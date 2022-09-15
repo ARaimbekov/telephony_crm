@@ -27,7 +27,8 @@ class Lead(models.Model):
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')
     patronymic_name = models.CharField(max_length=20, verbose_name='Отчество')
     phone_model = models.CharField(max_length=50, verbose_name='Модель телефона')
-    Company = models.CharField(max_length=50, verbose_name='Компания')
+    # Company = models.CharField(max_length=50, verbose_name='Компания')
+    Company = models.ManyToManyField("Company", null = True, verbose_name='Компания')
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
     update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
     agent = models.ForeignKey("Agent", null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Оператор')
@@ -48,6 +49,12 @@ class Lead(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
+
+class Company(models.Model):
+    name = models.CharField(max_length=50, verbose_name='компании')
+
+    def __str__(self):
+        return self.name
 
 def handle_upload_follow_ups(instance, filename):
     return f"lead_followups/lead_{instance.lead.pk}/{filename}"
