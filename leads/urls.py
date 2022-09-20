@@ -3,8 +3,8 @@ from django.urls import path
 from .views import (
     LeadListView, LeadDetailView, LeadCreateView, LeadUpdateView, LeadDeleteView,
     AssignAgentView, CategoryListView, CategoryDetailView, LeadCategoryUpdateView,
-    CategoryCreateView, CategoryUpdateView, CategoryDeleteView, LeadJsonView, 
-    FollowUpCreateView, FollowUpUpdateView, FollowUpDeleteView, CompanyListView, CompanyCreateView
+    CategoryCreateView, CategoryUpdateView, CategoryDeleteView, LeadJsonView, CompanyUpdateView, 
+    FollowUpCreateView, FollowUpUpdateView, FollowUpDeleteView, CompanyListView, CompanyCreateView, ApparatCreateView, NumberCreateView
 )
 
 app_name = "leads"
@@ -21,7 +21,14 @@ urlpatterns = [
     path('followups/<int:pk>/', FollowUpUpdateView.as_view(), name='lead-followup-update'),
     path('followups/<int:pk>/delete/', FollowUpDeleteView.as_view(), name='lead-followup-delete'),
     path('create/', LeadCreateView.as_view(), name='lead-create'),
+
     path('create-company/', CompanyCreateView.as_view(), name='company-create'),
+    path('<int:pk>/update/', CompanyUpdateView.as_view(), name='company-update'),
+
+
+    path('create-apparat/', ApparatCreateView.as_view(), name='apparats-create'),
+    path('create-number/', NumberCreateView.as_view(), name='number-create'),
+
     path('categories/', CategoryListView.as_view(), name='category-list'),
     path('categories/<int:pk>/', CategoryDetailView.as_view(), name='category-detail'),
     path('categories/<int:pk>/update/', CategoryUpdateView.as_view(), name='category-update'),

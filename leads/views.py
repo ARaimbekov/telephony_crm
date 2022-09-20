@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.views import generic
 from agents.mixins import OrganisorAndLoginRequiredMixin
-from .models import Lead, Agent, Category, FollowUp, Company
+from .models import Lead, Agent, Category, FollowUp, Company, Apparats, Number
 from .forms import (
     LeadForm, 
     LeadModelForm, 
@@ -18,7 +18,9 @@ from .forms import (
     LeadCategoryUpdateForm,
     CategoryModelForm,
     FollowUpModelForm,
-    CompanyModelForm
+    CompanyModelForm,
+    ApparatModelForm,
+    NumberModelForm
 )
 
 
@@ -41,7 +43,7 @@ class LandingPageView(generic.TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect("dashboard")
+            return redirect("leads")
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -521,21 +523,21 @@ class CompanyListView(LoginRequiredMixin, generic.ListView):
         # if user.is_superuser:
         #     queryset = Lead.objects.all()
         if user.is_superuser:
-            queryset = Lead.objects.all()
+            queryset = Company.objects.all()
             
         elif user.is_organisor:
             # queryset = Lead.objects.filter(
             #     organisation=user.userprofile, 
             #     agent__isnull=False
             # )
-            queryset = Lead.objects.all()
+            queryset = Company.objects.all()
         else:
             # queryset = Lead.objects.filter(
             #     organisation=user.agent.organisation, 
             #     agent__isnull=False
             # )
             # filter for the agent that is logged in
-            queryset = Lead.objects.all()
+            queryset = Company.objects.all()
             # queryset = queryset.filter(agent__user=user)
         return queryset
 
@@ -543,10 +545,7 @@ class CompanyListView(LoginRequiredMixin, generic.ListView):
         context = super(CompanyListView, self).get_context_data(**kwargs)
         user = self.request.user
         if user.is_organisor:
-            queryset = Lead.objects.filter(
-                organisation=user.userprofile, 
-                agent__isnull=True
-            )
+            queryset = Company.objects.all()
             context.update({
                 "unassigned_leads": queryset
             })
@@ -608,6 +607,149 @@ class CompanyCreateView(OrganisorAndLoginRequiredMixin, generic.CreateView):
 
 
 def lead_create(request):
+    form = CompanydModelForm()
+    if request.method == "POST":
+        form = CompanyModelForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("/leads")
+    context = {
+        "form": form
+    }
+    return render(request, "leads/lead_create.html", context)
+
+class CompanyUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
+    template_name = "leads/company_update.html"
+    form_class = CompanyModelForm
+
+    def get_queryset(self):
+        user = self.request.user
+        # initial queryset of leads for the entire organisation
+        #ТУТ Я
+        # return Lead.objects.filter(organisation=user.userprofile)
+        return Company.objects.all()
+
+    def get_success_url(self):
+        return reverse("leads:lied-list")
+
+    def form_valid(self, form):
+        form.save()
+        messages.info(self.request, "Новые изменения добавлены в позицию")
+        return super(CompanyUpdateView, self).form_valid(form)
+
+
+def lead_update(request, pk):
+    lead = Number.objects.get(id=pk)
+    form = NumberModelForm(instance=lead)
+    if request.method == "POST":
+        form = NumberModelForm(request.POST, instance=lead)
+        if form.is_valid():
+            form.save()
+            return redirect("/leads")
+    context = {
+        "form": form,
+        "lead": lead
+    }
+    return render(request, "leads/lied_update.html", context)
+
+
+# высывс
+
+
+class ApparatListView(LoginRequiredMixin, generic.ListView):
+    template_name = "leads/apparats.html"
+    context_object_name = "leads"
+
+    def get_queryset(self):
+        user = self.request.user
+        # initial queryset of leads for the entire organisation
+        # if user.is_superuser:
+        #     queryset = Lead.objects.all()
+        if user.is_superuser:
+            queryset = Apparats.objects.all()
+            
+        elif user.is_organisor:
+            # queryset = Lead.objects.filter(
+            #     organisation=user.userprofile, 
+            #     agent__isnull=False
+            # )
+            queryset = Apparats.objects.all()
+        else:
+            # queryset = Lead.objects.filter(
+            #     organisation=user.agent.organisation, 
+            #     agent__isnull=False
+            # )
+            # filter for the agent that is logged in
+            queryset = Apparats.objects.all()
+            # queryset = queryset.filter(agent__user=user)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super(ApparatListView, self).get_context_data(**kwargs)
+        user = self.request.user
+        if user.is_organisor:
+            queryset = Apparats.objects.all()
+            context.update({
+                "unassigned_leads": queryset
+            })
+        return context
+
+
+def lead_list(request):
+    leads = Apparats.objects.name()
+    context = {
+        "leads": leads
+    }
+    return render(request, "leads/apparats.html", context)
+
+
+class ApparatDetailView(LoginRequiredMixin, generic.DetailView):
+    template_name = "leads/lead_detail.html"
+    context_object_name = "lead"
+
+    def get_queryset(self):
+        user = self.request.user
+        # initial queryset of leads for the entire organisation
+        if user.is_organisor:
+            queryset = Lead.objects.filter(organisation=user.userprofile)
+        else:
+            queryset = Lead.objects.filter(organisation=user.agent.organisation)
+            # filter for the agent that is logged in
+            queryset = queryset.filter(agent__user=user)
+        return queryset
+
+
+def lead_detail(request, pk):
+    lead = Apparats.objects.get(id=pk)
+    context = {
+        "lead": lead
+    }
+    return render(request, "leads/lead_detail.html", context)
+
+
+
+class ApparatCreateView(OrganisorAndLoginRequiredMixin, generic.CreateView):
+    template_name = "leads/lead_create.html"
+    form_class = ApparatModelForm
+
+    def get_success_url(self):
+        return reverse("leads:lead-list")
+
+    def form_valid(self, form):
+        lead = form.save(commit=False)
+        lead.organisation = self.request.user.userprofile
+        lead.save()
+        send_mail(
+            subject="A lead has been created",
+            message="Go to the site to see the new lead",
+            from_email="test@test.com",
+            recipient_list=["test2@test.com"]
+        )
+        messages.success(self.request, "Добавление позиции прошло успешно")
+        return super(ApparatCreateView, self).form_valid(form)
+
+
+def lead_create(request):
     form = LeadModelForm()
     if request.method == "POST":
         form = LeadModelForm(request.POST)
@@ -618,6 +760,116 @@ def lead_create(request):
         "form": form
     }
     return render(request, "leads/lead_create.html", context)
+
+
+# NUMBER NUMBER NUMBER NUMBER
+
+
+class NumberListView(LoginRequiredMixin, generic.ListView):
+    template_name = "leads/number.html"
+    context_object_name = "leads"
+
+    def get_queryset(self):
+        user = self.request.user
+        # initial queryset of leads for the entire organisation
+        # if user.is_superuser:
+        #     queryset = Lead.objects.all()
+        if user.is_superuser:
+            queryset = Number.objects.all()
+            
+        elif user.is_organisor:
+            # queryset = Lead.objects.filter(
+            #     organisation=user.userprofile, 
+            #     agent__isnull=False
+            # )
+            queryset = Number.objects.all()
+        else:
+            # queryset = Lead.objects.filter(
+            #     organisation=user.agent.organisation, 
+            #     agent__isnull=False
+            # )
+            # filter for the agent that is logged in
+            queryset = Number.objects.all()
+            # queryset = queryset.filter(agent__user=user)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super(NumberListView, self).get_context_data(**kwargs)
+        user = self.request.user
+        if user.is_organisor:
+            queryset = Number.objects.all()
+            context.update({
+                "unassigned_leads": queryset
+            })
+        return context
+
+
+def lead_list(request):
+    leads = Number.objects.name()
+    context = {
+        "leads": leads
+    }
+    return render(request, "leads/number.html", context)
+
+
+class NumberDetailView(LoginRequiredMixin, generic.DetailView):
+    template_name = "leads/lead_detail.html"
+    context_object_name = "lead"
+
+    def get_queryset(self):
+        user = self.request.user
+        # initial queryset of leads for the entire organisation
+        if user.is_organisor:
+            queryset = Lead.objects.filter(organisation=user.userprofile)
+        else:
+            queryset = Lead.objects.filter(organisation=user.agent.organisation)
+            # filter for the agent that is logged in
+            queryset = queryset.filter(agent__user=user)
+        return queryset
+
+
+def lead_detail(request, pk):
+    number = Number.objects.get(id=pk)
+    context = {
+        "number": number
+    }
+    return render(request, "leads/lead_detail.html", context)
+
+
+
+class NumberCreateView(OrganisorAndLoginRequiredMixin, generic.CreateView):
+    template_name = "leads/number_create.html"
+    form_class = NumberModelForm
+
+    def get_success_url(self):
+        return reverse("leads:lead-list")
+
+    def form_valid(self, form):
+        lead = form.save(commit=False)
+        lead.organisation = self.request.user.userprofile
+        lead.save()
+        send_mail(
+            subject="A lead has been created",
+            message="Go to the site to see the new lead",
+            from_email="test@test.com",
+            recipient_list=["test2@test.com"]
+        )
+        messages.success(self.request, "Добавление позиции прошло успешно")
+        return super(NumberCreateView, self).form_valid(form)
+
+
+def lead_create(request):
+    form = LeadModelForm()
+    if request.method == "POST":
+        form = LeadModelForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("/leads")
+    context = {
+        "form": form
+    }
+    return render(request, "leads/lead_create.html", context)
+
 
 
 class LeadJsonView(generic.View):
