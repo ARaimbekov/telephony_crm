@@ -21,14 +21,16 @@ class LeadManager(models.Manager):
 
 
 class Lead(models.Model):
-    phone_number = models.CharField(max_length=20, verbose_name='Номер телефона')
+    # phone_number = models.ForeignKey("Number", on_delete=models.PROTECT, verbose_name='Номер телефона'),
+    # phone_number = models.ForeignKey("Number", null=False, on_delete=models.PROTECT, verbose_name='Номер телефона')
+    phone_number = models.OneToOneField("Number", on_delete=models.PROTECT, verbose_name='Номер телефона')     
     mac_address = models.CharField(max_length=15, verbose_name='MAC-Адрес')    
     first_name = models.CharField(max_length=20, verbose_name='Имя')
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')
     patronymic_name = models.CharField(max_length=20, verbose_name='Отчество')
-    phone_model = models.CharField(max_length=50, verbose_name='Модель телефона')
+    phone_model = models.ManyToManyField("Apparats",  verbose_name='Модель телефона')
     # Company = models.CharField(max_length=50, verbose_name='Компания')
-    Company = models.ManyToManyField("Company", null = True, verbose_name='Компания')
+    Company = models.ManyToManyField("Company", verbose_name='Компания')
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
     update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
     agent = models.ForeignKey("Agent", null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Оператор')
@@ -55,6 +57,21 @@ class Company(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Apparats(models.Model):
+    name = models.CharField(max_length=50, verbose_name='модель')
+
+    def __str__(self):
+        return self.name
+
+
+class Number(models.Model):
+    name = models.CharField(max_length=30, verbose_name='Номер телефона 2')
+
+    def __str__(self):
+        return self.name
+
 
 def handle_upload_follow_ups(instance, filename):
     return f"lead_followups/lead_{instance.lead.pk}/{filename}"
