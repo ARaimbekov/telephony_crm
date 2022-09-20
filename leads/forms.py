@@ -2,13 +2,16 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UsernameField
-from .models import Lead, Category, FollowUp, Company
+from .models import Lead, Category, FollowUp, Company, Apparats, Number
+from django.db.models import Count
 
 User = get_user_model()
 
 
 class LeadModelForm(forms.ModelForm):
     class Meta:
+        # model = Lead.objects.values('phone_number').annotate(name_count=Count('phone_number')).filter(name_count__gt=1).first()
+        # model = tmp
         model = Lead
         fields = (
             'phone_number',
@@ -57,6 +60,49 @@ class CompanyModelForm(forms.ModelForm):
         # if first_name + last_name != "Joe Soap":
         #     raise ValidationError("Your name is not Joe Soap")
 
+
+class ApparatModelForm(forms.ModelForm):
+    class Meta:
+        model = Apparats
+        fields = (
+            'name',
+        )
+
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+        # if data != "Joe":
+        #     raise ValidationError("Your name is not Joe")
+        return data
+
+    def clean(self):
+        pass
+        # first_name = self.cleaned_data["first_name"]
+        # last_name = self.cleaned_data["last_name"]
+        # if first_name + last_name != "Joe Soap":
+        #     raise ValidationError("Your name is not Joe Soap")
+
+
+class NumberModelForm(forms.ModelForm):
+    class Meta:
+        model = Number
+        fields = (
+            'name',
+        )
+
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+        # if data != "Joe":
+        #     raise ValidationError("Your name is not Joe")
+        return data
+
+    def clean(self):
+        pass
+        # first_name = self.cleaned_data["first_name"]
+        # last_name = self.cleaned_data["last_name"]
+        # if first_name + last_name != "Joe Soap":
+        #     raise ValidationError("Your name is not Joe Soap")
 
 
 class LeadForm(forms.Form):
