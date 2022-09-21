@@ -13,7 +13,7 @@
             </div>
             {% if request.user.is_organisor %}
             <div>
-                <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:company-create' %}">
+                <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:company_create' %}">
                     Добавить
                 </a>
             </div>
@@ -43,7 +43,7 @@
                                 </td>
                                 
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="{% url 'leads:company-update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
+                                    <a href="{% url 'leads:company_update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
                                         Edit
                                     </a>
                                 </td>
