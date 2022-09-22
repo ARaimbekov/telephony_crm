@@ -1,3 +1,5 @@
+import csv
+import xlwt
 import logging
 import datetime
 from django import contrib
@@ -29,6 +31,73 @@ logger = logging.getLogger(__name__)
 
 # CRUD+L - Create, Retrieve, Update and Delete + List
 
+# @login_required(login_url=signup)
+# def export_to_csv(request):
+#     lead = Lead.objects.all()
+#     response = HttpResponse('text/csv')
+#     response['Content']
+
+
+# def export_to_csv(reuest): 
+#     lied = Lead.objects.all()
+    # print(type(lied))
+    # response = HttpResponse('') 
+    # response['Content-Disposition'] = 'attachment; filename = hahtung.csv'
+    # writer = csv.writer(response, delimiter = ';') 
+    # writer.writerow(['Номер телефона', 'Мак-адрес', 'Модель телефона', 'Компания', 'Дата создания', 'Дата изменения', 'Активация']) 
+    # lied_fields = lied.values_list('phone_number', 'mac_address', 'phone_model', 'Company', 'date_added', 'update_added', 'active') 
+    # for profile in lied_fields: 
+    #     writer.writerow(profile) 
+    # return response
+
+
+def export_to_csv(request):
+    response = HttpResponse(content_type='application/ms-excel') 
+    response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.datetime.now())+'.xls' 
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Выгрузка-таблицы ') 
+    row_num = 0 
+    font_style = xlwt.XFStyle()
+    font_style.font.bold = True 
+
+    columns = (
+        'Имя', 
+        'Фамилия', 
+        'Отчество', 
+        'Номер телефона', 
+        'Мак-адрес', 
+        'Модель телефона', 
+        'Компания', 
+        'Дата-добавления', 
+        'Дата-изменения', 
+        'Активация'
+        ) 
+
+    for col_num in range(len(columns)): 
+        ws.write(row_num,col_num,columns[col_num], font_style)
+    
+    rows = Lead.objects.filter().values_list(
+        'first_name', 
+        'last_name', 
+        'patronymic_name', 
+        'phone_number', 
+        'mac_address', 
+        'phone_model', 
+        'Company', 
+        'date_added', 
+        'update_added', 
+        'active'
+        )
+
+    for row in rows:
+        row_num += 1
+
+        for col_num in range(len(row)):
+            ws.write(row_num,col_num,str(row[col_num]))
+    wb.save(response)
+
+    return response
+
 
 class SignupView(generic.CreateView):
     template_name = "registration/signup.html"
@@ -43,7 +112,7 @@ class LandingPageView(generic.TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect("leads")
+            return redirect("/leads")
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -196,14 +265,14 @@ def lead_create(request):
 
 class LeadUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
     template_name = "leads/lead_update.html"
-    form_class = LeadModelForm
+    form_class = NumberModelForm
 
     def get_queryset(self):
         user = self.request.user
         # initial queryset of leads for the entire organisation
         #ТУТ Я
         # return Lead.objects.filter(organisation=user.userprofile)
-        return Lead.objects.all()
+        return Number.objects.all()
 
     def get_success_url(self):
         return reverse("leads:lead-list")
@@ -215,10 +284,10 @@ class LeadUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
 
 
 def lead_update(request, pk):
-    lead = Lead.objects.get(id=pk)
-    form = LeadModelForm(instance=lead)
+    lead = Number.objects.get(id=pk)
+    form = NumberModelForm(instance=lead)
     if request.method == "POST":
-        form = LeadModelForm(request.POST, instance=lead)
+        form = NumberModelForm(request.POST, instance=lead)
         if form.is_valid():
             form.save()
             return redirect("/leads")
@@ -561,16 +630,16 @@ def lead_list(request):
 
 
 class CompanyDetailView(LoginRequiredMixin, generic.DetailView):
-    template_name = "leads/lead_detail.html"
+    template_name = "leads/company_detail.html"
     context_object_name = "lead"
 
     def get_queryset(self):
         user = self.request.user
         # initial queryset of leads for the entire organisation
         if user.is_organisor:
-            queryset = Lead.objects.filter(organisation=user.userprofile)
+            queryset = Company.objects.filter(organisation=user.userprofile)
         else:
-            queryset = Lead.objects.filter(organisation=user.agent.organisation)
+            queryset = Company.objects.filter(organisation=user.agent.organisation)
             # filter for the agent that is logged in
             queryset = queryset.filter(agent__user=user)
         return queryset
@@ -581,7 +650,7 @@ def lead_detail(request, pk):
     context = {
         "lead": lead
     }
-    return render(request, "leads/lead_detail.html", context)
+    return render(request, "leads/company_detail.html", context)
 
 
 
@@ -630,7 +699,7 @@ class CompanyUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
         return Company.objects.all()
 
     def get_success_url(self):
-        return reverse("leads:lied-list")
+        return reverse("leads:company")
 
     def form_valid(self, form):
         form.save()

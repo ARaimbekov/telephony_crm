@@ -13,8 +13,11 @@
             </div>
             {% if request.user.is_organisor %}
             <div>
+                <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:export_table' %}">
+                    Скачать
+                </a>
                 <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:lead-create' %}">
-                    Добавить
+                    &nbsp &nbspДобавить
                 </a>
             </div>
             {% endif %}
