@@ -60,12 +60,34 @@ def export_to_csv(request):
     font_style = xlwt.XFStyle()
     font_style.font.bold = True 
 
-    columns = ('Имя', 'Фамилия', 'Отчество', 'Номер телефона', 'Мак-адрес', 'Модель телефона', 'Компания', 'Дата-добавления', 'Дата-изменения', 'Активация') 
+    columns = (
+        'Имя', 
+        'Фамилия', 
+        'Отчество', 
+        'Номер телефона', 
+        'Мак-адрес', 
+        'Модель телефона', 
+        'Компания', 
+        'Дата-добавления', 
+        'Дата-изменения', 
+        'Активация'
+        ) 
 
     for col_num in range(len(columns)): 
         ws.write(row_num,col_num,columns[col_num], font_style)
     
-    rows = Lead.objects.filter().values_list('first_name', 'last_name', 'patronymic_name', 'phone_number', 'mac_address', 'phone_model', 'Company', 'date_added', 'update_added', 'active')
+    rows = Lead.objects.filter().values_list(
+        'first_name', 
+        'last_name', 
+        'patronymic_name', 
+        'phone_number', 
+        'mac_address', 
+        'phone_model', 
+        'Company', 
+        'date_added', 
+        'update_added', 
+        'active'
+        )
 
     for row in rows:
         row_num += 1
@@ -75,13 +97,6 @@ def export_to_csv(request):
     wb.save(response)
 
     return response
-
-
-    
-
-
-
-
 
 
 class SignupView(generic.CreateView):
@@ -97,7 +112,7 @@ class LandingPageView(generic.TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            return redirect("leads")
+            return redirect("/leads")
         return super().dispatch(request, *args, **kwargs)
 
 
