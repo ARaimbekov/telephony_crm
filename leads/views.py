@@ -29,27 +29,6 @@ from .forms import (
 logger = logging.getLogger(__name__)
 
 
-# CRUD+L - Create, Retrieve, Update and Delete + List
-
-# @login_required(login_url=signup)
-# def export_to_csv(request):
-#     lead = Lead.objects.all()
-#     response = HttpResponse('text/csv')
-#     response['Content']
-
-
-# def export_to_csv(reuest): 
-#     lied = Lead.objects.all()
-    # print(type(lied))
-    # response = HttpResponse('') 
-    # response['Content-Disposition'] = 'attachment; filename = hahtung.csv'
-    # writer = csv.writer(response, delimiter = ';') 
-    # writer.writerow(['Номер телефона', 'Мак-адрес', 'Модель телефона', 'Компания', 'Дата создания', 'Дата изменения', 'Активация']) 
-    # lied_fields = lied.values_list('phone_number', 'mac_address', 'phone_model', 'Company', 'date_added', 'update_added', 'active') 
-    # for profile in lied_fields: 
-    #     writer.writerow(profile) 
-    # return response
-
 
 def export_to_csv(request):
     response = HttpResponse(content_type='application/ms-excel') 
@@ -614,7 +593,7 @@ class CompanyDetailView(LoginRequiredMixin, generic.DetailView):
 def lead_detail(request, pk):
     lead = Company.objects.get(id=pk)
     context = {
-        "lead": lead
+        "lead": lead,
     }
     return render(request, "leads/company_detail.html", context)
 
@@ -625,7 +604,7 @@ class CompanyCreateView(OrganisorAndLoginRequiredMixin, generic.CreateView):
     form_class = CompanyModelForm
 
     def get_success_url(self):
-        return reverse("leads:lead-list")
+        return reverse("company")
 
     def form_valid(self, form):
         lead = form.save(commit=False)
@@ -647,7 +626,7 @@ def lead_create(request):
         form = CompanyModelForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect("/leads")
+            return redirect("/company")
     context = {
         "form": form
     }
@@ -674,16 +653,16 @@ class CompanyUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
 
 
 def lead_update(request, pk):
-    lead = Company.objects.get(id=pk)
-    form = CompanyModelForm(instance=lead)
+    company = Company.objects.get(id=pk)
+    form = CompanyModelForm(instance=company)
     if request.method == "POST":
-        form = CompanyModelForm(request.POST, instance=lead)
+        form = CompanyModelForm(request.POST, instance=company)
         if form.is_valid():
             form.save()
             return redirect("/leads")
     context = {
         "form": form,
-        "lead": lead
+        "company": company
     }
     return render(request, "leads/lied_update.html", context)
 
@@ -768,7 +747,7 @@ class ApparatCreateView(OrganisorAndLoginRequiredMixin, generic.CreateView):
     form_class = ApparatModelForm
 
     def get_success_url(self):
-        return reverse("leads:lead-list")
+        return reverse("apparats")
 
     def form_valid(self, form):
         lead = form.save(commit=False)
@@ -806,26 +785,14 @@ class NumberListView(LoginRequiredMixin, generic.ListView):
 
     def get_queryset(self):
         user = self.request.user
-        # initial queryset of leads for the entire organisation
-        # if user.is_superuser:
-        #     queryset = Lead.objects.all()
+
         if user.is_superuser:
             queryset = Number.objects.all()
             
         elif user.is_organisor:
-            # queryset = Lead.objects.filter(
-            #     organisation=user.userprofile, 
-            #     agent__isnull=False
-            # )
             queryset = Number.objects.all()
         else:
-            # queryset = Lead.objects.filter(
-            #     organisation=user.agent.organisation, 
-            #     agent__isnull=False
-            # )
-            # filter for the agent that is logged in
             queryset = Number.objects.all()
-            # queryset = queryset.filter(agent__user=user)
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -877,7 +844,7 @@ class NumberCreateView(OrganisorAndLoginRequiredMixin, generic.CreateView):
     form_class = NumberModelForm
 
     def get_success_url(self):
-        return reverse("leads:lead-list")
+        return reverse("number")
 
     def form_valid(self, form):
         lead = form.save(commit=False)

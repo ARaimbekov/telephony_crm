@@ -13,18 +13,9 @@
                         </div>
                         <p class="mt-1 text-xl text-gray-500 truncate">{{ lead.description }}</p>
                     </div>
-                    {% if lead.profile_picture %}
-                    <img class="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0" src="{{ lead.profile_picture.url }}" alt="">
-                    {% endif %}
                 </div>
                 <div class="flex mb-4">
-                    <!-- <a href="{% url 'leads:lead-detail' lead.pk %}" class="flex-grow text-indigo-500 border-b-2 border-indigo-500 py-2 text-lg px-1">
-                        ФИО
-                    </a> -->
-                    <!-- <a href="{% url 'leads:lead-category-update' lead.pk %}" class="flex-grow border-b-2 border-gray-300 py-2 text-lg px-1">
-                        Category
-                    </a> -->
-                    <a href="{% url 'leads:company_update' lead.pk %}" class="flex-grow border-b-2 border-gray-300 py-2 text-lg px-1">
+                    <a href="{% url 'leads:company_update' company.pk %}" class="flex-grow border-b-2 border-gray-300 py-2 text-lg px-1">
                         Обновляемая информация
                     </a>    
                 </div>
