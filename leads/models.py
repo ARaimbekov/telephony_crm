@@ -9,7 +9,7 @@ class User(AbstractUser):
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
 
     def __str__(self):
         return self.user.username
@@ -27,12 +27,13 @@ class Lead(models.Model):
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')
     patronymic_name = models.CharField(max_length=20, verbose_name='Отчество')
     phone_model = models.ManyToManyField("Apparats",  verbose_name='Модель телефона')
-    # Company = models.CharField(max_length=50, verbose_name='Компания')
     Company = models.ManyToManyField("Company", verbose_name='Компания')
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
     update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
     agent = models.ForeignKey("Agent", null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Оператор')
     active = models.BooleanField(default=True)
+    line = models.CharField(max_length=20, verbose_name='Линия')
+    atc = models.CharField(max_length=20, verbose_name='ATC')
 
     age = models.IntegerField(default=0)
     organisation = models.ForeignKey(UserProfile, on_delete=models.CASCADE)

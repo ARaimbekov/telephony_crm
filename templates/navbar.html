@@ -7,16 +7,19 @@
       <nav class="md:ml-auto flex flex-wrap items-center text-base justify-center">
         {% if user.is_superuser %}
         <div>
-          <a class="hover:text-blue-500" style="margin-left: 100px;" href="{% url 'company' %}"> Компании</a>
+          <a class="hover:text-blue-500" style="margin-left: 100px;" href="{% url 'company' %}"> | &nbsp;&nbsp;&nbsp;&nbsp;Компании</a>
       </div>
         <div>
         <a class="hover:text-blue-500" style="margin-left: 100px;" href="{% url 'apparats' %}"> Аппараты</a>
       </div>
         <div>
-        <a class="hover:text-blue-500" style="margin-left: 100px;" href="{% url 'number' %}"> Номера</a>
+        <a class="hover:text-blue-500" style="margin-left: 100px;" href="{% url 'number' %}"> Номера&nbsp;&nbsp;&nbsp;&nbsp; | </a>
+      </div>
+      <div>
+        <a href="{% url 'leads:lead-list' %}" style="margin-left: 100px;">Телефоны</a>
       </div>        
         <div>
-          <a class="hover:text-blue-500" style="margin-left: 100px;" href="{% url 'signup' %}"> Создать аккаунт</a>
+          <a class="hover:text-blue-500"  style="margin-left: 100px;"href="{% url 'signup' %}"> | &nbsp;&nbsp;&nbsp;&nbsp;Создать аккаунт</a>
       </div>  
       {% endif %}
         {% if not request.user.is_authenticated %}
@@ -25,11 +28,11 @@
           {% if request.user.is_organisor %}
           <!-- <a href="{% url 'agents:agent-list' %}" class="mr-5 hover:text-gray-900">&nbsp;&nbsp;&nbsp;&nbsp;Оператор</a> -->
           {% endif %}
-          <a href="{% url 'leads:lead-list' %}" class="mr-5 hover:text-gray-900">&nbsp;&nbsp;&nbsp;&nbsp;Телефоны</a>
+          <!-- <a href="{% url 'leads:lead-list' %}" class="mr-5 hover:text-gray-900">&nbsp;&nbsp;&nbsp;&nbsp;Телефоны</a> -->
         {% endif %}
       </nav>
       {% if request.user.is_authenticated %}
-        Вы вошли как: {{ request.user.username }}
+      &nbsp;&nbsp;&nbsp;&nbsp;Вы вошли как: {{ request.user.username }}
         <a href="{% url 'logout' %}" class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0">
           Выйти
             <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-4 h-4 ml-1" viewBox="0 0 24 24">

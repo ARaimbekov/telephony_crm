@@ -67,7 +67,9 @@ def export_to_csv(request):
         'Номер телефона', 
         'Мак-адрес', 
         'Модель телефона', 
-        'Компания', 
+        'Компания',
+        'Линия',
+        'АТС',
         'Дата-добавления', 
         'Дата-изменения', 
         'Активация'
@@ -84,6 +86,8 @@ def export_to_csv(request):
         'mac_address', 
         'phone_model', 
         'Company', 
+        'line',
+        'atc',
         'date_added', 
         'update_added', 
         'active'
