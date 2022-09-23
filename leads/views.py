@@ -90,6 +90,11 @@ def export_to_csv(request):
         )
 
     for row in rows:
+        row_list = list (row)
+        row_list[3] = Number.objects.get(pk=row_list[3])
+        row_list[6] = Apparats.objects.get(pk=row_list[6])
+        row_list[5] = Company.objects.get(pk=row_list[5])
+        row=tuple(row_list)
         row_num += 1
 
         for col_num in range(len(row)):
@@ -265,14 +270,14 @@ def lead_create(request):
 
 class LeadUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
     template_name = "leads/lead_update.html"
-    form_class = NumberModelForm
+    form_class = LeadModelForm
 
     def get_queryset(self):
         user = self.request.user
         # initial queryset of leads for the entire organisation
         #ТУТ Я
         # return Lead.objects.filter(organisation=user.userprofile)
-        return Number.objects.all()
+        return Lead.objects.all()
 
     def get_success_url(self):
         return reverse("leads:lead-list")
@@ -284,10 +289,10 @@ class LeadUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
 
 
 def lead_update(request, pk):
-    lead = Number.objects.get(id=pk)
-    form = NumberModelForm(instance=lead)
+    lead = Lead.objects.get(id=pk)
+    form = LeadModelForm(instance=lead)
     if request.method == "POST":
-        form = NumberModelForm(request.POST, instance=lead)
+        form = LeadModelForm(request.POST, instance=lead)
         if form.is_valid():
             form.save()
             return redirect("/leads")
