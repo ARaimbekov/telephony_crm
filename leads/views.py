@@ -544,49 +544,6 @@ class FollowUpDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
 
 
 
-# def lead_update(request, pk):
-#     lead = Lead.objects.get(id=pk)
-#     form = LeadForm()
-#     if request.method == "POST":
-#         form = LeadForm(request.POST)
-#         if form.is_valid():
-#             first_name = form.cleaned_data['first_name']
-#             last_name = form.cleaned_data['last_name']
-#             age = form.cleaned_data['age']
-#             lead.first_name = first_name
-#             lead.last_name = last_name
-#             lead.age = age
-#             lead.save()
-#             return redirect("/leads")
-    # context = {
-    #     "form": form,
-    #     "lead": lead
-    # }
-#     return render(request, "leads/lead_update.html", context)
-
-
-# def lead_create(request):
-    # form = LeadForm()
-    # if request.method == "POST":
-    #     form = LeadForm(request.POST)
-    #     if form.is_valid():
-    #         first_name = form.cleaned_data['first_name']
-    #         last_name = form.cleaned_data['last_name']
-    #         age = form.cleaned_data['age']
-    #         agent = Agent.objects.first()
-    #         Lead.objects.create(
-    #             first_name=first_name,
-    #             last_name=last_name,
-    #             age=age,
-    #             agent=agent
-    #         )
-    #         return redirect("/leads")
-    # context = {
-    #     "form": form
-    # }
-#     return render(request, "leads/lead_create.html", context)
-
-
 class CompanyListView(LoginRequiredMixin, generic.ListView):
     template_name = "leads/company.html"
     context_object_name = "leads"
@@ -713,10 +670,10 @@ class CompanyUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
 
 
 def lead_update(request, pk):
-    lead = Number.objects.get(id=pk)
-    form = NumberModelForm(instance=lead)
+    lead = Company.objects.get(id=pk)
+    form = CompanyModelForm(instance=lead)
     if request.method == "POST":
-        form = NumberModelForm(request.POST, instance=lead)
+        form = CompanyModelForm(request.POST, instance=lead)
         if form.is_valid():
             form.save()
             return redirect("/leads")

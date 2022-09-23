@@ -21,8 +21,6 @@ class LeadManager(models.Manager):
 
 
 class Lead(models.Model):
-    # phone_number = models.ForeignKey("Number", on_delete=models.PROTECT, verbose_name='Номер телефона'),
-    # phone_number = models.ForeignKey("Number", null=False, on_delete=models.PROTECT, verbose_name='Номер телефона')
     phone_number = models.OneToOneField("Number", on_delete=models.PROTECT, verbose_name='Номер телефона')     
     mac_address = models.CharField(max_length=15, verbose_name='MAC-Адрес')    
     first_name = models.CharField(max_length=20, verbose_name='Имя')
@@ -34,7 +32,7 @@ class Lead(models.Model):
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
     update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
     agent = models.ForeignKey("Agent", null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Оператор')
-    active = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
 
     age = models.IntegerField(default=0)
     organisation = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
