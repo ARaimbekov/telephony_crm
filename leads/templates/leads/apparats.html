@@ -7,13 +7,10 @@
         <div class="w-full mb-6 py-6 flex justify-between items-center border-b border-gray-200">
             <div>
                 <h1 class="text-4xl text-gray-800">Аппараты</h1>
-                <!-- <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:category-list' %}">
-                    View categories
-                </a> -->
             </div>
             {% if request.user.is_organisor %}
             <div>
-                <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:apparats-create' %}">
+                <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:apparats_create' %}">
                     Добавить
                 </a>
             </div>
@@ -41,9 +38,8 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.name }}
                                 </td>
-                                
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="{% url 'leads:lead-update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
+                                    <a href="{% url 'leads:apparats_update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
                                         Edit
                                     </a>
                                 </td>

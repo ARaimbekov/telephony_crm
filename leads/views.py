@@ -626,11 +626,11 @@ def lead_create(request):
         form = CompanyModelForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect("/company")
+            return redirect("/leads")
     context = {
         "form": form
     }
-    return render(request, "leads/lead_create.html", context)
+    return render(request, "leads/company_create.html", context)
 
 class CompanyUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
     template_name = "leads/company_update.html"
@@ -644,7 +644,7 @@ class CompanyUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
         return Company.objects.all()
 
     def get_success_url(self):
-        return reverse("leads:company")
+        return reverse("company")
 
     def form_valid(self, form):
         form.save()
@@ -667,6 +667,24 @@ def lead_update(request, pk):
     return render(request, "leads/lied_update.html", context)
 
 
+class CompanyDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
+    template_name = "leads/company_delete.html"
+
+    def get_success_url(self):
+        return reverse("company")
+
+    def get_queryset(self):
+        user = self.request.user
+        # initial queryset of leads for the entire organisation
+        return Company.objects.all()
+
+
+def lead_delete(request, pk):
+    lead = Company.objects.get(id=pk)
+    lead.delete()
+    return redirect("/leads")
+
+
 # высывс
 
 
@@ -676,26 +694,15 @@ class ApparatListView(LoginRequiredMixin, generic.ListView):
 
     def get_queryset(self):
         user = self.request.user
-        # initial queryset of leads for the entire organisation
-        # if user.is_superuser:
-        #     queryset = Lead.objects.all()
+    
         if user.is_superuser:
             queryset = Apparats.objects.all()
             
         elif user.is_organisor:
-            # queryset = Lead.objects.filter(
-            #     organisation=user.userprofile, 
-            #     agent__isnull=False
-            # )
             queryset = Apparats.objects.all()
         else:
-            # queryset = Lead.objects.filter(
-            #     organisation=user.agent.organisation, 
-            #     agent__isnull=False
-            # )
-            # filter for the agent that is logged in
             queryset = Apparats.objects.all()
-            # queryset = queryset.filter(agent__user=user)
+    
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -718,16 +725,16 @@ def lead_list(request):
 
 
 class ApparatDetailView(LoginRequiredMixin, generic.DetailView):
-    template_name = "leads/lead_detail.html"
+    template_name = "leads/apparats_detail.html"
     context_object_name = "lead"
 
     def get_queryset(self):
         user = self.request.user
         # initial queryset of leads for the entire organisation
         if user.is_organisor:
-            queryset = Lead.objects.filter(organisation=user.userprofile)
+            queryset = Apparats.objects.filter(organisation=user.userprofile)
         else:
-            queryset = Lead.objects.filter(organisation=user.agent.organisation)
+            queryset = Apparats.objects.filter(organisation=user.agent.organisation)
             # filter for the agent that is logged in
             queryset = queryset.filter(agent__user=user)
         return queryset
@@ -738,12 +745,47 @@ def lead_detail(request, pk):
     context = {
         "lead": lead
     }
-    return render(request, "leads/lead_detail.html", context)
+    return render(request, "leads/apparats_detail.html", context)
+
+
+class ApparatUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
+    template_name = "leads/apparats_update.html"
+    form_class = ApparatModelForm
+
+    def get_queryset(self):
+        user = self.request.user
+        # initial queryset of leads for the entire organisation
+        #ТУТ Я
+        # return Lead.objects.filter(organisation=user.userprofile)
+        return Apparats.objects.all()
+
+    def get_success_url(self):
+        return reverse("apparats")
+
+    def form_valid(self, form):
+        form.save()
+        messages.info(self.request, "Новые изменения добавлены в позицию")
+        return super(ApparatUpdateView, self).form_valid(form)
+
+
+def lead_update(request, pk):
+    lead = Apparats.objects.get(id=pk)
+    form = ApparatModelForm(instance=lead)
+    if request.method == "POST":
+        form = ApparatModelForm(request.POST, instance=lead)
+        if form.is_valid():
+            form.save()
+            return redirect("/leads")
+    context = {
+        "form": form,
+        "lead": lead
+    }
+    return render(request, "leads/apparats_update.html", context)
 
 
 
 class ApparatCreateView(OrganisorAndLoginRequiredMixin, generic.CreateView):
-    template_name = "leads/lead_create.html"
+    template_name = "leads/apparats_create.html"
     form_class = ApparatModelForm
 
     def get_success_url(self):
@@ -764,9 +806,9 @@ class ApparatCreateView(OrganisorAndLoginRequiredMixin, generic.CreateView):
 
 
 def lead_create(request):
-    form = LeadModelForm()
+    form = ApparatModelForm()
     if request.method == "POST":
-        form = LeadModelForm(request.POST)
+        form = ApparatModelForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect("/leads")
@@ -774,6 +816,24 @@ def lead_create(request):
         "form": form
     }
     return render(request, "leads/lead_create.html", context)
+
+
+class ApparatDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
+    template_name = "leads/apparats_delete.html"
+
+    def get_success_url(self):
+        return reverse("apparats")
+
+    def get_queryset(self):
+        user = self.request.user
+        # initial queryset of leads for the entire organisation
+        return Apparats.objects.all()
+
+
+def lead_delete(request, pk):
+    lead = Apparats.objects.get(id=pk)
+    lead.delete()
+    return redirect("/apparats")
 
 
 # NUMBER NUMBER NUMBER NUMBER

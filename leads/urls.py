@@ -3,8 +3,8 @@ from django.urls import path
 from .views import (
     LeadListView, LeadDetailView, LeadCreateView, LeadUpdateView, LeadDeleteView,
     AssignAgentView, CategoryListView, CategoryDetailView, LeadCategoryUpdateView,
-    CategoryCreateView, CategoryUpdateView, CategoryDeleteView, LeadJsonView, CompanyUpdateView, CompanyDetailView,
-    FollowUpCreateView, FollowUpUpdateView, FollowUpDeleteView, CompanyListView, CompanyCreateView, ApparatCreateView, NumberCreateView, export_to_csv
+    CategoryCreateView, CategoryUpdateView, CategoryDeleteView, LeadJsonView, CompanyUpdateView, CompanyDetailView, ApparatUpdateView, CompanyDeleteView,
+    FollowUpCreateView, FollowUpUpdateView, FollowUpDeleteView, CompanyListView, CompanyCreateView, ApparatCreateView, NumberCreateView, export_to_csv, ApparatDeleteView
 )
 
 app_name = "leads"
@@ -25,9 +25,13 @@ urlpatterns = [
     # path('<int:pk>/', CompanyDetailView.as_view(), name='company_detail'),
     path('create_company/', CompanyCreateView.as_view(), name='company_create'),
     path('<int:pk>/company_update/', CompanyUpdateView.as_view(), name='company_update'),
+    path('<int:pk>/company_delete/', CompanyDeleteView.as_view(), name='company_delete'),
 
 
-    path('create-apparat/', ApparatCreateView.as_view(), name='apparats-create'),
+    path('apparats_create/', ApparatCreateView.as_view(), name='apparats_create'),
+    path('<int:pk>/apparats_update/', ApparatUpdateView.as_view(), name='apparats_update'),
+    path('<int:pk>/apparats_delete/', ApparatDeleteView.as_view(), name='apparats_delete'),
+
     path('create-number/', NumberCreateView.as_view(), name='number-create'),
 
     path('export_table/', export_to_csv, name='export_table'),
