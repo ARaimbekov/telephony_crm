@@ -27,7 +27,7 @@ class Lead(models.Model):
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')
     patronymic_name = models.CharField(max_length=20, verbose_name='Отчество')
     phone_model = models.ManyToManyField("Apparats",  verbose_name='Модель телефона')
-    Company = models.ManyToManyField("Company", verbose_name='Компания')
+    company = models.ManyToManyField("company", verbose_name='Компания')
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
     update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
     agent = models.ForeignKey("Agent", null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Оператор')

@@ -14,7 +14,8 @@ from agents.mixins import OrganisorAndLoginRequiredMixin
 from .models import Lead, Agent, Category, FollowUp, Company, Apparats, Number
 from .forms import (
     LeadForm, 
-    LeadModelForm, 
+    LeadCreateModelForm, 
+    LeadUpdateModelForm, 
     CustomUserCreationForm, 
     AssignAgentForm, 
     LeadCategoryUpdateForm,
@@ -64,7 +65,7 @@ def export_to_csv(request):
         'phone_number', 
         'mac_address', 
         'phone_model', 
-        'Company', 
+        'company', 
         'line',
         'atc',
         'date_added', 
@@ -149,27 +150,34 @@ class LeadListView(LoginRequiredMixin, generic.ListView):
 
     def get_queryset(self):
         user = self.request.user
-        # initial queryset of leads for the entire organisation
-        # if user.is_superuser:
-        #     queryset = Lead.objects.all()
-        if user.is_superuser:
-            queryset = Lead.objects.all()
-            
-        elif user.is_organisor:
-            # queryset = Lead.objects.filter(
-            #     organisation=user.userprofile, 
-            #     agent__isnull=False
-            # )
-            queryset = Lead.objects.all()
-        else:
-            # queryset = Lead.objects.filter(
-            #     organisation=user.agent.organisation, 
-            #     agent__isnull=False
-            # )
-            # filter for the agent that is logged in
-            queryset = Lead.objects.all()
-            # queryset = queryset.filter(agent__user=user)
+        row_num = 0
+        queryset = Lead.objects.all().prefetch_related('company')
+        print(queryset)
         return queryset
+
+        # rows = Lead.objects.filter().values_list(
+        #     'first_name', 
+        #     'last_name', 
+        #     'patronymic_name', 
+        #     'phone_number', 
+        #     'mac_address', 
+        #     'phone_model', 
+        #     'company', 
+        #     'line',
+        #     'atc',
+        #     'date_added', 
+        #     'update_added', 
+        #     'active'
+        # )
+
+        # for row in rows:
+        #     row_list = list (row)
+        #     row_list[3] = Number.objects.get(pk=row_list[3])
+        #     row_list[6] = Apparats.objects.get(pk=row_list[6])
+        #     row_list[5] = Company.objects.get(pk=row_list[5])
+        #     row=tuple(row_list)
+        #     queryset = row
+        #     return queryset
 
     def get_context_data(self, **kwargs):
         context = super(LeadListView, self).get_context_data(**kwargs)
@@ -219,7 +227,7 @@ def lead_detail(request, pk):
 
 class LeadCreateView(OrganisorAndLoginRequiredMixin, generic.CreateView):
     template_name = "leads/lead_create.html"
-    form_class = LeadModelForm
+    form_class = LeadCreateModelForm
 
     def get_success_url(self):
         return reverse("leads:lead-list")
@@ -253,7 +261,7 @@ def lead_create(request):
 
 class LeadUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
     template_name = "leads/lead_update.html"
-    form_class = LeadModelForm
+    form_class = LeadUpdateModelForm
 
     def get_queryset(self):
         user = self.request.user
@@ -271,19 +279,19 @@ class LeadUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
         return super(LeadUpdateView, self).form_valid(form)
 
 
-def lead_update(request, pk):
-    lead = Lead.objects.get(id=pk)
-    form = LeadModelForm(instance=lead)
-    if request.method == "POST":
-        form = LeadModelForm(request.POST, instance=lead)
-        if form.is_valid():
-            form.save()
-            return redirect("/leads")
-    context = {
-        "form": form,
-        "lead": lead
-    }
-    return render(request, "leads/lead_update.html", context)
+# def lead_update(request, pk):
+#     lead = Lead.objects.get(id=pk)
+#     form = LeadUpdateModelForm(instance=lead)
+#     if request.method == "POST":
+#         form = LeadUpdateModelForm(request.POST, instance=lead)
+#         if form.is_valid():
+#             form.save()
+#             return redirect("/leads")
+#     context = {
+#         "form": form,
+#         "lead": lead
+#     }
+#     return render(request, "leads/lead_update.html", context)
 
 
 class LeadDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
