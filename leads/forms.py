@@ -3,12 +3,13 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UsernameField
 from .models import Lead, Category, FollowUp, Company, Apparats, Number
+from itertools import chain
 from django.db.models import Count
+from django.forms import inlineformset_factory
 
 User = get_user_model()
 
-
-class LeadModelForm(forms.ModelForm):
+class LeadCreateModelForm(forms.ModelForm):
     class Meta:
         # model = Lead.objects.values('phone_number').annotate(name_count=Count('phone_number')).filter(name_count__gt=1).first()
         # model = tmp
@@ -20,12 +21,53 @@ class LeadModelForm(forms.ModelForm):
             'last_name',
             'patronymic_name',
             'phone_model',
-            'Company',
+            'company',
             'line',
             'atc',
             'active',
         )
 
+    def __init__(self,*args,**kwargs):
+        super(LeadCreateModelForm, self).__init__(*args,**kwargs)
+        numbers = Lead.objects.all().values('phone_number')
+        self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+        # if data != "Joe":
+        #     raise ValidationError("Your name is not Joe")
+        return data
+
+    def clean(self):
+        pass
+        # first_name = self.cleaned_data["first_name"]
+        # last_name = self.cleaned_data["last_name"]
+        # if first_name + last_name != "Joe Soap":
+        #     raise ValidationError("Your name is not Joe Soap")
+
+class LeadUpdateModelForm(forms.ModelForm):
+    class Meta:
+        # model = Lead.objects.values('phone_number').annotate(name_count=Count('phone_number')).filter(name_count__gt=1).first()
+        # model = tmp
+        model = Lead
+        fields = (
+            'phone_number',
+            'mac_address',
+            'first_name',
+            'last_name',
+            'patronymic_name',
+            'phone_model',
+            'company',
+            'line',
+            'atc',
+            'active',
+        )
+
+    def __init__(self, *args, **kwargs):
+        super(LeadUpdateModelForm, self).__init__(*args,**kwargs)
+        numbers = Lead.objects.all().values('phone_number')
+        
+        self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]

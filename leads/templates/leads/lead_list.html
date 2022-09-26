@@ -87,12 +87,16 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.patronymic_name }}
                                 </td>
+                                {% for phone in lead.phone_model.all %}
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.phone_model }}
+                                    {{ phone.name }}
                                 </td>
+                                {% endfor %}
+                                {% for company in lead.company.all %}
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.Company }}
+                                    {{ company.name }}
                                 </td>
+                                {% endfor %}
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.line }}
                                 </td>
