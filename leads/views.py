@@ -15,7 +15,8 @@ from .models import Lead, Agent, Category, FollowUp, Company, Apparats, Number
 from .forms import (
     LeadForm, 
     LeadCreateModelForm, 
-    LeadUpdateModelForm, 
+    # LeadUpdateModelForm, 
+    LeadModelForm,
     CustomUserCreationForm, 
     AssignAgentForm, 
     LeadCategoryUpdateForm,
@@ -261,7 +262,7 @@ def lead_create(request):
 
 class LeadUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
     template_name = "leads/lead_update.html"
-    form_class = LeadUpdateModelForm
+    form_class = LeadModelForm
 
     def get_queryset(self):
         user = self.request.user
@@ -277,6 +278,39 @@ class LeadUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
         form.save()
         messages.info(self.request, "Новые изменения добавлены в позицию")
         return super(LeadUpdateView, self).form_valid(form)
+
+
+def lead_update(request, pk):
+    lead = Lead.objects.get(id=pk)
+    form = LeadModelForm(instance=lead)
+    if request.method == "POST":
+        form = LeadModelForm(request.POST, instance=lead)
+        if form.is_valid():
+            form.save()
+            return redirect("/leads")
+    context = {
+        "form": form,
+        "lead": lead
+    }
+    return render(request, "leads/lead_update.html", context)
+# class LeadUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
+#     template_name = "leads/lead_update.html"
+#     form_class = LeadUpdateModelForm
+
+#     def get_queryset(self):
+#         user = self.request.user
+#         # initial queryset of leads for the entire organisation
+#         #ТУТ Я
+#         # return Lead.objects.filter(organisation=user.userprofile)
+#         return Lead.objects.all()
+
+#     def get_success_url(self):
+#         return reverse("leads:lead-list")
+
+#     def form_valid(self, form):
+#         form.save()
+#         messages.info(self.request, "Новые изменения добавлены в позицию")
+#         return super(LeadUpdateModelForm, self).form_valid(form)
 
 
 # def lead_update(request, pk):
