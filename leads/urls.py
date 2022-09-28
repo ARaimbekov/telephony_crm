@@ -4,7 +4,8 @@ from .views import (
     LeadListView, LeadDetailView, LeadCreateView, LeadUpdateView, LeadDeleteView,
     AssignAgentView, CategoryListView, CategoryDetailView, LeadCategoryUpdateView,
     CategoryCreateView, CategoryUpdateView, CategoryDeleteView, LeadJsonView, CompanyUpdateView, CompanyDetailView, ApparatUpdateView, CompanyDeleteView,
-    FollowUpCreateView, FollowUpUpdateView, FollowUpDeleteView, CompanyListView, CompanyCreateView, ApparatCreateView, NumberCreateView, export_to_csv, ApparatDeleteView
+    FollowUpCreateView, FollowUpUpdateView, FollowUpDeleteView, CompanyListView, CompanyCreateView, ApparatCreateView, NumberCreateView, export_to_csv, ApparatDeleteView,
+    NumberDeleteView
 )
 
 app_name = "leads"
@@ -33,6 +34,7 @@ urlpatterns = [
     path('<int:pk>/apparats_delete/', ApparatDeleteView.as_view(), name='apparats_delete'),
 
     path('create-number/', NumberCreateView.as_view(), name='number-create'),
+    path('<int:pk>/number_delete/', NumberDeleteView.as_view(), name='number_delete'),
 
     path('export_table/', export_to_csv, name='export_table'),
 
