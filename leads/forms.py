@@ -45,7 +45,36 @@ class LeadCreateModelForm(forms.ModelForm):
         # if first_name + last_name != "Joe Soap":
         #     raise ValidationError("Your name is not Joe Soap")
 
-class LeadUpdateModelForm(forms.ModelForm):
+# class LeadUpdateModelForm(forms.ModelForm):
+#     class Meta:
+#         model = Lead
+#         fields = (
+#             'phone_number',
+#             'mac_address',
+#             'first_name',
+#             'last_name',
+#             'patronymic_name',
+#             'phone_model',
+#             'company',
+#             'active',
+#         )
+
+
+#     def __init__(self, *args, **kwargs):
+#         super(LeadUpdateModelForm, self).__init__(*args,**kwargs)
+#         numbers = Lead.objects.all().values('phone_number')
+        
+#         self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
+
+#     def clean_first_name(self):
+#         data = self.cleaned_data["first_name"]
+#         return data
+
+#     def clean(self):
+#         pass
+
+
+class LeadModelForm(forms.ModelForm):
     class Meta:
         # model = Lead.objects.values('phone_number').annotate(name_count=Count('phone_number')).filter(name_count__gt=1).first()
         # model = tmp
@@ -58,16 +87,9 @@ class LeadUpdateModelForm(forms.ModelForm):
             'patronymic_name',
             'phone_model',
             'company',
-            'line',
-            'atc',
             'active',
         )
 
-    def __init__(self, *args, **kwargs):
-        super(LeadUpdateModelForm, self).__init__(*args,**kwargs)
-        numbers = Lead.objects.all().values('phone_number')
-        
-        self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
@@ -81,7 +103,7 @@ class LeadUpdateModelForm(forms.ModelForm):
         # last_name = self.cleaned_data["last_name"]
         # if first_name + last_name != "Joe Soap":
         #     raise ValidationError("Your name is not Joe Soap")
-
+        
 
 class CompanyModelForm(forms.ModelForm):
     class Meta:
