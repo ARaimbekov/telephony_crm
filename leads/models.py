@@ -44,6 +44,8 @@ class Lead(models.Model):
     converted_date = models.DateTimeField(null=True, blank=True)
     
 
+    class Meta:
+        unique_together = ('mac_address', 'line',)
 
     objects = LeadManager()
 
@@ -52,21 +54,21 @@ class Lead(models.Model):
 
 
 class Company(models.Model):
-    name = models.CharField(max_length=50, verbose_name='компании')
+    name = models.CharField(max_length=50, unique=True, verbose_name='компании')
 
     def __str__(self):
         return self.name
 
 
 class Apparats(models.Model):
-    name = models.CharField(max_length=50, verbose_name='модель')
+    name = models.CharField(max_length=50, unique=True, verbose_name='модель')
 
     def __str__(self):
         return self.name
 
 
 class Number(models.Model):
-    name = models.CharField(max_length=30, verbose_name='Номер телефона 2')
+    name = models.CharField(max_length=30, unique=True, verbose_name='Номер телефона 2')
 
     def __str__(self):
         return self.name
