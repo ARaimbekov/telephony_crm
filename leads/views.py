@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 def export_to_csv(request):
     response = HttpResponse(content_type='application/ms-excel') 
-    response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.datetime.now())+'.xls' 
+    response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.datetime.now())+'.csv' 
     wb = xlwt.Workbook(encoding='utf-8')
     ws = wb.add_sheet('Выгрузка-таблицы ') 
     row_num = 0 
@@ -41,18 +41,18 @@ def export_to_csv(request):
     font_style.font.bold = True 
 
     columns = (
-        'Имя', 
-        'Фамилия', 
-        'Отчество', 
-        'Номер телефона', 
-        'Мак-адрес', 
-        'Модель телефона', 
-        'Компания',
-        'Линия',
-        'АТС',
-        'Дата-добавления', 
-        'Дата-изменения', 
-        'Активация'
+        'first_name', 
+        'last_name', 
+        'patronymic_name', 
+        'phone_number', 
+        'mac_address', 
+        'phone_model', 
+        'company',
+        'line',
+        'atc',
+        'date_added', 
+        'update_added', 
+        'active'
         ) 
 
     for col_num in range(len(columns)): 
@@ -635,6 +635,9 @@ def lead_create(request):
         if form.is_valid():
             form.save()
             return redirect("/leads")
+
+        else:
+            return redirect("/leads")    
     context = {
         "form": form
     }

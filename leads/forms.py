@@ -11,8 +11,6 @@ User = get_user_model()
 
 class LeadCreateModelForm(forms.ModelForm):
     class Meta:
-        # model = Lead.objects.values('phone_number').annotate(name_count=Count('phone_number')).filter(name_count__gt=1).first()
-        # model = tmp
         model = Lead
         fields = (
             'phone_number',
@@ -34,21 +32,14 @@ class LeadCreateModelForm(forms.ModelForm):
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
-        # if data != "Joe":
-        #     raise ValidationError("Your name is not Joe")
         return data
 
     def clean(self):
         pass
-        # first_name = self.cleaned_data["first_name"]
-        # last_name = self.cleaned_data["last_name"]
-        # if first_name + last_name != "Joe Soap":
-        #     raise ValidationError("Your name is not Joe Soap")
+
 
 class LeadUpdateModelForm(forms.ModelForm):
     class Meta:
-        # model = Lead.objects.values('phone_number').annotate(name_count=Count('phone_number')).filter(name_count__gt=1).first()
-        # model = tmp
         model = Lead
         fields = (
             'phone_number',
@@ -71,16 +62,12 @@ class LeadUpdateModelForm(forms.ModelForm):
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
-        # if data != "Joe":
-        #     raise ValidationError("Your name is not Joe")
+
         return data
 
     def clean(self):
         pass
-        # first_name = self.cleaned_data["first_name"]
-        # last_name = self.cleaned_data["last_name"]
-        # if first_name + last_name != "Joe Soap":
-        #     raise ValidationError("Your name is not Joe Soap")
+
 
 
 class CompanyModelForm(forms.ModelForm):
