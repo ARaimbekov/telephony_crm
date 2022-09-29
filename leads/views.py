@@ -31,17 +31,12 @@ from .forms import (
 logger = logging.getLogger(__name__)
 
 
-
-def export_to_csv(request):
-    response = HttpResponse(content_type='application/ms-excel') 
-    response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.datetime.now())+'.csv' 
-    wb = xlwt.Workbook(encoding='utf-8')
-    ws = wb.add_sheet('Выгрузка-таблицы ') 
-    row_num = 0 
-    font_style = xlwt.XFStyle()
-    font_style.font.bold = True 
-
-    columns = (
+def export_to_csv(reuest): 
+    leads = Lead.objects.all() 
+    response = HttpResponse('') 
+    response['Content-Disposition'] = 'attachment; filename=profile_export.csv'
+    writer = csv.writer(response,  delimiter =';',quotechar =',') 
+    writer.writerow([
         'first_name', 
         'last_name', 
         'patronymic_name', 
@@ -54,12 +49,9 @@ def export_to_csv(request):
         'date_added', 
         'update_added', 
         'active'
-        ) 
+        ])
 
-    for col_num in range(len(columns)): 
-        ws.write(row_num,col_num,columns[col_num], font_style)
-    
-    rows = Lead.objects.filter().values_list(
+    leads_fields = leads.values_list(
         'first_name', 
         'last_name', 
         'patronymic_name', 
@@ -72,21 +64,69 @@ def export_to_csv(request):
         'date_added', 
         'update_added', 
         'active'
-        )
+    )
 
-    for row in rows:
-        row_list = list (row)
-        row_list[3] = Number.objects.get(pk=row_list[3])
-        row_list[6] = Apparats.objects.get(pk=row_list[6])
-        row_list[5] = Company.objects.get(pk=row_list[5])
-        row=tuple(row_list)
-        row_num += 1
+    for lied in leads_fields: 
+        writer.writerow(lied) 
+    return response 
 
-        for col_num in range(len(row)):
-            ws.write(row_num,col_num,str(row[col_num]))
-    wb.save(response)
 
-    return response
+
+# def export_to_exel(request):
+#     response = HttpResponse(content_type='application/ms-excel') 
+#     response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.datetime.now())+'.csv' 
+#     wb = xlwt.Workbook(encoding='utf-8')
+#     ws = wb.add_sheet('Выгрузка-таблицы ') 
+#     row_num = 0 
+#     font_style = xlwt.XFStyle()
+#     font_style.font.bold = True 
+
+#     columns = (
+#         'first_name', 
+#         'last_name', 
+#         'patronymic_name', 
+#         'phone_number', 
+#         'mac_address', 
+#         'phone_model', 
+#         'company',
+#         'line',
+#         'atc',
+#         'date_added', 
+#         'update_added', 
+#         'active'
+#         ) 
+
+#     for col_num in range(len(columns)): 
+#         ws.write(row_num,col_num,columns[col_num], font_style)
+    
+#     rows = Lead.objects.filter().values_list(
+#         'first_name', 
+#         'last_name', 
+#         'patronymic_name', 
+#         'phone_number', 
+#         'mac_address', 
+#         'phone_model', 
+#         'company', 
+#         'line',
+#         'atc',
+#         'date_added', 
+#         'update_added', 
+#         'active'
+#         )
+
+#     for row in rows:
+#         row_list = list (row)
+#         row_list[3] = Number.objects.get(pk=row_list[3])
+#         row_list[6] = Apparats.objects.get(pk=row_list[6])
+#         row_list[5] = Company.objects.get(pk=row_list[5])
+#         row=tuple(row_list)
+#         row_num += 1
+
+#         for col_num in range(len(row)):
+#             ws.write(row_num,col_num,str(row[col_num]))
+#     wb.save(response)
+
+#     return response
 
 
 class SignupView(generic.CreateView):
