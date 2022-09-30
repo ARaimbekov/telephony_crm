@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 def export_to_csv(reuest): 
+    row_num = 0 
     leads = Lead.objects.all() 
     response = HttpResponse('') 
     response['Content-Disposition'] = 'attachment; filename=profile_export.csv'
@@ -51,7 +52,7 @@ def export_to_csv(reuest):
         'active'
         ])
 
-    leads_fields = leads.values_list(
+    rows = leads.values_list(
         'first_name', 
         'last_name', 
         'patronymic_name', 
@@ -66,8 +67,14 @@ def export_to_csv(reuest):
         'active'
     )
 
-    for lied in leads_fields: 
-        writer.writerow(lied) 
+    for row in rows:
+        row_list = list (row)
+        row_list[3] = Number.objects.get(pk=row_list[3])
+        row_list[5] = Apparats.objects.get(pk=row_list[5])
+        row_list[6] = Company.objects.get(pk=row_list[6])
+        row=tuple(row_list)
+        writer.writerow(row) 
+
     return response 
 
 
@@ -382,7 +389,7 @@ class LeadDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
 def lead_delete(request, pk):
     lead = Lead.objects.get(id=pk)
     lead.delete()
-    return redirect("/leads")
+    return redirect("leads:lead-list")
 
 
 class AssignAgentView(OrganisorAndLoginRequiredMixin, generic.FormView):
@@ -1288,7 +1295,7 @@ class NumberDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
     template_name = "leads/number_delete.html"
 
     def get_success_url(self):
-        return reverse("leads:lead-list")
+        return reverse("number")
 
     def get_queryset(self):
         user = self.request.user
@@ -1299,7 +1306,7 @@ class NumberDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
 def lead_delete(request, pk):
     lead = Number.objects.get(id=pk)
     lead.delete()
-    return redirect("/number")
+    return redirect("number")
 
 
 
