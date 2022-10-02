@@ -21,7 +21,7 @@ class LeadManager(models.Manager):
 
 
 class Lead(models.Model):
-    phone_number = models.OneToOneField("Number", on_delete=models.PROTECT, verbose_name='Номер телефона')     
+    phone_number = models.OneToOneField("Number", on_delete=models.PROTECT, verbose_name='Номер телефона')    
     mac_address = models.CharField(max_length=15, verbose_name='MAC-Адрес')    
     first_name = models.CharField(max_length=20, verbose_name='Имя')
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')

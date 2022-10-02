@@ -29,6 +29,10 @@ class LeadCreateModelForm(forms.ModelForm):
         super(LeadCreateModelForm, self).__init__(*args,**kwargs)
         numbers = Lead.objects.all().values('phone_number')
         self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
+        self.fields['phone_number'].empty_label = "номер телефона не выбрана"
+        self.fields['company'].empty_label = "компания не выбрана"
+        self.fields['phone_model'].empty_label = "модель телефона не выбрана"
+
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
