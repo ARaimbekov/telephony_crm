@@ -82,6 +82,8 @@ class LeadModelForm(forms.ModelForm):
             'patronymic_name',
             'phone_model',
             'company',
+            'line',
+            'atc',
             'active',
         )
 
