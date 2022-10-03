@@ -285,7 +285,7 @@ def apparat_create(request):
         form = ApparatModelForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect("apparat")
+            return redirect("apparats")
     context = {
         "form": form
     }
@@ -315,7 +315,7 @@ def apparat_update(request, pk):
         form = ApparatModelForm(request.POST, instance=lead)
         if form.is_valid():
             form.save()
-            return redirect("apparat")
+            return redirect("apparats")
     context = {
         "form": form,
         "lead": lead
