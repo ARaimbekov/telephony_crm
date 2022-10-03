@@ -32,7 +32,7 @@ INSTALLED_APPS = [
 
     # Local apps
     'leads',
-    'agents',
+    # 'agents',
 ]
 
 MIDDLEWARE = [

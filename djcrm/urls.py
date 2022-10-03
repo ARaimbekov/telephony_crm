@@ -10,13 +10,12 @@ from django.contrib.auth.views import (
     PasswordResetCompleteView
 )
 from django.urls import path, include
-from leads.views import landing_page, LandingPageView, SignupView, DashboardView, CompanyListView, ApparatListView, NumberListView, export_to_csv
+from leads.views import *
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', LandingPageView.as_view(), name='landing-page'),
-    path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('leads/',  include('leads.urls', namespace="leads")),
     path('agents/',  include('agents.urls', namespace="agents")),
     path('signup/', SignupView.as_view(), name='signup'),
@@ -26,9 +25,9 @@ urlpatterns = [
     path('password-reset-complete/', PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('company/', CompanyListView.as_view(), name='company'),
-    path('apparats/', ApparatListView.as_view(), name='apparats'),
-    path('number/', NumberListView.as_view(), name='number'),
+    path('company/', company_list, name='company'),
+    path('apparats/', apparat_list, name='apparats'),
+    path('number/', number_list, name='number'),
     # path('company/', include('leads.urls', namespace="company"))
 ]
 
