@@ -36,9 +36,19 @@ class LeadCreateModelForm(forms.ModelForm):
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
+
         return data
 
+
+
     def clean(self):
+        # cleaned_data = self.cleaned_data
+        # if Lead.objects.filter(mac_address=cleaned_data['mac_address'], line=self.line).exists():
+
+        #     raise ValidationError(
+        #           'Solution with this Name already exists for this problem')
+
+        # return cleaned_data
         pass
 
 

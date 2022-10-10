@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
+import re
 
 
 class User(AbstractUser):
@@ -22,7 +24,15 @@ class LeadManager(models.Manager):
 
 class Lead(models.Model):
     phone_number = models.OneToOneField("Number", unique=True, on_delete=models.PROTECT, verbose_name='Номер телефона')    
-    mac_address = models.CharField(max_length=15, verbose_name='MAC-Адрес')    
+    mac_address = models.CharField(max_length=12, verbose_name='MAC-Адрес', validators = [
+        RegexValidator(
+            regex=r'^([0-9a-f]{2}){5}([0-9a-f]{2})$',
+            message = 'Не правильный ввод, пример ввода: 2c549188c9e3',
+            code = 'invalid',
+            inverse_match = False,
+            flags = re.IGNORECASE
+        )
+    ])      
     first_name = models.CharField(max_length=20, verbose_name='Имя')
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')
     patronymic_name = models.CharField(max_length=20, verbose_name='Отчество')
@@ -31,12 +41,13 @@ class Lead(models.Model):
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
     update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
     active = models.BooleanField(default=True)
-    line = models.CharField(max_length=20, verbose_name='Линия')
-    atc = models.CharField(max_length=20, verbose_name='ATC')
+    line = models.CharField(max_length=5, verbose_name='Линия')
+    atc = models.CharField(max_length=25, verbose_name='ATC')
 
 
     class Meta:
-        unique_together = ('mac_address', 'line',)
+        unique_together = ['mac_address', 'line']
+
 
     objects = LeadManager()
 
