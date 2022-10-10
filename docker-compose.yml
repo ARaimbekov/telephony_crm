@@ -13,8 +13,6 @@ services:
 
   web:
     build: .
-    command: python3 manage.py migrate
-    # command: python manage.py runserver 0.0.0.0:8000
     command: gunicorn --bind 0.0.0.0:8080 djcrm.wsgi
     volumes:
       - .:/code
