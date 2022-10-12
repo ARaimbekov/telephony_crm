@@ -154,11 +154,46 @@ def landing_page(request):
 
 
 def lead_list(request):
-    leads = Lead.objects.all()
+    search_number_query = request.GET.get('number', '',)
+    search_mac_query = request.GET.get('mac', '',)
+    search_name_query = request.GET.get('name', '', )
+        
+    if search_number_query:
+        leads = Lead.objects.filter(phone_number__in=Number.objects.filter(name__icontains=search_number_query))
+    elif search_mac_query:
+        leads = Lead.objects.filter(mac_address__icontains=search_mac_query)
+    elif search_name_query:
+        leads = Lead.objects.filter(last_name__icontains=search_name_query)
+
+    else:
+        leads = Lead.objects.all()
+
     context = {
         "leads": leads
     }
     return render(request, "leads/lead_list.html", context)
+
+# def lead_list(request):
+#     leads = Lead.objects.all()
+
+#     results = []
+
+#     if request.method == "GET":
+
+#         query = request.GET.get('search')
+
+#         if query == '':
+
+#             query = 'None'
+        
+#         results = Lead.objects.all()
+
+#     context = {
+#         "leads": leads,
+#         "query": query,
+#         "results": results
+#     }
+#     return render(request, "leads/lead_list.html", context)
 
 
 def lead_detail(request, pk):
