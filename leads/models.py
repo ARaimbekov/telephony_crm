@@ -2,7 +2,11 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
-import re
+import re, uuid 
+from uuid import uuid4
+from django_extensions.db.fields import ShortUUIDField
+import shortuuid
+
 
 
 class User(AbstractUser):
@@ -46,7 +50,7 @@ class Lead(models.Model):
     active = models.BooleanField(default=True)
     line = models.CharField(max_length=5, verbose_name='Линия')
     atc = models.CharField(max_length=25, verbose_name='ATC')
-
+    passwd = ShortUUIDField(max_length=22, unique=True, editable=False, default=shortuuid.uuid, verbose_name='Пароль')
 
     class Meta:
         unique_together = ['mac_address', 'line']
