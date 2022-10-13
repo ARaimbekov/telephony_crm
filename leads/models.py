@@ -6,11 +6,13 @@ import re
 
 
 class User(AbstractUser):
+    id = models.AutoField(primary_key=True)
     is_organisor = models.BooleanField(default=True)
     is_agent = models.BooleanField(default=False)
 
 
 class UserProfile(models.Model):
+    id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
 
     def __str__(self):
@@ -23,6 +25,7 @@ class LeadManager(models.Manager):
 
 
 class Lead(models.Model):
+    id = models.AutoField(primary_key=True)
     phone_number = models.OneToOneField("Number", unique=True, on_delete=models.PROTECT, verbose_name='Номер телефона')    
     mac_address = models.CharField(max_length=12, verbose_name='MAC-Адрес', validators = [
         RegexValidator(
@@ -56,6 +59,7 @@ class Lead(models.Model):
 
 
 class Company(models.Model):
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50, unique=True, verbose_name='компании')
 
     def __str__(self):
@@ -63,6 +67,7 @@ class Company(models.Model):
 
 
 class Apparats(models.Model):
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50, unique=True, verbose_name='модель')
 
     def __str__(self):
@@ -70,6 +75,7 @@ class Apparats(models.Model):
 
 
 class Number(models.Model):
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=30, unique=True, verbose_name='Номер телефона 2')
 
     def __str__(self):
