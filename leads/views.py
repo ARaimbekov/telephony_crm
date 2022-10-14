@@ -390,11 +390,6 @@ def number_detail(request, pk):
 
 
 def number_create(request):
-    # input_str = '1000-1100'
-    # num1, num2 = input_str.split('-')
-    # for i in range(num1, num2+1):
-    #     Number.objects.create(name=i).save()
-
     form = NumberModelForm()
     if request.method == "POST":
         form = NumberModelForm(request.POST)
@@ -404,9 +399,18 @@ def number_create(request):
                 for i in range(num1, num2+1):
                     Number.objects.create(name=i).save()
                 return redirect("number")
+            elif " " in request.POST["name"]: 
+                num = [int(i) for i in request.POST["name"].split()]
+                for i in num:
+                    Number.objects.create(name=i).save()
+                return redirect("number")
+            elif "," in request.POST["name"]: 
+                num = [int(i) for i in request.POST["name"].split(',')]
+                for i in num:
+                    Number.objects.create(name=i).save()
+                return redirect("number")
             else:
-                if form.is_valid():
-                    form.save()
+                form.save()
                 return redirect("number")
     context = {
         "form": form
