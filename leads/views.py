@@ -405,8 +405,7 @@ def number_create(request):
                     Number.objects.create(name=i).save()
                 return redirect("number")
             else:
-                if form.is_valid():
-                    form.save()
+                form.save()
                 return redirect("number")
     context = {
         "form": form
