@@ -3,14 +3,17 @@
       <nav class="md:ml-auto flex flex-wrap items-center text-base justify-center">
         {% if user.is_superuser %}
         <div>
-          <a class="hover:text-blue-500" style="margin-left: -100px;" href="{% url 'company' %}"> | &nbsp;&nbsp;&nbsp;&nbsp;Компании</a>
+          <a class="hover:text-blue-500" style="margin-left: -190px;" href="{% url 'company' %}"> | &nbsp;&nbsp;&nbsp;&nbsp;Компании</a>
       </div>
         <div>
-        <a class="hover:text-blue-500" style="margin-left: 100px;" href="{% url 'apparats' %}"> Модели телефонов</a>
+        <a class="hover:text-blue-500" style="margin-left: -10px;" href="{% url 'apparats' %}"> Модели телефонов</a>
       </div>
         <div>
-        <a class="hover:text-blue-500" style="margin-left: 100px;" href="{% url 'number' %}"> Нумерация&nbsp;&nbsp;&nbsp;&nbsp; | </a>
+        <a class="hover:text-blue-500" style="margin-left: 100px;" href="{% url 'number' %}"> Нумерация</a>
       </div>
+      <div>
+        <a class="hover:text-blue-500" style="margin-left: 100px;" href="{% url 'atc' %}">ATC &nbsp;&nbsp;&nbsp;&nbsp; | </a>
+      </div> 
       <div>
         <a class="hover:text-blue-500" href="{% url 'leads:lead-list' %}" style="margin-left: 100px;">Телефоны (MAC)</a>
       </div>        

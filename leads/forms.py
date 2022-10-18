@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UsernameField
-from .models import Lead, Company, Apparats, Number
+from .models import Lead, Company, Apparats, Number, Atc
 from itertools import chain
 from django.db.models import Count
 from django.forms import inlineformset_factory
@@ -23,6 +23,7 @@ class LeadCreateModelForm(forms.ModelForm):
             'line',
             'atc',
             'active',
+            'reservation',
         )
 
     def __init__(self,*args,**kwargs):
@@ -156,6 +157,29 @@ class NumberModelForm(forms.ModelForm):
         model = Number
         fields = (
             'name',
+        )
+
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+        # if data != "Joe":
+        #     raise ValidationError("Your name is not Joe")
+        return data
+
+    def clean(self):
+        pass
+        # first_name = self.cleaned_data["first_name"]
+        # last_name = self.cleaned_data["last_name"]
+        # if first_name + last_name != "Joe Soap":
+        #     raise ValidationError("Your name is not Joe Soap")
+
+
+class AtcModelForm(forms.ModelForm):
+    class Meta:
+        model = Atc
+        fields = (
+            'name',
+            'ip_address',
         )
 
 

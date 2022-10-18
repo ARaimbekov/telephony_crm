@@ -22,6 +22,10 @@ urlpatterns = [
     path('<int:pk>/apparats_update/', apparat_update, name='apparats_update'),
     path('<int:pk>/apparats_delete/', ApparatDeleteView.as_view(), name='apparats_delete'),
 
+    path('atc_create/', atc_create, name='atc_create'),
+    path('<int:pk>/atc_update/', atc_update, name='atc_update'),
+    path('<int:pk>/atc_delete/', atc_delete, name='atc_delete'),
+
     path('create-number/', number_create, name='number-create'),
     path('<int:pk>/number_delete/', NumberDeleteView.as_view(), name='number_delete'),
 
