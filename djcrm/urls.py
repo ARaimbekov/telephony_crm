@@ -28,6 +28,8 @@ urlpatterns = [
     path('company/', company_list, name='company'),
     path('apparats/', apparat_list, name='apparats'),
     path('number/', number_list, name='number'),
+    path('atc/', atc_list, name='atc'),
+    path('error/', error_page, name='error'),
     # path('company/', include('leads.urls', namespace="company"))
 ]
 

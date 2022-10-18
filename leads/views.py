@@ -12,7 +12,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.views import generic
 from agents.mixins import OrganisorAndLoginRequiredMixin
-from .models import Lead, Company, Apparats, Number
+from .models import Lead, Company, Apparats, Number, Atc
 from .forms import (
     LeadForm, 
     LeadCreateModelForm, 
@@ -21,6 +21,7 @@ from .forms import (
     ApparatModelForm,
     NumberModelForm,
     CustomUserCreationForm,
+    AtcModelForm,
 )
 
 
@@ -173,28 +174,6 @@ def lead_list(request):
         "leads": leads
     }
     return render(request, "leads/lead_list.html", context)
-
-# def lead_list(request):
-#     leads = Lead.objects.all()
-
-#     results = []
-
-#     if request.method == "GET":
-
-#         query = request.GET.get('search')
-
-#         if query == '':
-
-#             query = 'None'
-        
-#         results = Lead.objects.all()
-
-#     context = {
-#         "leads": leads,
-#         "query": query,
-#         "results": results
-#     }
-#     return render(request, "leads/lead_list.html", context)
 
 
 def lead_detail(request, pk):
@@ -429,6 +408,83 @@ class NumberDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
         return Number.objects.all()
 
 
+def atc_list(request):
+    leads = Atc.objects.all()
+    context = {
+        "leads": leads
+    }
+    return render(request, "leads/atc.html", context)
+
+
+def atc_detail(request, pk):
+    lead = Atc.objects.get(id=pk)
+    context = {
+        "lead": lead
+    }
+    return render(request, "leads/atc_detail.html", context)
+
+
+def atc_create(request):
+    form = AtcModelForm()
+    if request.method == "POST":
+        form = AtcModelForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("atc")
+    context = {
+        "form": form
+    }
+    return render(request, "leads/atc_create.html", context)
+
+
+def atc_update(request, pk):
+    lead = Atc.objects.get(id=pk)
+    form = AtcModelForm(instance=lead)
+    if request.method == "POST":
+        form = AtcModelForm(request.POST, instance=lead)
+        if form.is_valid():
+            form.save()
+            return redirect("atc")
+    context = {
+        "form": form,
+        "lead": lead
+    }
+    return render(request, "leads/atc_update.html", context)
+
+
+# class AtcDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
+#     template_name = "leads/atc_delete.html"
+
+#     def get_success_url(self):
+#         return reverse("atc")
+
+#     def get_queryset(self):
+#         user = self.request.user
+#         return Atc.objects.all()
+
+
+
+def atc_delete(request, pk):    
+    lead = Atc.objects.get(id=pk)
+    form = AtcModelForm(instance=lead)
+    if request.method == "POST":
+        form = AtcModelForm(request.POST, instance=lead)
+        try:
+            if form.is_valid():
+                lead.delete()
+                return redirect("atc")
+        except Exception as e:
+            return redirect("error")  
+
+    context = {
+        "form": form,
+        "lead": lead
+    }
+    return render(request, "leads/atc_delete.html", context)    
+
+
+def error_page(request):
+    return render(request, "error.html")
 
 class LeadJsonView(generic.View):
 

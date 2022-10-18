@@ -40,13 +40,14 @@ class Lead(models.Model):
     first_name = models.CharField(max_length=20, verbose_name='Имя')
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')
     patronymic_name = models.CharField(max_length=20, verbose_name='Отчество')
-    phone_model = models.ManyToManyField("Apparats",  verbose_name='Модель телефона')
-    company = models.ManyToManyField("company", verbose_name='Компания')
+    phone_model = models.ForeignKey("Apparats", on_delete=models.PROTECT, verbose_name='Модель телефона')
+    company = models.ForeignKey("company", on_delete=models.PROTECT, verbose_name='Компания')
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
     update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
     active = models.BooleanField(default=True)
+    reservation = models.BooleanField(default=False)
     line = models.CharField(max_length=5, verbose_name='Линия')
-    atc = models.CharField(max_length=25, verbose_name='ATC')
+    atc = models.ForeignKey("atc", on_delete=models.PROTECT, verbose_name='Atc сервер')
     passwd = ShortUUIDField(max_length=22, unique=True, editable=False, default=shortuuid.uuid, verbose_name='Пароль')
 
     class Meta:
@@ -60,14 +61,14 @@ class Lead(models.Model):
 
 
 class Company(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name='компании')
+    name = models.CharField(max_length=50, unique=True, verbose_name='Компании')
 
     def __str__(self):
         return self.name
 
 
 class Apparats(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name='модель')
+    name = models.CharField(max_length=50, unique=True, verbose_name='Модель')
 
     def __str__(self):
         return self.name
@@ -75,6 +76,14 @@ class Apparats(models.Model):
 
 class Number(models.Model):
     name = models.CharField(max_length=30, unique=True, verbose_name='Номер телефона')
+
+    def __str__(self):
+        return self.name
+
+
+class Atc(models.Model):
+    name = models.CharField(max_length=30, unique=True, verbose_name='Наименование')
+    ip_address = models.CharField(max_length=30, unique=True, verbose_name='IP адрес')
 
     def __str__(self):
         return self.name
