@@ -36,18 +36,18 @@ class Lead(models.Model):
             inverse_match = False,
             flags = re.IGNORECASE
         )
-    ])      
+    ])
     first_name = models.CharField(max_length=20, verbose_name='Имя')
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')
     patronymic_name = models.CharField(max_length=20, verbose_name='Отчество')
-    phone_model = models.ForeignKey("Apparats", on_delete=models.PROTECT, verbose_name='Модель телефона')
-    company = models.ForeignKey("company", on_delete=models.PROTECT, verbose_name='Компания')
+    phone_model = models.ManyToManyField("Apparats", verbose_name='Модель телефона')
+    company = models.ManyToManyField("company", verbose_name='Компания')
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
     update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
     active = models.BooleanField(default=True)
     reservation = models.BooleanField(default=False)
     line = models.CharField(max_length=5, verbose_name='Линия')
-    atc = models.ForeignKey("atc", on_delete=models.PROTECT, verbose_name='Atc сервер')
+    atc = models.ManyToManyField("atc", verbose_name='Atc сервер')
     passwd = ShortUUIDField(max_length=22, unique=True, editable=False, default=shortuuid.uuid, verbose_name='Пароль')
 
     class Meta:

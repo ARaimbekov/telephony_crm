@@ -372,25 +372,28 @@ def number_create(request):
     form = NumberModelForm()
     if request.method == "POST":
         form = NumberModelForm(request.POST)
-        if form.is_valid():
-            if "-" in request.POST["name"]:
-                num1, num2 = [int(i) for i in request.POST["name"].split('-')]
-                for i in range(num1, num2+1):
-                    Number.objects.create(name=i).save()
-                return redirect("number")
-            elif " " in request.POST["name"]: 
-                num = [int(i) for i in request.POST["name"].split()]
-                for i in num:
-                    Number.objects.create(name=i).save()
-                return redirect("number")
-            elif "," in request.POST["name"]: 
-                num = [int(i) for i in request.POST["name"].split(',')]
-                for i in num:
-                    Number.objects.create(name=i).save()
-                return redirect("number")
-            else:
-                form.save()
-                return redirect("number")
+        try:
+            if form.is_valid():
+                if "-" in request.POST["name"]:
+                    num1, num2 = [int(i) for i in request.POST["name"].split('-')]
+                    for i in range(num1, num2+1):
+                        Number.objects.create(name=i).save()
+                    return redirect("number")
+                elif " " in request.POST["name"]: 
+                    num = [int(i) for i in request.POST["name"].split()]
+                    for i in num:
+                        Number.objects.create(name=i).save()
+                    return redirect("number")
+                elif "," in request.POST["name"]: 
+                    num = [int(i) for i in request.POST["name"].split(',')]
+                    for i in num:
+                        Number.objects.create(name=i).save()
+                    return redirect("number")
+                else:
+                    form.save()
+                    return redirect("number")
+        except Exception as e:
+            return redirect("error")  
     context = {
         "form": form
     }
@@ -428,9 +431,12 @@ def atc_create(request):
     form = AtcModelForm()
     if request.method == "POST":
         form = AtcModelForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("atc")
+        try:
+            if form.is_valid():
+                form.save()
+                return redirect("atc")
+        except Exception as e:
+            return redirect("error")  
     context = {
         "form": form
     }
