@@ -118,9 +118,11 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.line }}
                                 </td>
+                                {% for atc in lead.atc.all %}
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.atc }}
-                                </td>                                                                
+                                    {{ atc.name }}
+                                </td>
+                                {% endfor %}                                                                
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.date_added }}
                                 </td>

@@ -4,6 +4,8 @@ import xlwt
 import logging
 import datetime
 from django import contrib
+import random
+import string
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.http.response import JsonResponse
@@ -189,8 +191,23 @@ def lead_create(request):
     if request.method == "POST":
         form = LeadCreateModelForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect("/leads")
+            if ('reservation') in request.POST:
+                letters = string.digits
+                new_mac = '000000' + ''.join(random.choice(letters) for i in range(6))
+                temp = request.POST.copy()
+                temp['mac_address'] = new_mac
+                request.POST = temp
+                form = LeadCreateModelForm(request.POST)
+                form.save()
+                return redirect("/leads")
+            # elif "" in request.POST["mac_address"]:
+            elif not request.POST["mac_address"]:
+                print(request.POST)
+                print("hahting")
+                return redirect("error")  
+            else:
+                form.save()
+                return redirect("/leads")
     context = {
         "form": form
     }
@@ -372,25 +389,28 @@ def number_create(request):
     form = NumberModelForm()
     if request.method == "POST":
         form = NumberModelForm(request.POST)
-        if form.is_valid():
-            if "-" in request.POST["name"]:
-                num1, num2 = [int(i) for i in request.POST["name"].split('-')]
-                for i in range(num1, num2+1):
-                    Number.objects.create(name=i).save()
-                return redirect("number")
-            elif " " in request.POST["name"]: 
-                num = [int(i) for i in request.POST["name"].split()]
-                for i in num:
-                    Number.objects.create(name=i).save()
-                return redirect("number")
-            elif "," in request.POST["name"]: 
-                num = [int(i) for i in request.POST["name"].split(',')]
-                for i in num:
-                    Number.objects.create(name=i).save()
-                return redirect("number")
-            else:
-                form.save()
-                return redirect("number")
+        try:
+            if form.is_valid():
+                if "-" in request.POST["name"]:
+                    num1, num2 = [int(i) for i in request.POST["name"].split('-')]
+                    for i in range(num1, num2+1):
+                        Number.objects.create(name=i).save()
+                    return redirect("number")
+                elif " " in request.POST["name"]: 
+                    num = [int(i) for i in request.POST["name"].split()]
+                    for i in num:
+                        Number.objects.create(name=i).save()
+                    return redirect("number")
+                elif "," in request.POST["name"]: 
+                    num = [int(i) for i in request.POST["name"].split(',')]
+                    for i in num:
+                        Number.objects.create(name=i).save()
+                    return redirect("number")
+                else:
+                    form.save()
+                    return redirect("number")
+        except Exception as e:
+            return redirect("error")  
     context = {
         "form": form
     }
@@ -428,9 +448,12 @@ def atc_create(request):
     form = AtcModelForm()
     if request.method == "POST":
         form = AtcModelForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("atc")
+        try:
+            if form.is_valid():
+                form.save()
+                return redirect("atc")
+        except Exception as e:
+            return redirect("error")  
     context = {
         "form": form
     }

@@ -28,7 +28,7 @@ class LeadManager(models.Manager):
 
 class Lead(models.Model):
     phone_number = models.OneToOneField("Number", unique=True, on_delete=models.PROTECT, verbose_name='Номер телефона')    
-    mac_address = models.CharField(max_length=12, verbose_name='MAC-Адрес', validators = [
+    mac_address = models.CharField(max_length=12,blank=True, verbose_name='MAC-Адрес', validators = [
         RegexValidator(
             regex=r'^([0-9a-f]{2}){5}([0-9a-f]{2})$',
             message = 'Не правильный ввод, пример ввода: 2c549188c9e3',
@@ -36,18 +36,18 @@ class Lead(models.Model):
             inverse_match = False,
             flags = re.IGNORECASE
         )
-    ])      
+    ])
     first_name = models.CharField(max_length=20, verbose_name='Имя')
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')
     patronymic_name = models.CharField(max_length=20, verbose_name='Отчество')
-    phone_model = models.ForeignKey("Apparats", on_delete=models.PROTECT, verbose_name='Модель телефона')
-    company = models.ForeignKey("company", on_delete=models.PROTECT, verbose_name='Компания')
+    phone_model = models.ManyToManyField("Apparats", verbose_name='Модель телефона')
+    company = models.ManyToManyField("company", verbose_name='Компания')
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
     update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
     active = models.BooleanField(default=True)
-    reservation = models.BooleanField(default=False)
+    reservation = models.BooleanField(default=False, verbose_name='Зарезервировать')
     line = models.CharField(max_length=5, verbose_name='Линия')
-    atc = models.ForeignKey("atc", on_delete=models.PROTECT, verbose_name='Atc сервер')
+    atc = models.ManyToManyField("atc", verbose_name='Atc сервер')
     passwd = ShortUUIDField(max_length=22, unique=True, editable=False, default=shortuuid.uuid, verbose_name='Пароль')
 
     class Meta:
@@ -76,6 +76,7 @@ class Apparats(models.Model):
 
 class Number(models.Model):
     name = models.CharField(max_length=30, unique=True, verbose_name='Номер телефона')
+    atc = models.ForeignKey('atc', on_delete=models.PROTECT, verbose_name='атска')
 
     def __str__(self):
         return self.name
