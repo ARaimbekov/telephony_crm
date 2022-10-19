@@ -45,7 +45,7 @@ class Lead(models.Model):
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
     update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
     active = models.BooleanField(default=True)
-    reservation = models.BooleanField(default=False)
+    reservation = models.BooleanField(default=False, verbose_name='Зарезервировать')
     line = models.CharField(max_length=5, verbose_name='Линия')
     atc = models.ManyToManyField("atc", verbose_name='Atc сервер')
     passwd = ShortUUIDField(max_length=22, unique=True, editable=False, default=shortuuid.uuid, verbose_name='Пароль')

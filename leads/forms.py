@@ -14,6 +14,7 @@ class LeadCreateModelForm(forms.ModelForm):
         model = Lead
         fields = (
             'phone_number',
+            'reservation',
             'mac_address',
             'last_name',
             'first_name',
@@ -23,7 +24,6 @@ class LeadCreateModelForm(forms.ModelForm):
             'line',
             'atc',
             'active',
-            'reservation',
         )
 
     def __init__(self,*args,**kwargs):
