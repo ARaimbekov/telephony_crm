@@ -4,6 +4,8 @@ import xlwt
 import logging
 import datetime
 from django import contrib
+import random
+import string
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.http.response import JsonResponse
@@ -189,8 +191,23 @@ def lead_create(request):
     if request.method == "POST":
         form = LeadCreateModelForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect("/leads")
+            if ('reservation') in request.POST:
+                letters = string.digits
+                new_mac = '000000' + ''.join(random.choice(letters) for i in range(6))
+                temp = request.POST.copy()
+                temp['mac_address'] = new_mac
+                request.POST = temp
+                form = LeadCreateModelForm(request.POST)
+                form.save()
+                return redirect("/leads")
+            # elif "" in request.POST["mac_address"]:
+            elif not request.POST["mac_address"]:
+                print(request.POST)
+                print("hahting")
+                return redirect("error")  
+            else:
+                form.save()
+                return redirect("/leads")
     context = {
         "form": form
     }
