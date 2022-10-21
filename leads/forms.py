@@ -7,13 +7,13 @@ from itertools import chain
 from django.db.models import Count
 from django.forms import inlineformset_factory
 
+
 User = get_user_model()
 
 class LeadCreateModelForm(forms.ModelForm):
     class Meta:
         model = Lead
         fields = (
-            'phone_number',
             'reservation',
             'mac_address',
             'last_name',
@@ -23,19 +23,16 @@ class LeadCreateModelForm(forms.ModelForm):
             'company',
             'line',
             'active',
-            'atc',
         )
 
     def __init__(self,*args,**kwargs):
         super(LeadCreateModelForm, self).__init__(*args,**kwargs)
-        numbers = Lead.objects.all().values('phone_number')
-        self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
-        self.fields['phone_number'].empty_label = "номер телефона не выбран"
+        # numbers = Lead.objects.all().values('phone_number')
+        # self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
+        # self.fields['phone_number'].empty_label = "номер телефона не выбран"
         self.fields['company'].empty_label = "компания не выбрана"
         self.fields['phone_model'].empty_label = "модель телефона не выбрана"
         # self.fields['atc'].queryset = Atc.objects.filter(name__in=atc)
-
-
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
