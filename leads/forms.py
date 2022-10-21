@@ -22,20 +22,19 @@ class LeadCreateModelForm(forms.ModelForm):
             'phone_model',
             'company',
             'line',
-            'atc',
             'active',
+            'atc',
         )
 
     def __init__(self,*args,**kwargs):
         super(LeadCreateModelForm, self).__init__(*args,**kwargs)
         numbers = Lead.objects.all().values('phone_number')
-        atc = Number.objects.all().values('name')
         self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
         self.fields['phone_number'].empty_label = "номер телефона не выбран"
         self.fields['company'].empty_label = "компания не выбрана"
         self.fields['phone_model'].empty_label = "модель телефона не выбрана"
         # self.fields['atc'].queryset = Atc.objects.filter(name__in=atc)
-        self.fields['atc'].empty_label = "atc не выбран"
+
 
 
     def clean_first_name(self):
@@ -213,6 +212,32 @@ class CustomUserCreationForm(UserCreationForm):
         model = User
         fields = ("username",)
         field_classes = {'username': UsernameField}
+
+
+class LeadAtcModelForm(forms.ModelForm):
+    class Meta:
+        model = Lead
+        fields = (
+            'atc',
+        )
+
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+
+        return data
+
+
+
+    def clean(self):
+        # cleaned_data = self.cleaned_data
+        # if Lead.objects.filter(mac_address=cleaned_data['mac_address'], line=self.line).exists():
+
+        #     raise ValidationError(
+        #           'Solution with this Name already exists for this problem')
+
+        # return cleaned_data
+        pass
 
 
 # class AssignAgentForm(forms.Form):

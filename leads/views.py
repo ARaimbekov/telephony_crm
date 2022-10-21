@@ -24,6 +24,7 @@ from .forms import (
     NumberModelForm,
     CustomUserCreationForm,
     AtcModelForm,
+    LeadAtcModelForm,
 )
 
 
@@ -186,8 +187,24 @@ def lead_detail(request, pk):
     return render(request, "leads/lead_detail.html", context)
 
 
+def lead_atc_filtering(request):
+    form = LeadAtcModelForm()
+    if request.method == "POST":
+        form = LeadAtcModelForm(request.POST)
+        if form.is_valid():
+            if ('atc') in request.POST:
+                atc_req = request.POST["atc"]
+                return redirect("leads:lead-create")
+                # return atc_req
+    context = {
+        "form": form
+    }
+    return render(request, "leads/lead_atc_filtering.html", context)
+
+
 def lead_create(request):
     form = LeadCreateModelForm()
+    print(lead_atc_filtering.request)
     if request.method == "POST":
         form = LeadCreateModelForm(request.POST)
         if form.is_valid():
@@ -200,10 +217,7 @@ def lead_create(request):
                 form = LeadCreateModelForm(request.POST)
                 form.save()
                 return redirect("/leads")
-            # elif "" in request.POST["mac_address"]:
             elif not request.POST["mac_address"]:
-                print(request.POST)
-                print("hahting")
                 return redirect("error")  
             else:
                 form.save()
