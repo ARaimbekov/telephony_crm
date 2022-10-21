@@ -31,5 +31,6 @@ urlpatterns = [
 
     path('export_table/', export_to_csv, name='export_table'),
     path('export_to_exel/', export_to_exel, name='export_table_exel'),
+    path('phones/', phones, name='phones')
 
 ]

@@ -204,7 +204,6 @@ def lead_atc_filtering(request):
 
 def lead_create(request):
     form = LeadCreateModelForm()
-    print(lead_atc_filtering.request)
     if request.method == "POST":
         form = LeadCreateModelForm(request.POST)
         if form.is_valid():
@@ -223,7 +222,8 @@ def lead_create(request):
                 form.save()
                 return redirect("/leads")
     context = {
-        "form": form
+        "form": form,
+        "atcs": Atc.objects.all()
     }
     return render(request, "leads/lead_create.html", context)
 
@@ -536,3 +536,10 @@ class LeadJsonView(generic.View):
         return JsonResponse({
             "qs": qs,
         })
+
+
+def phones(request):
+    atc = request.GET.get('atc')
+    phones = Number.objects.filter(atc=atc)
+    context = {'phones': phones}
+    return render(request, 'leads/phones.html', context)

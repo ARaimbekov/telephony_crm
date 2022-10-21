@@ -1,0 +1,7 @@
+<select class="custom-select">
+    <option selected>Выберите номер</option>
+    
+    {% for phone in phones %}
+        <option value="{{phone.pk}}">{{ phone.name }}</option>
+    {% endfor %}
+</select>

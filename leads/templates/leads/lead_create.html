@@ -10,7 +10,25 @@
     </div>
     <form method="post" class="mt-5">
         {% csrf_token %}
-        {{ form|crispy }}
+        <!-- {{ form|crispy }} -->
+        <!-- {{ form.phone_number }} -->
+        <select class="custom-select mb-4"
+            name="atc"
+            hx-get="{% url 'leads:phones' %}" 
+            hx-trigger="change" 
+            hx-target="#phones">
+
+            <option selected>Выберите номер</option>
+        
+            {% for atc in atcs %}
+                <option value="{{atc.pk}}">{{ atc.name }}</option>
+            {% endfor %}
+        </select>
+
+        <div id="phones">
+            {% include 'leads/phones.html' %} 
+        </div>
+
         <button type='submit' class="w-full text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">
             Готово
         </button>
