@@ -10,8 +10,10 @@
     </div>
     <form method="post" class="mt-5">
         {% csrf_token %}
-        {{ form.media.js }}
-        {{ form|crispy }}
+        <!-- {{ form|crispy }} -->
+        {% for number in numbers %}
+            {{ number|as_crispy_field }}
+        {% endfor %}
         <button type='submit' class="w-full text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">
             Готово
         </button>

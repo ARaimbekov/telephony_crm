@@ -228,6 +228,10 @@ def lead_update(request, pk):
     }
     return render(request, "leads/lead_update.html", context)
 
+# def lead_load_numbers(request):
+#     atc_id = request.GET.get('atc')
+#     numbers = Number.objects.filter(atc_id=atc_id).order_by('id')
+#     return render(request, "leads/lead_dropdown_list.html", {'numbers': numbers})
 
 class LeadDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
     template_name = "leads/lead_delete.html"

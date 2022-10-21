@@ -31,6 +31,9 @@ urlpatterns = [
     path('atc/', atc_list, name='atc'),
     path('error/', error_page, name='error'),
     # path('company/', include('leads.urls', namespace="company"))
+    path('chaining/', include('smart_selects.urls')), 
+     
+    
 ]
 
 if settings.DEBUG:

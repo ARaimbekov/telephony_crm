@@ -7,6 +7,7 @@ from itertools import chain
 from django.db.models import Count
 from django.forms import inlineformset_factory
 
+
 User = get_user_model()
 
 class LeadCreateModelForm(forms.ModelForm):
@@ -28,9 +29,9 @@ class LeadCreateModelForm(forms.ModelForm):
 
     def __init__(self,*args,**kwargs):
         super(LeadCreateModelForm, self).__init__(*args,**kwargs)
-        numbers = Lead.objects.all().values('phone_number')
-        atc = Number.objects.all().values('name')
-        self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
+        # numbers = Lead.objects.all().values('phone_number')
+        # atc = Number.objects.all().values('name')
+        # self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
         self.fields['phone_number'].empty_label = "номер телефона не выбран"
         self.fields['company'].empty_label = "компания не выбрана"
         self.fields['phone_model'].empty_label = "модель телефона не выбрана"
