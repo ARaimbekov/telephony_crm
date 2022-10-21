@@ -11,7 +11,7 @@ urlpatterns = [
     path('<int:pk>/update/', lead_update, name='lead-update'),
     path('<int:pk>/delete/', LeadDeleteView.as_view(), name='lead-delete'),
     path('create/', lead_create, name='lead-create'),
-    path('atcfiltering/', lead_atc_filtering, name='lead-atc-filtering'),
+    path('phones/', phones, name='phones'),
 
     # path('<int:pk>/', CompanyDetailView.as_view(), name='company_detail'),
     path('create_company/', company_create, name='company_create'),
@@ -31,6 +31,4 @@ urlpatterns = [
 
     path('export_table/', export_to_csv, name='export_table'),
     path('export_to_exel/', export_to_exel, name='export_table_exel'),
-    path('phones/', phones, name='phones')
-
 ]

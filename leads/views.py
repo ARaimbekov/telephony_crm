@@ -24,7 +24,6 @@ from .forms import (
     NumberModelForm,
     CustomUserCreationForm,
     AtcModelForm,
-    LeadAtcModelForm,
 )
 
 
@@ -187,21 +186,6 @@ def lead_detail(request, pk):
     return render(request, "leads/lead_detail.html", context)
 
 
-def lead_atc_filtering(request):
-    form = LeadAtcModelForm()
-    if request.method == "POST":
-        form = LeadAtcModelForm(request.POST)
-        if form.is_valid():
-            if ('atc') in request.POST:
-                atc_req = request.POST["atc"]
-                return redirect("leads:lead-create")
-                # return atc_req
-    context = {
-        "form": form
-    }
-    return render(request, "leads/lead_atc_filtering.html", context)
-
-
 def lead_create(request):
     form = LeadCreateModelForm()
     if request.method == "POST":
@@ -226,6 +210,13 @@ def lead_create(request):
         "atcs": Atc.objects.all()
     }
     return render(request, "leads/lead_create.html", context)
+
+
+def phones(request):
+    atc = request.GET.get('atc')
+    phones = Number.objects.filter(atc=atc)
+    context = {'phones': phones}
+    return render(request, 'leads/phones.html', context)
 
 
 def lead_update(request, pk):
@@ -536,10 +527,3 @@ class LeadJsonView(generic.View):
         return JsonResponse({
             "qs": qs,
         })
-
-
-def phones(request):
-    atc = request.GET.get('atc')
-    phones = Number.objects.filter(atc=atc)
-    context = {'phones': phones}
-    return render(request, 'leads/phones.html', context)
