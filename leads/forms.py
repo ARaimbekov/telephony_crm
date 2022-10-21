@@ -14,6 +14,8 @@ class LeadCreateModelForm(forms.ModelForm):
     class Meta:
         model = Lead
         fields = (
+            'atc',
+            'phone_number',
             'reservation',
             'mac_address',
             'last_name',

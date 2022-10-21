@@ -206,7 +206,7 @@ def lead_create(request):
                 form.save()
                 return redirect("/leads")
     context = {
-        "form": form,
+        "form_context": form,
         "atcs": Atc.objects.all()
     }
     return render(request, "leads/lead_create.html", context)
