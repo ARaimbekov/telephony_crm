@@ -11,7 +11,8 @@ urlpatterns = [
     path('<int:pk>/update/', lead_update, name='lead-update'),
     path('<int:pk>/delete/', LeadDeleteView.as_view(), name='lead-delete'),
     path('create/', lead_create, name='lead-create'),
-    path('phones/', phones, name='phones'),
+    # path('phones/', phones, name='phones'),
+    path('phone/', phone_number, name='lead-phone'),
 
     # path('<int:pk>/', CompanyDetailView.as_view(), name='company_detail'),
     path('create_company/', company_create, name='company_create'),

@@ -2,6 +2,7 @@
 {% load tailwind_filters %}
 {% load crispy_forms_tags %}
 
+
 {% block content %}
 
 <div class="max-w-lg mx-auto">
@@ -11,127 +12,79 @@
     </div>
     <form method="post" class="mt-5">
         {% csrf_token %}
-
-        <div id="div_id_atc_number" class="mb-3"> <label for="id_atc_number"
-                class="block text-gray-700 text-sm font-bold mb-2">
-                Номер atc </label>
-            <div class="mb-3">
-                <div class="relative">
-                    <select
-                        class="border border-red-500 bg-white focus:outline-none border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal text-gray-700"
-                        name="atc" hx-get="{% url 'leads:phones' %}" hx-trigger="change" hx-target="#phones">
-
-                        <option selected>Выберите номер</option>
-
-                        {% for atc in atcs %}
-                        <option value="{{atc.pk}}">{{ atc.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="phones">
-            {% include 'leads/phones.html' %}
-        </div>
-
-        <div id="div_id_reservation" class="mb-3"> <label for="id_reservation"
-                class="block text-gray-700 text-sm font-bold mb-2">
-                Зарезервировать
-            </label> <input type="checkbox" name="reservation" class="checkboxinput  " id="id_reservation"> </div>
-
-        <div id="div_id_mac_address" class="mb-3"> <label for="id_mac_address"
-                class="block text-gray-700 text-sm font-bold mb-2">
-                MAC-Адрес
-            </label> <input type="text" name="mac_address" maxlength="12"
-                class="textinput px-4 appearance-none border-gray-300 leading-normal rounded-lg block py-2 bg-white border focus:outline-none text-gray-700 w-full px-4 appearance-none border-gray-300 leading-normal rounded-lg block py-2 bg-white border focus:outline-none text-gray-700 w-full"
-                id="id_mac_address">
-        </div>
-        <div id="div_id_last_name" class="mb-3"> <label for="id_last_name"
-                class="block text-gray-700 text-sm font-bold mb-2">
-                Фамилия<span class="asteriskField">*</span> </label> <input type="text" name="last_name" 
-                maxlength="20"
-                class="textinput px-4 appearance-none border-gray-300 leading-normal rounded-lg block py-2 bg-white border focus:outline-none text-gray-700 w-full px-4 appearance-none border-gray-300 leading-normal rounded-lg block py-2 bg-white border focus:outline-none text-gray-700 w-full"
-                required="" id="id_last_name"> </div>
-        <div id="div_id_first_name" class="mb-3"> <label for="id_first_name"
-                class="block text-gray-700 text-sm font-bold mb-2">
-                Имя<span class="asteriskField">*</span> </label> <input type="text" name="first_name"
-                maxlength="20"
-                class="textinput px-4 appearance-none border-gray-300 leading-normal rounded-lg block py-2 bg-white border focus:outline-none text-gray-700 w-full px-4 appearance-none border-gray-300 leading-normal rounded-lg block py-2 bg-white border focus:outline-none text-gray-700 w-full"
-                required="" id="id_first_name"> </div>
-
-        <div id="div_id_patronymic_name" class="mb-3"> <label for="id_patronymic_name"
-                class="block text-gray-700 text-sm font-bold mb-2">
-                Отчество<span class="asteriskField">*</span> </label> <input type="text" name="patronymic_name"
-                maxlength="20"
-                class="textinput px-4 appearance-none border-gray-300 leading-normal rounded-lg block py-2 bg-white border focus:outline-none text-gray-700 w-full px-4 appearance-none border-gray-300 leading-normal rounded-lg block py-2 bg-white border focus:outline-none text-gray-700 w-full"
-                required="" id="id_patronymic_name"> </div>
-        <div id="div_id_phone_model" class="mb-3"> <label for="id_phone_model"
-                class="block text-gray-700 text-sm font-bold mb-2">
-                Модель телефона<span class="asteriskField">*</span> </label>
-            <div class="mb-3">
-                <div class="relative">
-                    <select
-                        class="border border-red-500 bg-white focus:outline-none border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal text-gray-700"
-                        name="phone_model">
-
-                        {% for phone_model in form.phone_model %}
-                        <option value="{{phone_model}}"></option>
-                        {% endfor %}
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"></path>
-                        </svg> </div>
-                </div>
-            </div>
-            <p id="error_1_id_phone_model" class="text-red-500 text-xs italic"><strong></strong>
-            </p>
-        </div>
+        {{ form|crispy }}
 
 
-        <div id="div_id_company" class="mb-3"> <label for="id_company"
-                class="block text-gray-700 text-sm font-bold mb-2">
-                Компания<span class="asteriskField">*</span> </label>
-            <div class="mb-3">
-                <div class="relative">
-                    <select
-                        class="border border-red-500 bg-white focus:outline-none border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal text-gray-700"
-                        name="company">
-
-                        {% for company in form.company %}
-                        <option value="{{company}}"></option>
-                        {% endfor %}
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"></path>
-                        </svg> </div>
-                </div>
-            </div>
-            <p id="error_1_id_company" class="text-red-500 text-xs italic"><strong></strong></p>
-        </div>
-
-        <div id="div_id_line" class="mb-3"> <label for="id_line" class="block text-gray-700 text-sm font-bold mb-2">
-                Линия<span class="asteriskField">*</span> </label> <input type="text" name="line"
-                maxlength="5"
-                class="textinput px-4 appearance-none border-gray-300 leading-normal rounded-lg block py-2 bg-white border focus:outline-none text-gray-700 w-full px-4 appearance-none border-gray-300 leading-normal rounded-lg block py-2 bg-white border focus:outline-none text-gray-700 w-full"
-                required="" id="id_line"> </div>
-
-        <div id="div_id_active" class="mb-3"> <label for="id_active" class="block text-gray-700 text-sm font-bold mb-2">
-                Active
-            </label> <input type="checkbox" name="active" class="checkboxinput  " id="id_active"> </div>
 
         <button type='submit' class="w-full text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">
             Готово
         </button>
     </form>
 </div>
+
+
+<script>
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    let atc_field = document.getElementById("div_id_atc")
+    let number_field = document.querySelector("div.relative select[name='phone_number']")
+    console.log(number_field)
+    atc_field.addEventListener("change", getAtcId)
+
+
+    function getAtcId(e) {
+        console.log(e.target.value)
+        let atc_id = e.target.value
+
+
+        const data = { id: atc_id };
+
+        let url = " {% url 'leads:lead-phone' %} "
+
+        fetch(url, {
+            method: 'POST', // or 'PUT'
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data),
+        })
+            .then((response) => response.json())
+
+            .then((data) => {
+                console.log('Success:', data);
+
+                number_field.innerHTML = '<option value="" id="number-id-field">номер телефона не выбран</option>'
+
+
+                for (let i = 0; i < data.length; i++) {
+                    number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`
+                }
+
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+
+    }
+</script>
 
 
 {% endblock content %}
