@@ -80,7 +80,7 @@
                         class="border border-red-500 bg-white focus:outline-none border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal text-gray-700"
                         name="phone_model">
 
-                        {% for phone_model in form_context.phone_model %}
+                        {% for phone_model in form.phone_model %}
                         <option value="{{phone_model}}"></option>
                         {% endfor %}
                     </select>
@@ -104,7 +104,7 @@
                         class="border border-red-500 bg-white focus:outline-none border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal text-gray-700"
                         name="company">
 
-                        {% for company in form_context.company %}
+                        {% for company in form.company %}
                         <option value="{{company}}"></option>
                         {% endfor %}
                     </select>

@@ -189,6 +189,7 @@ def lead_detail(request, pk):
 def lead_create(request):
     form = LeadCreateModelForm()
     if request.method == "POST":
+        print(request.POST)
         form = LeadCreateModelForm(request.POST)
         if form.is_valid():
             if ('reservation') in request.POST:
