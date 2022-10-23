@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 {% load tailwind_filters %}
 {% load crispy_forms_tags %}
+{% load static %}
 
 
 {% block content %}
-
+<!-- <script src="{% static 'js/lead_create.js' %}"></script> -->
 <div class="max-w-lg mx-auto">
     <a class="hover:text-blue-500" href="{% url 'leads:lead-list' %}">Вернуться к таблице</a>
     <div class="py-5 border-t border-gray-200">
@@ -22,9 +23,7 @@
     </form>
 </div>
 
-
 <script>
-
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -44,12 +43,10 @@
 
     let atc_field = document.getElementById("div_id_atc")
     let number_field = document.querySelector("div.relative select[name='phone_number']")
-    console.log(number_field)
     atc_field.addEventListener("change", getAtcId)
 
 
     function getAtcId(e) {
-        console.log(e.target.value)
         let atc_id = e.target.value
 
 
@@ -85,6 +82,8 @@
 
     }
 </script>
+
+
 
 
 {% endblock content %}

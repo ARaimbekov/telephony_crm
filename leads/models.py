@@ -1,3 +1,6 @@
+from email.policy import default
+from random import choices
+from secrets import choice
 from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.auth.models import AbstractUser
@@ -27,6 +30,7 @@ class LeadManager(models.Manager):
 
 
 class Lead(models.Model):
+    CHOICES = [(i+1,i+1) for i in range(10)]
     phone_number = models.OneToOneField("Number", unique=True, on_delete=models.PROTECT, verbose_name='Номер телефона')    
     mac_address = models.CharField(max_length=12,blank=True, verbose_name='MAC-Адрес', validators = [
         RegexValidator(
@@ -46,7 +50,7 @@ class Lead(models.Model):
     update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
     active = models.BooleanField(default=True)
     reservation = models.BooleanField(default=False, verbose_name='Зарезервировать')
-    line = models.CharField(max_length=5, verbose_name='Линия')
+    line = models.CharField(max_length=5,choices=CHOICES, default='1', verbose_name='Линия')
     atc = models.ManyToManyField("atc", verbose_name='Atc сервер')
     passwd = ShortUUIDField(max_length=22, unique=True, editable=False, default=shortuuid.uuid, verbose_name='Пароль')
 

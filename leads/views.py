@@ -216,7 +216,8 @@ def lead_create(request):
 def phone_number(request):
     data = json.loads(request.body)
     atc_id = data["id"]
-    phone_number = Number.objects.filter(atc__id=atc_id)
+    numbers = Lead.objects.all().values('phone_number')
+    phone_number = Number.objects.filter(atc__id=atc_id).exclude(id__in=numbers)
     return JsonResponse(list(phone_number.values("id", "name")), safe=False)
 
 
