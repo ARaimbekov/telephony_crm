@@ -1,3 +1,4 @@
+from dataclasses import Field
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
@@ -6,6 +7,8 @@ from .models import Lead, Company, Apparats, Number, Atc
 from itertools import chain
 from django.db.models import Count
 from django.forms import inlineformset_factory
+from crispy_forms.helper import FormHelper, Layout
+from crispy_forms.layout import Fieldset,Field
 
 User = get_user_model()
 
@@ -13,6 +16,7 @@ class LeadCreateModelForm(forms.ModelForm):
     class Meta:
         model = Lead
         fields = (
+            'atc',
             'phone_number',
             'reservation',
             'mac_address',
@@ -22,21 +26,16 @@ class LeadCreateModelForm(forms.ModelForm):
             'phone_model',
             'company',
             'line',
-            'atc',
             'active',
         )
 
     def __init__(self,*args,**kwargs):
         super(LeadCreateModelForm, self).__init__(*args,**kwargs)
-        numbers = Lead.objects.all().values('phone_number')
-        atc = Number.objects.all().values('name')
-        self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
+        self.fields['atc'].empty_label = "atc не выбрана"
         self.fields['phone_number'].empty_label = "номер телефона не выбран"
         self.fields['company'].empty_label = "компания не выбрана"
         self.fields['phone_model'].empty_label = "модель телефона не выбрана"
-        # self.fields['atc'].queryset = Atc.objects.filter(name__in=atc)
-        self.fields['atc'].empty_label = "atc не выбран"
-
+        
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]

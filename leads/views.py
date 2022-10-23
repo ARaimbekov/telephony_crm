@@ -6,6 +6,7 @@ import datetime
 from django import contrib
 import random
 import string
+import json
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.http.response import JsonResponse
@@ -16,8 +17,8 @@ from django.views import generic
 from agents.mixins import OrganisorAndLoginRequiredMixin
 from .models import Lead, Company, Apparats, Number, Atc
 from .forms import (
-    LeadForm, 
-    LeadCreateModelForm, 
+    LeadForm,
+    LeadCreateModelForm,
     LeadModelForm,
     CompanyModelForm,
     ApparatModelForm,
@@ -30,106 +31,106 @@ from .forms import (
 logger = logging.getLogger(__name__)
 
 
-def export_to_csv(reuest): 
-    row_num = 0 
-    leads = Lead.objects.all() 
-    response = HttpResponse('') 
+def export_to_csv(reuest):
+    row_num = 0
+    leads = Lead.objects.all()
+    response = HttpResponse('')
     response['Content-Disposition'] = 'attachment; filename=profile_export.csv'
-    writer = csv.writer(response,  delimiter =';',quotechar =',') 
+    writer = csv.writer(response,  delimiter=';', quotechar=',')
     writer.writerow([
-        'first_name', 
-        'last_name', 
-        'patronymic_name', 
-        'phone_number', 
-        'mac_address', 
-        'phone_model', 
+        'first_name',
+        'last_name',
+        'patronymic_name',
+        'phone_number',
+        'mac_address',
+        'phone_model',
         'company',
         'line',
         'atc',
-        'date_added', 
-        'update_added', 
+        'date_added',
+        'update_added',
         'active'
-        ])
+    ])
 
     rows = leads.values_list(
-        'first_name', 
-        'last_name', 
-        'patronymic_name', 
-        'phone_number', 
-        'mac_address', 
-        'phone_model', 
-        'company', 
+        'first_name',
+        'last_name',
+        'patronymic_name',
+        'phone_number',
+        'mac_address',
+        'phone_model',
+        'company',
         'line',
         'atc',
-        'date_added', 
-        'update_added', 
+        'date_added',
+        'update_added',
         'active'
     )
 
     for row in rows:
-        row_list = list (row)
+        row_list = list(row)
         row_list[3] = Number.objects.get(pk=row_list[3])
         row_list[5] = Apparats.objects.get(pk=row_list[5])
         row_list[6] = Company.objects.get(pk=row_list[6])
-        row=tuple(row_list)
-        writer.writerow(row) 
+        row = tuple(row_list)
+        writer.writerow(row)
 
-    return response 
-
+    return response
 
 
 def export_to_exel(request):
-    response = HttpResponse(content_type='application/ms-excel') 
-    response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.datetime.now())+'.xls' 
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename=Expenses' + \
+        str(datetime.datetime.now())+'.xls'
     wb = xlwt.Workbook(encoding='utf-8')
-    ws = wb.add_sheet('Выгрузка-таблицы ') 
-    row_num = 0 
+    ws = wb.add_sheet('Выгрузка-таблицы ')
+    row_num = 0
     font_style = xlwt.XFStyle()
-    font_style.font.bold = True 
+    font_style.font.bold = True
 
     columns = (
-        'first_name', 
-        'last_name', 
-        'patronymic_name', 
-        'phone_number', 
-        'mac_address', 
-        'phone_model', 
+        'first_name',
+        'last_name',
+        'patronymic_name',
+        'phone_number',
+        'mac_address',
+        'phone_model',
         'company',
         'line',
         'atc',
-        'date_added', 
-        'update_added', 
+        'date_added',
+        'update_added',
         'active'
-        ) 
+    )
 
-    for col_num in range(len(columns)): 
-        ws.write(row_num,col_num,columns[col_num], font_style)
-    
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], font_style)
+
     rows = Lead.objects.filter().values_list(
-        'first_name', 
-        'last_name', 
-        'patronymic_name', 
-        'phone_number', 
-        'mac_address', 
-        'phone_model', 
-        'company', 
+        'first_name',
+        'last_name',
+        'patronymic_name',
+        'phone_number',
+        'mac_address',
+        'phone_model',
+        'company',
         'line',
         'atc',
-        'date_added', 
-        'update_added', 
+        'date_added',
+        'update_added',
         'active'
-        )
+    )
 
     for row in rows:
-        row_list = list (row)
+        row_list = list(row)
         row_list[3] = Number.objects.get(pk=row_list[3])
         row_list[5] = Apparats.objects.get(pk=row_list[5])
         row_list[6] = Company.objects.get(pk=row_list[6])
-        row=tuple(row_list)
+        row = tuple(row_list)
         row_num += 1
 
         for col_num in range(len(row)):
-            ws.write(row_num,col_num,str(row[col_num]))
+            ws.write(row_num, col_num, str(row[col_num]))
     wb.save(response)
 
     return response
@@ -152,7 +153,6 @@ class LandingPageView(generic.TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
 
-
 def landing_page(request):
     return render(request, "landing.html")
 
@@ -161,9 +161,10 @@ def lead_list(request):
     search_number_query = request.GET.get('number', '',)
     search_mac_query = request.GET.get('mac', '',)
     search_name_query = request.GET.get('name', '', )
-        
+
     if search_number_query:
-        leads = Lead.objects.filter(phone_number__in=Number.objects.filter(name__icontains=search_number_query))
+        leads = Lead.objects.filter(phone_number__in=Number.objects.filter(
+            name__icontains=search_number_query))
     elif search_mac_query:
         leads = Lead.objects.filter(mac_address__icontains=search_mac_query)
     elif search_name_query:
@@ -193,25 +194,31 @@ def lead_create(request):
         if form.is_valid():
             if ('reservation') in request.POST:
                 letters = string.digits
-                new_mac = '000000' + ''.join(random.choice(letters) for i in range(6))
+                new_mac = '000000' + \
+                    ''.join(random.choice(letters) for i in range(6))
                 temp = request.POST.copy()
                 temp['mac_address'] = new_mac
                 request.POST = temp
                 form = LeadCreateModelForm(request.POST)
                 form.save()
                 return redirect("/leads")
-            # elif "" in request.POST["mac_address"]:
             elif not request.POST["mac_address"]:
-                print(request.POST)
-                print("hahting")
-                return redirect("error")  
+                return redirect("error")
             else:
                 form.save()
                 return redirect("/leads")
     context = {
-        "form": form
+        "form": form,
     }
     return render(request, "leads/lead_create.html", context)
+
+
+def phone_number(request):
+    data = json.loads(request.body)
+    atc_id = data["id"]
+    numbers = Lead.objects.all().values('phone_number')
+    phone_number = Number.objects.filter(atc__id=atc_id).exclude(id__in=numbers)
+    return JsonResponse(list(phone_number.values("id", "name")), safe=False)
 
 
 def lead_update(request, pk):
@@ -267,7 +274,7 @@ def company_create(request):
             return redirect("company")
 
         else:
-            return redirect("company")    
+            return redirect("company")
     context = {
         "form": form
     }
@@ -392,16 +399,17 @@ def number_create(request):
         try:
             if form.is_valid():
                 if "-" in request.POST["name"]:
-                    num1, num2 = [int(i) for i in request.POST["name"].split('-')]
+                    num1, num2 = [int(i)
+                                  for i in request.POST["name"].split('-')]
                     for i in range(num1, num2+1):
                         Number.objects.create(name=i).save()
                     return redirect("number")
-                elif " " in request.POST["name"]: 
+                elif " " in request.POST["name"]:
                     num = [int(i) for i in request.POST["name"].split()]
                     for i in num:
                         Number.objects.create(name=i).save()
                     return redirect("number")
-                elif "," in request.POST["name"]: 
+                elif "," in request.POST["name"]:
                     num = [int(i) for i in request.POST["name"].split(',')]
                     for i in num:
                         Number.objects.create(name=i).save()
@@ -410,11 +418,11 @@ def number_create(request):
                     form.save()
                     return redirect("number")
         except Exception as e:
-            return redirect("error")  
+            return redirect("error")
     context = {
         "form": form
     }
-    return render(request, "leads/lead_create.html", context)
+    return render(request, "leads/number_create.html", context)
 
 
 class NumberDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
@@ -453,7 +461,7 @@ def atc_create(request):
                 form.save()
                 return redirect("atc")
         except Exception as e:
-            return redirect("error")  
+            return redirect("error")
     context = {
         "form": form
     }
@@ -486,8 +494,7 @@ def atc_update(request, pk):
 #         return Atc.objects.all()
 
 
-
-def atc_delete(request, pk):    
+def atc_delete(request, pk):
     lead = Atc.objects.get(id=pk)
     form = AtcModelForm(instance=lead)
     if request.method == "POST":
@@ -497,25 +504,26 @@ def atc_delete(request, pk):
                 lead.delete()
                 return redirect("atc")
         except Exception as e:
-            return redirect("error")  
+            return redirect("error")
 
     context = {
         "form": form,
         "lead": lead
     }
-    return render(request, "leads/atc_delete.html", context)    
+    return render(request, "leads/atc_delete.html", context)
 
 
 def error_page(request):
     return render(request, "error.html")
 
+
 class LeadJsonView(generic.View):
 
     def get(self, request, *args, **kwargs):
-        
+
         qs = list(Lead.objects.all().values(
-            "first_name", 
-            "last_name", 
+            "first_name",
+            "last_name",
             "age")
         )
 
