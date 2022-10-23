@@ -73,10 +73,10 @@ WSGI_APPLICATION = 'djcrm.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'webportal',
-        'USER': 'test',
-        'PASSWORD': 'test',
-        'HOST': '127.0.0.1',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'db',
         'PORT': '5432',
     }
 }
