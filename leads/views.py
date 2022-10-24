@@ -396,23 +396,24 @@ def number_create(request):
     form = NumberModelForm()
     if request.method == "POST":
         form = NumberModelForm(request.POST)
+        atc = Atc.objects.filter(pk=request.POST["atc"]).first()
         try:
             if form.is_valid():
                 if "-" in request.POST["name"]:
                     num1, num2 = [int(i)
                                   for i in request.POST["name"].split('-')]
                     for i in range(num1, num2+1):
-                        Number.objects.create(name=i).save()
+                        Number.objects.create(name=i, atc=atc).save()
                     return redirect("number")
                 elif " " in request.POST["name"]:
                     num = [int(i) for i in request.POST["name"].split()]
                     for i in num:
-                        Number.objects.create(name=i).save()
+                        Number.objects.create(name=i, atc=atc).save()
                     return redirect("number")
                 elif "," in request.POST["name"]:
                     num = [int(i) for i in request.POST["name"].split(',')]
                     for i in num:
-                        Number.objects.create(name=i).save()
+                        Number.objects.create(name=i, atc=atc).save()
                     return redirect("number")
                 else:
                     form.save()
