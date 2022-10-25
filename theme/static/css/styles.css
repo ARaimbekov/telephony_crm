@@ -490,7 +490,12 @@ img,video{
     margin-left:1rem
 }
 .mt-5{
-    margin-top:0.5rem;
+    margin-top:1rem;
+    /* transform: scale(82%); */
+    /* margin-top: -80px; */
+}
+.mt-25{
+    margin-top:1rem;
     transform: scale(82%);
     margin-top: -80px;
 }
