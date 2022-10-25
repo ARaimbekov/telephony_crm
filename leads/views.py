@@ -201,11 +201,13 @@ def lead_create(request):
                 request.POST = temp
                 form = LeadCreateModelForm(request.POST)
                 form.save()
+                messages.success(request, "Вы успешно создали зарезервированную позицию !")
                 return redirect("/leads")
             elif not request.POST["mac_address"]:
                 return redirect("error")
             else:
                 form.save()
+                messages.success(request, "Вы успешно создали позицию !")
                 return redirect("/leads")
     context = {
         "form": form,
