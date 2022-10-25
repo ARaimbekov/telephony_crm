@@ -67,13 +67,18 @@
             .then((data) => {
                 console.log('Success:', data);
 
-                number_field.innerHTML = '<option value="" id="number-id-field">номер телефона не выбран</option>'
+                if (data.length != 0) {
+                    number_field.innerHTML = `<option value="${data[0]["id"]}" id="number-id-field">${data[0]["name"]}</option>`
 
 
-                for (let i = 0; i < data.length; i++) {
-                    number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`
+                    for (let i = 1; i < data.length; i++) {
+                        number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`
+                    }
+
+                } else {
+                    number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номером</option>'
+
                 }
-
 
             })
             .catch((error) => {
