@@ -30,6 +30,7 @@ class LeadManager(models.Manager):
 
 
 class Lead(models.Model):
+
     CHOICES = (
         ('1', '1'),
         ('2', '2'),
@@ -42,6 +43,7 @@ class Lead(models.Model):
         ('9', '9'),
         ('10', '10'),
     )
+
     phone_number = models.OneToOneField("Number", unique=True, on_delete=models.PROTECT, verbose_name='Номер телефона')    
     mac_address = models.CharField(max_length=12,blank=True, verbose_name='MAC-Адрес', validators = [
         RegexValidator(
