@@ -14,7 +14,6 @@ import shortuuid
 
 class User(AbstractUser):
     is_organisor = models.BooleanField(default=True)
-    is_agent = models.BooleanField(default=False)
 
 
 class UserProfile(models.Model):
@@ -106,15 +105,3 @@ class Atc(models.Model):
     def __str__(self):
         return self.name
 
-
-def handle_upload_follow_ups(instance, filename):
-    return f"lead_followups/lead_{instance.lead.pk}/{filename}"
-
-
-
-def post_user_created_signal(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-
-post_save.connect(post_user_created_signal, sender=User)
