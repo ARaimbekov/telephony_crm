@@ -23,9 +23,9 @@
         </div>
         
         <form style="padding-left: 300px;" action="{% url 'leads:lead-list' %}">
-            <input class="form-control mr-sm-2" type="search" placeholder="Номер" style="border: 3px solid rgb(1, 1, 2); "  name="number"> 
-            <input class="form-control mr-sm-2" type="search" placeholder="Мак" style="border: 3px solid rgb(1, 1, 2);" name="mac"> 
-            <input class="form-control mr-sm-2" type="search" placeholder="Фамилия" style="border: 3px solid rgb(1, 1, 2);" name="name">
+            <input class="form-control mr-sm-2" type="search" placeholder="Номер" style="border: 3px solid rgb(139, 139, 155); "  name="number"> 
+            <input class="form-control mr-sm-2" type="search" placeholder="Мак" style="border: 3px solid rgb(139, 139, 155);" name="mac"> 
+            <input class="form-control mr-sm-2" type="search" placeholder="Фамилия" style="border: 3px solid rgb(139, 139, 155);" name="name">
             
             <button class="text-gray-500 hover:text-blue-500" type="submit">Поиск/Сбросить</button>
              
@@ -40,10 +40,16 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            АТС
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Номер телефона
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Мак-Адрес
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Линия
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Фамилия
@@ -61,12 +67,6 @@
                             Компания
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Линия
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            АТС
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Время добавления
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -78,9 +78,6 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Зарезервирован
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Пароль
-                            </th>
                             <th scope="col" class="relative px-6 py-3">
                             <span class="sr-only">Изменить</span>
                             </th>
@@ -89,12 +86,19 @@
                     <tbody>
                         {% for lead in leads %}
                             <tr class="bg-white">
-                            
+                                {% for atc in lead.atc.all %}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ atc.name }}
+                                </td>
+                                {% endfor %} 
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.phone_number }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.mac_address }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ lead.line }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.last_name }}
@@ -114,15 +118,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ company.name }}
                                 </td>
-                                {% endfor %}
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.line }}
-                                </td>
-                                {% for atc in lead.atc.all %}
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ atc.name }}
-                                </td>
-                                {% endfor %}                                                                
+                                {% endfor %}                                                               
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.date_added }}
                                 </td>
@@ -134,12 +130,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.reservation }}
-                                </td> 
-                                {% if user.is_superuser %}
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.passwd }}
-                                </td>
-                                {% endif %}   
+                                </td>   
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <a href="{% url 'leads:lead-update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
                                         Изменить
