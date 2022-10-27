@@ -1,3 +1,4 @@
+from re import template
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -15,7 +16,7 @@ from leads.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', landing_page, name='login'),
+    path('', LoginView.as_view(template_name="registration/login.html", redirect_authenticated_user=True), name='login'),
     path('leads/',  include('leads.urls', namespace="leads")),
     path('agents/',  include('agents.urls', namespace="agents")),
     path('signup/', SignupView.as_view(), name='signup'),
