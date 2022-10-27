@@ -1,6 +1,7 @@
 from dataclasses import Field
 from django import forms
 from django.core.exceptions import ValidationError
+from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UsernameField
 from .models import Lead, Company, Apparats, Number, Atc
@@ -20,12 +21,12 @@ class LeadCreateModelForm(forms.ModelForm):
             'phone_number',
             'reservation',
             'mac_address',
+            'line',
             'last_name',
             'first_name',
             'patronymic_name',
             'phone_model',
             'company',
-            'line',
             'active',
         )
 
@@ -110,6 +111,42 @@ class LeadModelForm(forms.ModelForm):
     def clean(self):
         pass
 
+
+class UserModelForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'is_superuser',
+            'password',
+        )
+        
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+
+        return data
+
+    def clean(self):
+        pass
+
+
+
+class SetPasswordForm(SetPasswordForm):
+    class Meta:
+        model = get_user_model()
+        fields = ['new_password1', 'new_password2']
+
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+
+        return data
+
+    def clean(self):
+        pass
+
+        
 
 class CompanyModelForm(forms.ModelForm):
     class Meta:
@@ -210,7 +247,10 @@ class LeadForm(forms.Form):
 class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = User
-        fields = ("username",)
+        fields = (
+            "username",
+            "is_superuser"
+        )
         field_classes = {'username': UsernameField}
 
 

@@ -7,6 +7,7 @@ from django import contrib
 import random
 import string
 import json
+from django.contrib.auth.views import PasswordResetDoneView
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.http.response import JsonResponse
@@ -15,17 +16,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.views import generic
 from agents.mixins import OrganisorAndLoginRequiredMixin
-from .models import Lead, Company, Apparats, Number, Atc
-from .forms import (
-    LeadForm,
-    LeadCreateModelForm,
-    LeadModelForm,
-    CompanyModelForm,
-    ApparatModelForm,
-    NumberModelForm,
-    CustomUserCreationForm,
-    AtcModelForm,
-)
+from .models import Lead, Company, Apparats, Number, Atc, User
+from .forms import *
 
 
 logger = logging.getLogger(__name__)
@@ -155,6 +147,48 @@ class LandingPageView(generic.TemplateView):
 
 def landing_page(request):
     return render(request, "landing.html")
+
+
+def user_list(request):
+    leads = User.objects.all()
+    context = {
+        "leads": leads
+    }
+    return render(request, "leads/users.html", context)
+
+
+def user_update(request, pk):
+    lead = User.objects.get(id=pk)
+    form = UserModelForm(instance=lead)
+    if request.method == "POST":
+        form = UserModelForm(request.POST, instance=lead)
+        if form.is_valid():
+            form.save()
+            return redirect("leads:users")
+    context = {
+        "form": form,
+        "lead": lead
+    }
+    return render(request, "leads/user_update.html", context)
+
+
+def password_change(request, pk):
+    user = User.objects.get(id=pk)
+    form = SetPasswordForm(user)
+    if request.method == 'POST':
+        form = SetPasswordForm(user, request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your password has been changed")
+            return redirect('login')
+        else:
+            for error in list(form.errors.values()):
+                messages.error(request, error)
+    context = {
+        "form": form,
+        "user": user
+    }
+    return render(request, "leads/password_reset_confirm.html", context)
 
 
 def lead_list(request):
