@@ -6,11 +6,11 @@
     <div class="container px-5 py-24 mx-auto flex flex-wrap">
         <div class="w-full mb-6 py-6 flex justify-between items-center border-b border-gray-200">
             <div>
-                <h1 class="text-4xl text-gray-800">Компании</h1>
+                <h1 class="text-4xl text-gray-800">Пользователи</h1>
             </div>
             {% if request.user.is_organisor %}
             <div>
-                <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:company_create' %}">
+                <a class="text-gray-500 hover:text-blue-500" href="{% url 'signup' %}">
                     Добавить
                 </a>
             </div>
@@ -49,6 +49,9 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <a href="{% url 'leads:password_change' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
                                         Изменить
+                                    </a>
+                                    <a href="{% url 'leads:user_delete' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
+                                        &nbsp;&nbsp;&nbsp; Удалить
                                     </a>
                                 </td>
                             </tr>

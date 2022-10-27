@@ -46,43 +46,7 @@ class LeadCreateModelForm(forms.ModelForm):
 
 
     def clean(self):
-        # cleaned_data = self.cleaned_data
-        # if Lead.objects.filter(mac_address=cleaned_data['mac_address'], line=self.line).exists():
-
-        #     raise ValidationError(
-        #           'Solution with this Name already exists for this problem')
-
-        # return cleaned_data
         pass
-
-
-# class LeadUpdateModelForm(forms.ModelForm):
-#     class Meta:
-#         model = Lead
-#         fields = (
-#             'phone_number',
-#             'mac_address',
-#             'first_name',
-#             'last_name',
-#             'patronymic_name',
-#             'phone_model',
-#             'company',
-#             'active',
-#         )
-
-
-#     def __init__(self, *args, **kwargs):
-#         super(LeadUpdateModelForm, self).__init__(*args,**kwargs)
-#         numbers = Lead.objects.all().values('phone_number')
-        
-#         self.fields['phone_number'].queryset = Number.objects.exclude(id__in=numbers)
-
-#     def clean_first_name(self):
-#         data = self.cleaned_data["first_name"]
-#         return data
-
-#     def clean(self):
-#         pass
 
 
 class LeadModelForm(forms.ModelForm):
@@ -110,6 +74,66 @@ class LeadModelForm(forms.ModelForm):
 
     def clean(self):
         pass
+
+
+class LeadDelModelForm(forms.ModelForm):
+    class Meta:
+        model = Lead
+        fields = ()
+        
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+
+        return data
+
+    def clean(self):
+        pass
+
+
+class CompanyDelModelForm(forms.ModelForm):
+    class Meta:
+        model = Company
+        fields = ()
+        
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+
+        return data
+
+    def clean(self):
+        pass
+
+
+class ApparatDelModelForm(forms.ModelForm):
+    class Meta:
+        model = Apparats
+        fields = ()
+        
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+
+        return data
+
+    def clean(self):
+        pass
+
+
+class NumberDelModelForm(forms.ModelForm):
+    class Meta:
+        model = Apparats
+        fields = ()
+        
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+
+        return data
+
+    def clean(self):
+        pass        
 
 
 class UserModelForm(forms.ModelForm):
@@ -158,16 +182,12 @@ class CompanyModelForm(forms.ModelForm):
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
-        # if data != "Joe":
-        #     raise ValidationError("Your name is not Joe")
         return data
+
 
     def clean(self):
         pass
-        # first_name = self.cleaned_data["first_name"]
-        # last_name = self.cleaned_data["last_name"]
-        # if first_name + last_name != "Joe Soap":
-        #     raise ValidationError("Your name is not Joe Soap")
+
 
 
 class ApparatModelForm(forms.ModelForm):
@@ -180,16 +200,12 @@ class ApparatModelForm(forms.ModelForm):
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
-        # if data != "Joe":
-        #     raise ValidationError("Your name is not Joe")
         return data
+
 
     def clean(self):
         pass
-        # first_name = self.cleaned_data["first_name"]
-        # last_name = self.cleaned_data["last_name"]
-        # if first_name + last_name != "Joe Soap":
-        #     raise ValidationError("Your name is not Joe Soap")
+
 
 
 class NumberModelForm(forms.ModelForm):
@@ -203,16 +219,12 @@ class NumberModelForm(forms.ModelForm):
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
-        # if data != "Joe":
-        #     raise ValidationError("Your name is not Joe")
         return data
+
 
     def clean(self):
         pass
-        # first_name = self.cleaned_data["first_name"]
-        # last_name = self.cleaned_data["last_name"]
-        # if first_name + last_name != "Joe Soap":
-        #     raise ValidationError("Your name is not Joe Soap")
+
 
 
 class AtcModelForm(forms.ModelForm):
@@ -226,16 +238,12 @@ class AtcModelForm(forms.ModelForm):
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
-        # if data != "Joe":
-        #     raise ValidationError("Your name is not Joe")
         return data
+
 
     def clean(self):
         pass
-        # first_name = self.cleaned_data["first_name"]
-        # last_name = self.cleaned_data["last_name"]
-        # if first_name + last_name != "Joe Soap":
-        #     raise ValidationError("Your name is not Joe Soap")
+
 
 
 class LeadForm(forms.Form):
@@ -252,38 +260,3 @@ class CustomUserCreationForm(UserCreationForm):
             "is_superuser"
         )
         field_classes = {'username': UsernameField}
-
-
-# class AssignAgentForm(forms.Form):
-#     # agent = forms.ModelChoiceField(queryset=Agent.objects.none())
-
-#     def __init__(self, *args, **kwargs):
-#         request = kwargs.pop("request")
-#         agents = Agent.objects.filter(organisation=request.user.userprofile)
-#         super(AssignAgentForm, self).__init__(*args, **kwargs)
-#         self.fields["agent"].queryset = agents
-
-
-# class LeadCategoryUpdateForm(forms.ModelForm):
-#     class Meta:
-#         model = Lead
-#         fields = (
-#             'category',
-#         )
-
-
-# class CategoryModelForm(forms.ModelForm):
-#     class Meta:
-#         model = Category
-#         fields = (
-#             'name',
-#         )
-
-
-# class FollowUpModelForm(forms.ModelForm):
-#     class Meta:
-#         model = FollowUp
-#         fields = (
-#             'notes',
-#             'file'
-#         )
