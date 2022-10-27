@@ -18,6 +18,7 @@ from django.views import generic
 from agents.mixins import OrganisorAndLoginRequiredMixin
 from .models import Lead, Company, Apparats, Number, Atc, User
 from .forms import *
+from django.db.models import ProtectedError
 
 
 logger = logging.getLogger(__name__)
@@ -150,7 +151,7 @@ def landing_page(request):
 
 
 def user_list(request):
-    leads = User.objects.all()
+    leads = User.objects.filter(is_active=True)
     context = {
         "leads": leads
     }
@@ -175,12 +176,13 @@ def user_update(request, pk):
 
 def user_delete(request, pk):
     lead = User.objects.get(id=pk)
-    form = UserModelForm(instance=lead)
+    form = UserDelModelForm(instance=lead)
     if request.method == "POST":
-        form = UserModelForm(request.POST, instance=lead)
+        form = UserDelModelForm(request.POST, instance=lead)
         try:
             if form.is_valid():
-                lead.delete()
+                lead.is_active = False
+                lead.save()
                 messages.success(request, "Пользователь был успешно удален !")
                 return redirect("leads:users")
         except Exception as e:
@@ -341,11 +343,16 @@ def company_create(request):
         form = CompanyModelForm(request.POST)
         try:
             if form.is_valid():
+                print(request.POST)
                 form.save()
                 messages.success(request, "Создание компании прошло успешно !")
                 return redirect("company")
+
         except Exception as e:
-            return redirect("error")
+            context = {
+                'error': "Создание невозможно, такая уже компания существует."
+            }
+            return render(request, "error.html", context)
 
     context = {
         "form": form
@@ -373,15 +380,23 @@ def company_delete(request, pk):
     lead = Company.objects.get(id=pk)
     form = CompanyDelModelForm(instance=lead)
     if request.method == "POST":
-        form = CompanyDelModelForm(request.POST, instance=lead) 
+        form = CompanyDelModelForm(request.POST, instance=lead)
         try:
             if form.is_valid():
-                lead.delete()
-                messages.success(request, "Компияния была удалена !")
-                return redirect("company")
-
+                if not len(Lead.objects.filter(company=lead).all()):
+                    lead.delete()
+                    messages.success(request, "Компияния была удалена !")
+                    return redirect("company")
+                else:
+                    print("hahtung")
+                    return render(request, "error_company.html")
+        
+        
         except Exception as e:
-            return redirect("error")
+            context = {
+                'error': e
+            }
+            return render(request, "error.html", context)
 
     context = {
         "form": form,
@@ -405,10 +420,18 @@ def apparat_create(request):
     form = ApparatModelForm()
     if request.method == "POST":
         form = ApparatModelForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Модель телефона была успешна создана !")
-            return redirect("apparats")
+        try:    
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Модель телефона была успешна создана !")
+                return redirect("apparats")
+
+        except Exception as e:
+            context = {
+                'error': "Создание невозможно, такая модель телефона уже существует."
+            }
+            return render(request, "error.html", context)
+        
     context = {
         "form": form
     }
@@ -454,18 +477,24 @@ def apparat_delete(request, pk):
         form = ApparatDelModelForm(request.POST, instance=lead) 
         try:
             if form.is_valid():
-                lead.delete()
-                messages.success(request, "Модель телефона была удалена !")
-                return redirect("company")
+                if not len(Lead.objects.filter(phone_model=lead).all()):
+                    lead.delete()
+                    messages.success(request, "Модель телефона была удалена !")
+                    return redirect("company")
+                else:
+                    return render(request, "error_model.html")
 
         except Exception as e:
-            return redirect("error")
+            context = {
+                'error': e
+            }
+            return render(request, "error.html", context)
 
     context = {
         "form": form,
         "lead": lead
     }
-    return render(request, "leads/apparat_delete.html", context)
+    return render(request, "leads/apparats_delete.html", context)
 
 
 # NUMBER NUMBER NUMBER NUMBER
@@ -538,9 +567,11 @@ def number_delete(request, pk):
                 lead.delete()
                 messages.success(request, "Номер телефона был удалена !")
                 return redirect("number")
+            else:
+                return render(request, 'error_number.html')
 
         except Exception as e:
-            return redirect("error")
+            return render(request, "error_number.html")
 
     context = {
         "form": form,
@@ -610,7 +641,7 @@ def atc_delete(request, pk):
                 messages.success(request, "ATC была удалена !")
                 return redirect("atc")
         except Exception as e:
-            return redirect("error")
+            return render(request, "error_atc.html")
 
     context = {
         "form": form,

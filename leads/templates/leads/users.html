@@ -25,10 +25,19 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Пользователь
+                            Логин
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Права админа
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Фамилия
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Имя
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Активен
                             </th>
                             <th scope="col" class="relative px-6 py-3">
                             <span class="sr-only">Изменитьы</span>
@@ -44,11 +53,22 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.is_superuser }}
                                 </td>
-
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ lead.last_name }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ lead.first_name }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ lead.is_active }}
+                                </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="{% url 'leads:user_update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
+                                        &nbsp;&nbsp;&nbsp;Изменить
+                                    </a>
                                     <a href="{% url 'leads:password_change' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
-                                        Изменить
+                                        &nbsp;&nbsp;&nbsp; Обновить пароль
                                     </a>
                                     <a href="{% url 'leads:user_delete' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
                                         &nbsp;&nbsp;&nbsp; Удалить

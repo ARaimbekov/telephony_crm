@@ -88,6 +88,7 @@ class LeadDelModelForm(forms.ModelForm):
         return data
 
     def clean(self):
+        
         pass
 
 
@@ -143,6 +144,26 @@ class UserModelForm(forms.ModelForm):
             'username',
             'is_superuser',
             'password',
+            'is_active',
+            'first_name',
+            'last_name',
+        )
+        
+
+    def clean_first_name(self):
+        data = self.cleaned_data["first_name"]
+
+        return data
+
+    def clean(self):
+        pass
+
+
+class UserDelModelForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = (
+            'username',
         )
         
 
@@ -186,6 +207,7 @@ class CompanyModelForm(forms.ModelForm):
 
 
     def clean(self):
+        
         pass
 
 
@@ -257,6 +279,9 @@ class CustomUserCreationForm(UserCreationForm):
         model = User
         fields = (
             "username",
-            "is_superuser"
+            "is_superuser",
+            "first_name",
+            "last_name",
         )
         field_classes = {'username': UsernameField}
+        
