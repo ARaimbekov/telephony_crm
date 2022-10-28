@@ -64,6 +64,7 @@ class LeadModelForm(forms.ModelForm):
             'atc',
             'active',
             'reservation',
+            # 'passwd',
         )
         
 
@@ -143,7 +144,6 @@ class UserModelForm(forms.ModelForm):
         fields = (
             'username',
             'is_superuser',
-            'password',
             'is_active',
             'first_name',
             'last_name',
@@ -162,9 +162,7 @@ class UserModelForm(forms.ModelForm):
 class UserDelModelForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = (
-            'username',
-        )
+        fields = ()
         
 
     def clean_first_name(self):

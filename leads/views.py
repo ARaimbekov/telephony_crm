@@ -198,6 +198,7 @@ def user_delete(request, pk):
     lead = User.objects.get(id=pk)
     form = UserDelModelForm(instance=lead)
     if request.method == "POST":
+        # user_id = request.POST['username']   
         form = UserDelModelForm(request.POST, instance=lead)
         try:
             if form.is_valid():
@@ -210,7 +211,7 @@ def user_delete(request, pk):
 
     context = {
         "form": form,
-        "lead": lead
+        "lead": lead,
     }
     return render(request, "leads/user_delete.html", context)
 
@@ -521,7 +522,7 @@ def apparat_delete(request, pk):
 
 
 def number_list(request):
-    leads = Number.objects.all()
+    leads = Number.objects.order_by('name')
     context = {
         "leads": leads
     }

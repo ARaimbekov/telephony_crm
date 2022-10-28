@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=30, unique=True, verbose_name='Номер телефона')),
-                ('atc', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='leads.atc', verbose_name='атска')),
+                ('atc', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='leads.atc', verbose_name='ATC')),
             ],
         ),
         migrations.CreateModel(

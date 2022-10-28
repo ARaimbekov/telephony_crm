@@ -92,7 +92,7 @@ class Apparats(models.Model):
 
 class Number(models.Model):
     name = models.CharField(max_length=30, unique=True, verbose_name='Номер телефона')
-    atc = models.ForeignKey('atc', on_delete=models.PROTECT, verbose_name='атска')
+    atc = models.ForeignKey('atc', on_delete=models.PROTECT, verbose_name='ATC')
 
     def __str__(self):
         return self.name
