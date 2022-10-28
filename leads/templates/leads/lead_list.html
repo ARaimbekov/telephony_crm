@@ -78,6 +78,9 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Зарезервирован
                             </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Пароль
+                            </th>
                             <th scope="col" class="relative px-6 py-3">
                             <span class="sr-only">Изменить</span>
                             </th>
@@ -130,7 +133,12 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.reservation }}
-                                </td>   
+                                </td>
+                                {% if user.is_superuser %}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ lead.passwd }}
+                                </td>     
+                                {% endif %}
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <a href="{% url 'leads:lead-update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
                                         Изменить
