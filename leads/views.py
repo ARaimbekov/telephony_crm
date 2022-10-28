@@ -39,7 +39,8 @@ def export_to_csv(reuest):
         'phone_model',
         'company',
         'line',
-        'atc',
+        'atc_name',
+        'atc_ip',
         'date_added',
         'update_added',
         'active'
@@ -55,6 +56,7 @@ def export_to_csv(reuest):
         'company',
         'line',
         'atc',
+        'atc',
         'date_added',
         'update_added',
         'active'
@@ -65,6 +67,14 @@ def export_to_csv(reuest):
         row_list[3] = Number.objects.get(pk=row_list[3])
         row_list[5] = Apparats.objects.get(pk=row_list[5])
         row_list[6] = Company.objects.get(pk=row_list[6])
+        ip_addr = Atc.objects.filter(pk=row_list[8]).values('ip_address')
+        for i in ip_addr:
+            address = (i['ip_address'])
+
+        row_list[9] = address
+        row_list[8] = Atc.objects.get(pk=row_list[8])
+
+
         row = tuple(row_list)
         writer.writerow(row)
 
@@ -90,7 +100,8 @@ def export_to_exel(request):
         'phone_model',
         'company',
         'line',
-        'atc',
+        'atc_name',
+        'atc_ip',
         'date_added',
         'update_added',
         'active'
@@ -109,6 +120,7 @@ def export_to_exel(request):
         'company',
         'line',
         'atc',
+        'atc',
         'date_added',
         'update_added',
         'active'
@@ -119,6 +131,14 @@ def export_to_exel(request):
         row_list[3] = Number.objects.get(pk=row_list[3])
         row_list[5] = Apparats.objects.get(pk=row_list[5])
         row_list[6] = Company.objects.get(pk=row_list[6])
+        ip_addr = Atc.objects.filter(pk=row_list[8]).values('ip_address')
+        for i in ip_addr:
+            address = (i['ip_address'])
+
+        row_list[9] = address
+        row_list[8] = Atc.objects.get(pk=row_list[8])
+
+
         row = tuple(row_list)
         row_num += 1
 
@@ -667,3 +687,4 @@ class LeadJsonView(generic.View):
         return JsonResponse({
             "qs": qs,
         })
+
