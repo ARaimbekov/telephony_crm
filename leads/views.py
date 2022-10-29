@@ -9,6 +9,7 @@ import string
 import json
 from django.contrib import messages
 from django.core.mail import send_mail
+from django.core.paginator import Paginator
 from django.http.response import JsonResponse
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -172,9 +173,12 @@ def lead_list(request):
 
     else:
         leads = Lead.objects.all()
+        page = Paginator(leads, 2)
+        page_list = request.GET.get('page')
+        page = page.get_page(page_list)
 
     context = {
-        "leads": leads
+        "page": page
     }
     return render(request, "leads/lead_list.html", context)
 
