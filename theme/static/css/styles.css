@@ -782,6 +782,13 @@ img,video{
 .w-full{
     width:100%
 }
+
+#pageStyle{
+    position: absolute; 
+    left: 650px; 
+    top: 1170px;
+}
+
 @-webkit-keyframes spin{
     to{
         transform:rotate(360deg)

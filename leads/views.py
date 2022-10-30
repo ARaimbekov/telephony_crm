@@ -173,7 +173,7 @@ def lead_list(request):
 
     else:
         leads = Lead.objects.all()
-        page = Paginator(leads, 2)
+        page = Paginator(leads, 15)
         page_list = request.GET.get('page')
         page = page.get_page(page_list)
 

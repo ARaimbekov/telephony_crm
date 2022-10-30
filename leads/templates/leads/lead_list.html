@@ -148,10 +148,10 @@
                 </table>
                 </div>
                 <div id="page_id "class="container">
-                    <div class="" style="position: absolute; left: 650px; top: 1000px;">
+                    <div class="" id="pageStyle">
                     {% if page.has_previous %}
-                        <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page=1">First</a>
-                        <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.previous_page_number }}">Previous</a>
+                        <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page=1">Начало</a>
+                        <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.previous_page_number }}">Предыдуший</a>
                     {% endif %}
                     
                     {% for num in page.paginator.page_range %}
@@ -163,8 +163,8 @@
                     {% endfor %}
 
                     {% if page.has_next %}
-                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.next_page_number }}">Next</a>
-                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.paginator.num_pages }}">Last</a>
+                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.next_page_number }}">Следуюшая</a>
+                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.paginator.num_pages }}">Конец</a>
                     {% endif %}
                     </div>
                 </div>
