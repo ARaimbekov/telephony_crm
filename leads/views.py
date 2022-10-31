@@ -295,6 +295,8 @@ def lead_create(request):
     return render(request, "leads/lead_create.html", context)
 
 
+# def mac_generate():
+    
 def phone_number(request):
     data = json.loads(request.body)
     atc_id = data["id"]
