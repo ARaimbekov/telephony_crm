@@ -284,7 +284,7 @@ def lead_create(request):
                 messages.success(request, "Вы успешно создали зарезервированную позицию !")
                 return redirect("/leads")
             elif not request.POST["mac_address"]:
-                return redirect("error")
+                return render(request, "error_mac.html")
             else:
                 form.save()
                 messages.success(request, "Вы успешно создали позицию !")
