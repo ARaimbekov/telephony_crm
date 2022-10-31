@@ -283,6 +283,45 @@ def lead_create(request):
                 form.save()
                 messages.success(request, "Вы успешно создали зарезервированную позицию !")
                 return redirect("/leads")
+            elif "-" in request.POST["mac_address"]:
+                temp = request.POST.copy()
+                mac = temp['mac_address']
+                result = ''
+                for i in mac.split("-"):
+                    result += '' + i
+                result = result.lower()
+                temp['mac_address'] = result
+                request.POST = temp
+                form = LeadCreateModelForm(request.POST)
+                form.save()
+                messages.success(request, "Вы успешно создали зарезервированную позицию !")
+                return redirect("/leads")
+            elif ":" in request.POST["mac_address"]:
+                temp = request.POST.copy()
+                mac = temp['mac_address']
+                result = ''
+                for i in mac.split(":"):
+                    result += '' + i
+                result = result.lower()
+                temp['mac_address'] = result
+                request.POST = temp
+                form = LeadCreateModelForm(request.POST)
+                form.save()
+                messages.success(request, "Вы успешно создали зарезервированную позицию !")
+                return redirect("/leads")
+            elif "." in request.POST["mac_address"]:
+                temp = request.POST.copy()
+                mac = temp['mac_address']
+                result = ''
+                for i in mac.split("."):
+                    result += '' + i
+                result = result.lower()
+                temp['mac_address'] = result
+                request.POST = temp
+                form = LeadCreateModelForm(request.POST)
+                form.save()
+                messages.success(request, "Вы успешно создали зарезервированную позицию !")
+                return redirect("/leads")             
             elif not request.POST["mac_address"]:
                 return render(request, "error_mac.html")
             else:

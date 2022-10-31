@@ -44,7 +44,7 @@ class Lead(models.Model):
     )
 
     phone_number = models.OneToOneField("Number", unique=True, on_delete=models.PROTECT, verbose_name='Номер телефона')    
-    mac_address = models.CharField(max_length=12,blank=True, verbose_name='MAC-Адрес')
+    mac_address = models.CharField(max_length=17, blank=True, verbose_name='MAC-Адрес')
     # mac_address = models.CharField(max_length=12,blank=True, verbose_name='MAC-Адрес', validators = [
     #     RegexValidator(
     #         regex=r'^([0-9a-f]{2}){5}([0-9a-f]{2})$',
