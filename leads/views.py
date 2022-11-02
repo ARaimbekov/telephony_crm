@@ -337,7 +337,7 @@ def lead_create(request):
                         messages.success(request, "Вы успешно создали позицию !")
                         return redirect("/leads")
             else:
-                return render(request, "error.html")
+                return render(request, "error_mac_failed.html")
         except Exception as e:
             context = {
                 'error': 'Такой MAC адрес уже существует'
