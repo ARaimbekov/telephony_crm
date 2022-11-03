@@ -9,9 +9,10 @@ from itertools import chain
 from django.db.models import Count
 from django.forms import inlineformset_factory
 from crispy_forms.helper import FormHelper, Layout
-from crispy_forms.layout import Fieldset,Field
+from crispy_forms.layout import Fieldset, Field
 
 User = get_user_model()
+
 
 class LeadCreateModelForm(forms.ModelForm):
     class Meta:
@@ -30,20 +31,43 @@ class LeadCreateModelForm(forms.ModelForm):
             'active',
         )
 
-    def __init__(self,*args,**kwargs):
-        super(LeadCreateModelForm, self).__init__(*args,**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(LeadCreateModelForm, self).__init__(*args, **kwargs)
         self.fields['atc'].empty_label = "ATC не выбрана"
         self.fields['phone_number'].empty_label = "номер телефона не выбран"
         self.fields['company'].empty_label = "компания не выбрана"
         self.fields['phone_model'].empty_label = "модель телефона не выбрана"
-        
+
+        self.fields['mac_address'].widget.attrs['placeholder'] = 'MAC адрес'
+        self.fields['last_name'].widget.attrs['placeholder'] = 'Фамилия'
+        self.fields['first_name'].widget.attrs['placeholder'] = 'Имя'
+        self.fields['patronymic_name'].widget.attrs['placeholder'] = 'Отчество'
+
+        for field_name, field in self.fields.items():
+            field.widget.attrs["class"] = " form-control"
+
+        self.fields['atc'].widget.attrs[
+            "class"] = "bg-white focus:outline-none border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal text-gray-700"
+
+        self.fields['phone_number'].widget.attrs[
+            "class"] = "bg-white focus:outline-none border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal text-gray-700"
+
+        self.fields['line'].widget.attrs[
+            "class"] = "bg-white focus:outline-none border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal text-gray-700"
+
+        self.fields['company'].widget.attrs[
+            "class"] = "bg-white focus:outline-none border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal text-gray-700"
+
+        self.fields['phone_model'].widget.attrs[
+            "class"] = "bg-white focus:outline-none border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal text-gray-700"
+        self.fields['atc'].widget.allow_multiple_selected = False
+        self.fields['phone_model'].widget.allow_multiple_selected = False
+        self.fields['company'].widget.allow_multiple_selected = False
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
 
         return data
-
-
 
     def clean(self):
         pass
@@ -66,7 +90,6 @@ class LeadModelForm(forms.ModelForm):
             'reservation',
             # 'passwd',
         )
-        
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
@@ -81,7 +104,6 @@ class LeadDelModelForm(forms.ModelForm):
     class Meta:
         model = Lead
         fields = ()
-        
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
@@ -89,7 +111,6 @@ class LeadDelModelForm(forms.ModelForm):
         return data
 
     def clean(self):
-        
         pass
 
 
@@ -97,7 +118,6 @@ class CompanyDelModelForm(forms.ModelForm):
     class Meta:
         model = Company
         fields = ()
-        
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
@@ -112,7 +132,6 @@ class ApparatDelModelForm(forms.ModelForm):
     class Meta:
         model = Apparats
         fields = ()
-        
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
@@ -127,7 +146,6 @@ class NumberDelModelForm(forms.ModelForm):
     class Meta:
         model = Apparats
         fields = ()
-        
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
@@ -135,7 +153,7 @@ class NumberDelModelForm(forms.ModelForm):
         return data
 
     def clean(self):
-        pass        
+        pass
 
 
 class UserModelForm(forms.ModelForm):
@@ -148,7 +166,6 @@ class UserModelForm(forms.ModelForm):
             'first_name',
             'last_name',
         )
-        
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
@@ -163,7 +180,6 @@ class UserDelModelForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ()
-        
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
@@ -172,7 +188,6 @@ class UserDelModelForm(forms.ModelForm):
 
     def clean(self):
         pass
-
 
 
 class SetPasswordForm(SetPasswordForm):
@@ -180,7 +195,6 @@ class SetPasswordForm(SetPasswordForm):
         model = get_user_model()
         fields = ['new_password1', 'new_password2']
 
-
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
 
@@ -189,7 +203,6 @@ class SetPasswordForm(SetPasswordForm):
     def clean(self):
         pass
 
-        
 
 class CompanyModelForm(forms.ModelForm):
     class Meta:
@@ -198,16 +211,12 @@ class CompanyModelForm(forms.ModelForm):
             'name',
         )
 
-
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
         return data
 
-
     def clean(self):
-        
         pass
-
 
 
 class ApparatModelForm(forms.ModelForm):
@@ -217,15 +226,12 @@ class ApparatModelForm(forms.ModelForm):
             'name',
         )
 
-
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
         return data
 
-
     def clean(self):
         pass
-
 
 
 class NumberModelForm(forms.ModelForm):
@@ -236,15 +242,12 @@ class NumberModelForm(forms.ModelForm):
             'atc',
         )
 
-
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
         return data
 
-
     def clean(self):
         pass
-
 
 
 class AtcModelForm(forms.ModelForm):
@@ -255,15 +258,12 @@ class AtcModelForm(forms.ModelForm):
             'ip_address',
         )
 
-
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
         return data
 
-
     def clean(self):
         pass
-
 
 
 class LeadForm(forms.Form):
@@ -282,4 +282,3 @@ class CustomUserCreationForm(UserCreationForm):
             "last_name",
         )
         field_classes = {'username': UsernameField}
-        
