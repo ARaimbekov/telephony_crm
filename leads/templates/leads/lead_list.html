@@ -23,12 +23,18 @@
         </div>
         
         <form style="padding-left: 300px;" action="{% url 'leads:lead-list' %}">
-            <input class="form-control mr-sm-2" type="search" placeholder="Номер" style="border: 3px solid rgb(139, 139, 155); "  name="number"> 
-            <input class="form-control mr-sm-2" type="search" placeholder="Мак" style="border: 3px solid rgb(139, 139, 155);" name="mac"> 
-            <input class="form-control mr-sm-2" type="search" placeholder="Фамилия" style="border: 3px solid rgb(139, 139, 155);" name="name">
+            <div class="form-group">
+            <div class="row">
+                <input class="mr-sm-2" type="search" placeholder="Номер" style="border: 3px solid rgb(139, 139, 155); "
+                    name="number">
+                <input class="mr-sm-2" type="search" placeholder="Мак" style="border: 3px solid rgb(139, 139, 155);"
+                    name="mac">
+                <input class="mr-sm-2" type="search" placeholder="Фамилия"
+                    style="border: 3px solid rgb(139, 139, 155);" name="name">
             
-            <button class="text-gray-500 hover:text-blue-500" type="submit">Поиск/Сбросить</button>
-             
+                <button class="text-gray-500 hover:text-blue-500" type="submit">Поиск/Сбросить</button>
+        </div>
+    </div>
         </form> 
         
 
