@@ -53,6 +53,7 @@ class LeadModelForm(forms.ModelForm):
     class Meta:
         model = Lead
         fields = (
+            'atc',
             'phone_number',
             'mac_address',
             'first_name',
@@ -61,7 +62,6 @@ class LeadModelForm(forms.ModelForm):
             'phone_model',
             'company',
             'line',
-            'atc',
             'active',
             'reservation',
             # 'passwd',
