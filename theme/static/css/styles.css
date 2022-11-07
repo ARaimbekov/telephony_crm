@@ -785,7 +785,7 @@ img,video{
 
 #pageStyle{
     position: absolute; 
-    left: 650px; 
+    margin-left: 1800px;
     top: 1170px;
 }
 
