@@ -14,7 +14,6 @@ import shortuuid
 
 class User(AbstractUser):
     is_organisor = models.BooleanField(default=True)
-    is_agent = models.BooleanField(default=False)
 
 
 class UserProfile(models.Model):
@@ -45,18 +44,19 @@ class Lead(models.Model):
     )
 
     phone_number = models.OneToOneField("Number", unique=True, on_delete=models.PROTECT, verbose_name='Номер телефона')    
-    mac_address = models.CharField(max_length=12,blank=True, verbose_name='MAC-Адрес', validators = [
-        RegexValidator(
-            regex=r'^([0-9a-f]{2}){5}([0-9a-f]{2})$',
-            message = 'Не правильный ввод, пример ввода: 2c549188c9e3',
-            code = 'invalid',
-            inverse_match = False,
-            flags = re.IGNORECASE
-        )
-    ])
-    first_name = models.CharField(max_length=20, verbose_name='Имя')
+    mac_address = models.CharField(max_length=17, blank=True, verbose_name='MAC-Адрес')
+    # mac_address = models.CharField(max_length=17,blank=True, verbose_name='MAC-Адрес', validators = [
+    #     RegexValidator(
+    #         regex=r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$',
+    #         message = 'Не правильный ввод, пример ввода: 2c549188c9e3',
+    #         code = 'invalid',
+    #         inverse_match = False,
+    #         flags = re.IGNORECASE
+    #     )
+    # ])
+    first_name = models.CharField(max_length=20, blank=True, verbose_name='Имя')
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')
-    patronymic_name = models.CharField(max_length=20, verbose_name='Отчество')
+    patronymic_name = models.CharField(max_length=20, blank=True, verbose_name='Отчество')
     phone_model = models.ManyToManyField("Apparats", verbose_name='Модель телефона')
     company = models.ManyToManyField("company", verbose_name='Компания')
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
@@ -93,7 +93,7 @@ class Apparats(models.Model):
 
 class Number(models.Model):
     name = models.CharField(max_length=30, unique=True, verbose_name='Номер телефона')
-    atc = models.ForeignKey('atc', on_delete=models.PROTECT, verbose_name='атска')
+    atc = models.ForeignKey('atc', on_delete=models.PROTECT, verbose_name='ATC')
 
     def __str__(self):
         return self.name
@@ -106,15 +106,3 @@ class Atc(models.Model):
     def __str__(self):
         return self.name
 
-
-def handle_upload_follow_ups(instance, filename):
-    return f"lead_followups/lead_{instance.lead.pk}/{filename}"
-
-
-
-def post_user_created_signal(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-
-post_save.connect(post_user_created_signal, sender=User)
