@@ -9,6 +9,7 @@ import re, uuid
 from uuid import uuid4
 from django_extensions.db.fields import ShortUUIDField
 import shortuuid
+import datetime
 
 
 
@@ -60,7 +61,7 @@ class Lead(models.Model):
     phone_model = models.ManyToManyField("Apparats", verbose_name='Модель телефона')
     company = models.ManyToManyField("company", verbose_name='Компания')
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
-    update_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата изменения')
+    update_added = models.DateTimeField(auto_now=True, verbose_name='Дата изменения')
     active = models.BooleanField(default=True)
     reservation = models.BooleanField(default=False, verbose_name='Зарезервировать')
     line = models.CharField(max_length=5,choices=CHOICES, default='1', verbose_name='Линия')
