@@ -262,7 +262,7 @@ def lead_list(request):
         context['leads'] = leads
 
     else:
-        leads = Lead.objects.all()
+        leads = Lead.objects.order_by('-update_added')
         context['leads'] = leads
     
     
