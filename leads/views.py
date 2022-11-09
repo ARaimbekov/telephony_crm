@@ -10,7 +10,7 @@ import json
 from django.contrib.auth.views import PasswordResetDoneView
 from django.contrib import messages
 from django.core.mail import send_mail
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http.response import JsonResponse
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -243,27 +243,40 @@ def password_change(request, pk):
 # LEAD LEAD LEAD LEAD LEAD
 
 def lead_list(request):
+    context = {}
     search_number_query = request.GET.get('number', '',)
     search_mac_query = request.GET.get('mac', '',)
     search_name_query = request.GET.get('name', '', )
+    page_list = request.GET.get('page')
+    
 
     if search_number_query:
         leads = Lead.objects.filter(phone_number__in=Number.objects.filter(
             name__icontains=search_number_query))
+        context['leads'] = leads
     elif search_mac_query:
         leads = Lead.objects.filter(mac_address__icontains=search_mac_query)
+        context['leads'] = leads
     elif search_name_query:
         leads = Lead.objects.filter(last_name__icontains=search_name_query)
+        context['leads'] = leads
 
     else:
-        leads = Lead.objects.all()
-        page = Paginator(leads, 15)
-        page_list = request.GET.get('page')
-        page = page.get_page(page_list)
+        leads = Lead.objects.order_by('-update_added')
+        context['leads'] = leads
+    
+    
+    paginator = Paginator(leads, 15)
+        
+    try:
+        page = paginator.page(page_list)
+    except PageNotAnInteger:
+        page = paginator.page(1)
+    except EmptyPage:
+        page = paginator.page(paginator.num_pages)
 
-    context = {
-        "page": page
-    }
+    context['page'] = page
+
     return render(request, "leads/lead_list.html", context)
 
 
