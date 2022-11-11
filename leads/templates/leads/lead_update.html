@@ -7,7 +7,7 @@
 <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
 
 <section class="text-gray-700 body-font overflow-hidden">
-    <div class="container px-5 py-24 mx-auto">
+    <div class="container px-5 py-24 mx-auto" style="margin-top:-100px;">
       <div class="lg:w-4/5 mx-auto flex flex-wrap">
         <div class="w-full lg:pr-10 lg:py-6 mb-6 lg:mb-0">
             <h2 class="text-gray-900 text-3xl title-font font-medium mb-4">Телефоны (MAC)</h2>
@@ -19,8 +19,7 @@
             </div>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-                <!-- {{ form|crispy }} -->
-                <!-- <button type="submit" class="w-full text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">Готово</button> -->
+
                 
                 <div class="row">
                     <div class="col-6">
