@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 {% load tailwind_filters %}
+{% load crispy_forms_tags %}
+{% load static %}
 
 {% block content %}
+<link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
 
 <section class="text-gray-700 body-font overflow-hidden">
-    <div class="container px-5 py-24 mx-auto">
+    <div class="container px-5 py-24 mx-auto" style="margin-top:-100px;">
       <div class="lg:w-4/5 mx-auto flex flex-wrap">
         <div class="w-full lg:pr-10 lg:py-6 mb-6 lg:mb-0">
             <h2 class="text-gray-900 text-3xl title-font font-medium mb-4">Телефоны (MAC)</h2>
@@ -16,8 +19,58 @@
             </div>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-                {{ form|crispy }}
-                <button type="submit" class="w-full text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">Готово</button>
+
+                
+                <div class="row">
+                    <div class="col-6">
+                        {{ form.atc | as_crispy_field }}
+                    </div>
+                    <div class="col-6">
+                        {{ form.phone_number | as_crispy_field }}
+                    </div>
+            
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        {{ form.reservation | as_crispy_field }}
+                    </div>
+                    <div class="col-6">
+                        {{ form.mac_address | as_crispy_field }}
+                    </div>
+                    <div class="col-4">
+                        {{ form.line | as_crispy_field }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4">
+                        {{ form.last_name | as_crispy_field }}
+                    </div>
+                    <div class="col-4">
+                        {{ form.first_name | as_crispy_field }}
+                    </div>
+                    <div class="col-4">
+                        {{ form.patronymic_name | as_crispy_field }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-5">
+                        {{ form.phone_model | as_crispy_field }}
+                    </div>
+                    <div class="col-5">
+                        {{ form.company | as_crispy_field }}
+                    </div>
+                    <div class="col-2">
+                        {{ form.active | as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center">
+                    <button type='submit' id="buttonStyle"
+                        class="col-6 text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">
+                        Готово
+                    </button>
+                </div>
+
             </form>
             <div class="mt-5 py-5 border-t border-gray-200">
                 <a href="{% url 'leads:lead-delete' lead.pk %}" class="w-1/2 mt-3 text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">

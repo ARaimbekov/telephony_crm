@@ -377,7 +377,9 @@ def phone_number(request):
 
 def lead_update(request, pk):
     lead = Lead.objects.get(id=pk)
-    form = LeadModelForm(instance=lead)
+    company = Company.objects.get(lead=lead)
+    model = Apparats.objects.get(lead=lead)
+    form = LeadModelForm(instance=lead, initial={'phone_model':model, 'company':company})
     if request.method == "POST":
         form = LeadModelForm(request.POST, instance=lead)
         if form.is_valid():
