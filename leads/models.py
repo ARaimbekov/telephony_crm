@@ -66,7 +66,7 @@ class Lead(models.Model):
     reservation = models.BooleanField(default=False, verbose_name='Зарезервировать')
     line = models.CharField(max_length=5,choices=CHOICES, default='1', verbose_name='Линия')
     atc = models.ManyToManyField("atc", verbose_name='ATC')
-    passwd = ShortUUIDField(max_length=22, unique=True, editable=False, default=shortuuid.uuid, verbose_name='Пароль')
+    passwd = ShortUUIDField(max_length=22, editable=False, default=shortuuid.uuid, verbose_name='Пароль')
 
     class Meta:
         unique_together = ['mac_address', 'line']

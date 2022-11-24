@@ -50,7 +50,7 @@ function getAtcId(e) {
                 }
 
             } else {
-                number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номером</option>'
+                number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номеров</option>'
 
             }
 
