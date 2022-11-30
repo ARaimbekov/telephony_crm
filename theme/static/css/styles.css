@@ -789,6 +789,12 @@ img,video{
     top: 1210px;
 }
 
+#numberPage{
+    position:absolute;
+    margin-left:500px;
+    top:1150px;
+}
+
 @-webkit-keyframes spin{
     to{
         transform:rotate(360deg)
