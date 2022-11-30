@@ -294,7 +294,7 @@ def lead_create(request):
         try:
             form = LeadCreateModelForm(request.POST)
             pattern = re.compile("^([0-9A-Fa-f]{2}[:-]{0,1}){5}([0-9A-Fa-f]{2})$")
-            if pattern.match(request.POST['mac_address']):
+            if pattern.match(request.POST['mac_address']) or request.POST['mac_address'] == '':
                 if form.is_valid():
                     if ('reservation') in request.POST:
                         letters = string.digits
