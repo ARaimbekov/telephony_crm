@@ -604,10 +604,29 @@ def apparat_delete(request, pk):
 
 
 def number_list(request):
-    leads = Number.objects.order_by('name')
-    context = {
-        "leads": leads
-    }
+    context={}
+    number_query = request.GET.get('number','',)
+    page_list = request.GET.get('page')
+
+    if number_query:
+        leads = Number.objects.filter(name__icontains=number_query)
+        context['leads'] = leads
+    
+    else:
+        leads = Number.objects.order_by('name')
+        context["leads"] = leads
+
+    paginator = Paginator(leads, 15)
+        
+    try:
+        page = paginator.page(page_list)
+    except PageNotAnInteger:
+        page = paginator.page(1)
+    except EmptyPage:
+        page = paginator.page(paginator.num_pages)
+
+    context['page'] = page
+
     return render(request, "leads/number.html", context)
 
 

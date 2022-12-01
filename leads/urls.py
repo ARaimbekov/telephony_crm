@@ -33,6 +33,7 @@ urlpatterns = [
 
     path('create-number/', number_create, name='number-create'),
     path('<int:pk>/number_delete/', number_delete, name='number_delete'),
+    # path('find-number/', number_list, name='number-find'),
 
     path('export_table/', export_to_csv, name='export_table'),
     path('export_to_exel/', export_to_exel, name='export_table_exel'),

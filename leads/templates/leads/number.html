@@ -9,6 +9,19 @@
                 <h1 class="text-4xl text-gray-800">Нумерация</h1>
             </div>
             {% if request.user.is_organisor %}
+
+            <form style="padding-left: 300px;" action="{% url 'number' %}">
+                <div class="form-group">
+                    <div class="row"> 
+                        <input class="mr-sm-2" type="search" placeholder="Номер"
+                            style="border: 2px solid rgb(139, 139, 155);" name="number"> 
+
+                            <button class="text-gray-500 hover:text-blue-500" type="submit">Поиск/Сбросить</button>
+                    </div>
+                    
+                </div>
+                
+            </form>
             <div>
                 <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:number-create' %}">
                     Добавить
@@ -37,7 +50,7 @@
                     </thead>
                     <tbody>
                         <div class="form-error"> {{ form.non_field_errors }} </div>
-                        {% for lead in leads %}
+                        {% for lead in page.object_list %}
                             <tr class="bg-white">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.name }}
@@ -62,6 +75,28 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                <div id="page_id "class="container">
+                    <div class="" id="numberPage">
+                    {% if page.has_previous %}
+                        <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page=1">Начало</a>
+                        <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.previous_page_number }}">Предыдуший</a>
+                    {% endif %}
+                    
+                    {% for num in page.paginator.page_range %}
+                        {% if page.number == num %}
+                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page= {{ num }} ">{{ num }}</a>
+                        {% elif num > page.number|add:'-2' and num < page.number|add:'2' %}
+                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page= {{ num }} ">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page.has_next %}
+                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.next_page_number }}">Следуюшая</a>
+                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.paginator.num_pages }}">{{ page.paginator.num_pages|add:'-1' }}</a>
+                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.paginator.num_pages }}">Конец</a>
+                    {% endif %}
+                    </div>
+                </div>
                 </div>
             </div>
             </div>
