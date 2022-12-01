@@ -275,7 +275,22 @@ def lead_list(request):
     except EmptyPage:
         page = paginator.page(paginator.num_pages)
 
-    context['page'] = page
+    # context['page'] = page
+    reserved_number = Lead.objects.filter(reservation=True).count()
+    total_number = Lead.objects.count()
+    # total_users = User.objects.count()   
+    free_number = Number.objects.count() - total_number
+    all_number = Number.objects.count()
+    all_atc = Atc.objects.count()
+
+    context = {
+        "page": page, 
+        "total_number": total_number,
+        "reserved_number" : reserved_number,
+        "free_number": free_number,
+        "all_number": all_number,
+        "all_atc": all_atc,
+    }
 
     return render(request, "leads/lead_list.html", context)
 
