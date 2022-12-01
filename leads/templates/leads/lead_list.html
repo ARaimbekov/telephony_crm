@@ -3,7 +3,15 @@
 {% block content %}    
 
 
+<h20 class="grays">Всего позиций : {{ total_number }}</h20>
+<h20 class="grays">Зарезервированых номеров : {{reserved_number}}</h20>
+<h20 class="grays">Количество номеров : {{all_number}}</h20>
+<h20 class="grays">Свободных номеров : {{free_number}}</h20>
+<h20 class="grays">Количество ATC :  {{all_atc}}</h20>
+
+
 <section class="text-gray-700 body-font">
+    
     <div class="container px-5 py-24 mx-auto flex flex-wrap">
         <div class="w-full mb-6 py-6 flex justify-between items-center border-b border-gray-200">
             <div>
