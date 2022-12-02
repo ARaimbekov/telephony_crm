@@ -170,6 +170,7 @@
 
                     {% if page.has_next %}
                             <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.next_page_number }}">Следуюшая</a>
+                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.paginator.num_pages }}">{{ page.paginator.num_pages|add:'-1' }}</a>
                             <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.paginator.num_pages }}">Конец</a>
                     {% endif %}
                     </div>
