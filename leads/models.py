@@ -102,7 +102,7 @@ class Number(models.Model):
 
 class Atc(models.Model):
     name = models.CharField(max_length=30, unique=True, verbose_name='Наименование')
-    ip_address = models.CharField(max_length=30, unique=True, verbose_name='IP адрес')
+    ip_address = models.CharField(max_length=30, verbose_name='IP адрес')
 
     def __str__(self):
         return self.name
