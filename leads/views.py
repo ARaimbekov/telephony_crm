@@ -402,10 +402,14 @@ def lead_update(request, pk):
     lead = Lead.objects.get(id=pk)
     company = Company.objects.get(lead=lead)
     model = Apparats.objects.get(lead=lead)
+    updated_user = request.user.username
     form = LeadModelForm(instance=lead, initial={'phone_model':model, 'company':company})
+    
     if request.method == "POST":
         form = LeadModelForm(request.POST, instance=lead)
         if form.is_valid():
+            lead.updated_user = updated_user
+            lead.save()
             form.save()
             messages.success(request, "Изменения были удачно внесены !")
             return redirect("/leads")
