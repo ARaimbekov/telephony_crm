@@ -64,6 +64,7 @@ class LeadModelForm(forms.ModelForm):
             'line',
             'active',
             'reservation',
+            'updated_user',
             # 'passwd',
         )
         
