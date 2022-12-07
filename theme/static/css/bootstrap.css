@@ -787,6 +787,10 @@ progress {
   width: 100%;
 }
 
+.hidden_block {
+  display: none;
+}
+
 .offset-1 {
   margin-left: 8.33333333%;
 }
