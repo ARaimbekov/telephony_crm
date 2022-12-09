@@ -305,6 +305,7 @@ def lead_detail(request, pk):
 
 def lead_create(request):
     form = LeadCreateModelForm()
+
     if request.method == "POST":
         try:
             form = LeadCreateModelForm(request.POST)
@@ -317,6 +318,7 @@ def lead_create(request):
                             ''.join(random.choice(letters) for i in range(6))
                         temp = request.POST.copy()
                         temp['mac_address'] = new_mac
+                        temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
                         form.save()
@@ -330,6 +332,7 @@ def lead_create(request):
                             result += '' + i
                         result = result.lower()
                         temp['mac_address'] = result
+                        temp['created_user'] = request.user.username
                         print(request.POST)
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
@@ -344,6 +347,7 @@ def lead_create(request):
                             result += '' + i
                         result = result.lower()
                         temp['mac_address'] = result
+                        temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
                         form.save()
@@ -357,6 +361,7 @@ def lead_create(request):
                             result += '' + i
                         result = result.lower()
                         temp['mac_address'] = result
+                        temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
                         form.save()
@@ -369,6 +374,7 @@ def lead_create(request):
                         mac = temp['mac_address']
                         mac = mac.lower()
                         temp['mac_address'] = mac
+                        temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
                         form.save()

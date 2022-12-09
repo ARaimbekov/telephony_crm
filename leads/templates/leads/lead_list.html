@@ -46,7 +46,7 @@
         </form> 
         
 
-        <div class="flex flex-col w-full" style="width: 100cm; margin-left: -330px;">
+        <div class="flex flex-col w-full" style="width: 100cm; margin-left: -30px;">
             <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
                 <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
@@ -66,13 +66,7 @@
                             Линия
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Фамилия
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Имя
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Отчество
+                            ФИО
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Модель телефона
@@ -81,19 +75,13 @@
                             Компания
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Редактор
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Время добавления
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Время обновления
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Активен
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Зарезервирован
+                            </th>
+                            <th scope="col" class="relative px-6 py-3">
+                            <span class="sr-only">Обзор</span>
                             </th>
                             <th scope="col" class="relative px-6 py-3">
                             <span class="sr-only">Изменить</span>
@@ -118,13 +106,9 @@
                                     {{ lead.line }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.last_name }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ lead.last_name }} 
                                     {{ lead.first_name }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.patronymic_name }}
+                                    {{ lead.first_name }}
                                 </td>
                                 {% for phone in lead.phone_model.all %}
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -137,20 +121,15 @@
                                 </td>
                                 {% endfor %}
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.updated_user }}
-                                </td>                                                               
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.date_added }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.update_added }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.active }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.reservation }}
                                 </td>   
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="{% url 'leads:lead-detail' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
+                                        Обзор
+                                    </a>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <a href="{% url 'leads:lead-update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
                                         Изменить

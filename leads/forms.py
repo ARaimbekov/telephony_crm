@@ -28,6 +28,7 @@ class LeadCreateModelForm(forms.ModelForm):
             'phone_model',
             'company',
             'active',
+            'created_user',
         )
 
     def __init__(self,*args,**kwargs):
