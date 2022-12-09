@@ -416,6 +416,7 @@ def lead_update(request, pk):
         if form.is_valid():
             lead.updated_user = updated_user
             lead.save()
+            lead.mac_address = lead.mac_address.lower()
             form.save()
             messages.success(request, "Изменения были удачно внесены !")
             return redirect("/leads")
