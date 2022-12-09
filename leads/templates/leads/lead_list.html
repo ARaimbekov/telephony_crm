@@ -46,7 +46,7 @@
         </form> 
         
 
-        <div class="flex flex-col w-full" style="width: 100cm; margin-left: -30px;">
+        <div class="flex flex-col w-full" style="width: 100cm; margin-left: -40px;">
             <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
                 <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
@@ -108,7 +108,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ lead.last_name }} 
                                     {{ lead.first_name }}
-                                    {{ lead.first_name }}
+                                    {{ lead.patronymic_name }}
                                 </td>
                                 {% for phone in lead.phone_model.all %}
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
