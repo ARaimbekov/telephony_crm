@@ -13,14 +13,27 @@
                         </div>
                         <p class="mt-1 text-xl text-gray-500 truncate">{{ lead.description }}</p>
                     </div>
-                    {% if lead.profile_picture %}
-                    <img class="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0" src="{{ lead.profile_picture.url }}" alt="">
-                    {% endif %}
                 </div>
                 <div class="flex mb-4">
-                    <a href="{% url 'leads:lead-update' lead.pk %}" class="flex-grow border-b-2 border-gray-300 py-2 text-lg px-1">
-                        Обновляемая информация
-                    </a>    
+                    <a class="hover:text-blue-500" href="{% url 'leads:lead-update' lead.pk %}">Внести изменения</a>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Номер телефона</span>
+                    <span class="ml-auto text-gray-900">{{ lead.phone_number}}</span>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Мак-Адрес</span>
+                    <span class="ml-auto text-gray-900">{{ lead.mac_address }}</span>
+                </div>
+                {% if user.is_superuser %}
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Пароль</span>
+                    <span class="ml-auto text-gray-900">{{ lead.passwd }}</span>
+                </div>
+                {% endif %}
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Линия</span>
+                    <span class="ml-auto text-gray-900">{{ lead.line }}</span>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Фамилия</span>
@@ -30,58 +43,52 @@
                     <span class="text-gray-500">Имя</span>
                     <span class="ml-auto text-gray-900">{{ lead.first_name }}</span>
                 </div>
-                <div class="flex border-t border-b mb-6 border-gray-300 py-2">
+                <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Отчество</span>
                     <span class="ml-auto text-gray-900">{{ lead.patronymic_name }}</span>
                 </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Модель телефона</span>
+                    {% for phone in lead.phone_model.all %}
+                    <span class="ml-auto text-gray-900">{{ phone.name }}</span>
+                    {% endfor %}
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Компания</span>
+                    {% for company in lead.company.all %}
+                    <span class="ml-auto text-gray-900">{{ company.name }}</span>
+                    {% endfor %}
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Добавил</span>
+                    <span class="ml-auto text-gray-900">{{ lead.created_user  }}</span>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Обновил</span>
+                    <span class="ml-auto text-gray-900">{{ lead.updated_user }}</span>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Время добавления</span>
+                    <span class="ml-auto text-gray-900">{{ lead.date_added }}</span>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Время обновления</span>
+                    <span class="ml-auto text-gray-900">{{ lead.update_added }}</span>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Активен</span>
+                    <span class="ml-auto text-gray-900">{{ lead.active }}</span>
+                </div>
+                <div class="flex border-t border-b mb-6 border-gray-300 py-2">
+                    <span class="text-gray-500">Зарезервирован</span>
+                    <span class="ml-auto text-gray-900">{{ lead.reservation }}</span>
+                </div>
             </div>
-
-    
-
         </div>
 
-        {% for followup in lead.followups.all %}
-            <div class="mt-5 shadow px-4 sm:px-6">
-                <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-500">
-                    Notes (<a href="{% url 'leads:lead-followup-update' followup.pk %}" class="text-blue-500 hover:text-blue-700">update</a>)
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {{ followup.notes }}
-                    </dd>
-                </div>
-                {% if followup.file %}
-                    <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">
-                        Attachments
-                        </dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <ul class="border border-gray-200 rounded-md divide-y divide-gray-200">
-                            <li class="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
-                                <div class="w-0 flex-1 flex items-center">
-                                   
-                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clip-rule="evenodd" />
-                                    </svg>
-                                    <span class="ml-2 flex-1 w-0 truncate">
-                                    {{ followup.file.name }}
-                                    </span>
-                                </div>
-                                <div class="ml-4 flex-shrink-0">
-                                    <a href="{{ followup.file.url }}" download class="font-medium text-indigo-600 hover:text-indigo-500">
-                                    Download
-                                    </a>
-                                </div>
-                            </li>
-                        </ul>
-                        </dd>
-                    </div>
-                {% endif %}
-            </div>
-        {% endfor %}
-
-
-        
+        <button type='submit' onclick="history.back();" class="text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md" style="margin-left: 500px;">
+            Вернуться назад
+        </button>
 
     </div>
   </section>

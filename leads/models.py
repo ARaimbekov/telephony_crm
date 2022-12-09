@@ -67,8 +67,8 @@ class Lead(models.Model):
     line = models.CharField(max_length=5,choices=CHOICES, default='1', verbose_name='Линия')
     atc = models.ManyToManyField("atc", verbose_name='ATC')
     passwd = ShortUUIDField(max_length=22, editable=False, default=shortuuid.uuid, verbose_name='Пароль')
-    updated_user = models.CharField(max_length=20, blank=True, verbose_name='Редактор')
-    created_user = models.CharField(max_length=20, blank=True, verbose_name='Создатель')
+    updated_user = models.CharField(max_length=20, blank=True, verbose_name='Обновил')
+    created_user = models.CharField(max_length=20, blank=True, verbose_name='Добавил')
 
     class Meta:
         unique_together = ['mac_address', 'line']
