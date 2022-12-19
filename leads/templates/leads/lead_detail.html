@@ -9,7 +9,7 @@
                 <div class="w-full flex items-center justify-between space-x-6">
                     <div class="flex-1 truncate">
                         <div class="flex items-center space-x-3">
-                            <h3 class="text-3xl text-gray-900 font-medium truncate">{{ lead.phone_number}} - {{ lead.first_name }} {{ lead.last_name }} {{ lead.patronymic_name }}</h3>
+                            <h3 class="text-3xl text-gray-900 font-medium truncate">{{ lead.phone_number}} -  {{ lead.last_name }} {{ lead.first_name }} {{ lead.patronymic_name }}</h3>
                         </div>
                         <p class="mt-1 text-xl text-gray-500 truncate">{{ lead.description }}</p>
                     </div>
@@ -18,7 +18,7 @@
                     <a class="text-indigo-600 hover:text-indigo-900" href="{% url 'leads:lead-update' lead.pk %}">Внести изменения</a>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
-                    <span class="text-gray-500">Atc</span>
+                    <span class="text-gray-500">ATC</span>
                     {% for atc in lead.atc.all %}
                     <span class="ml-auto text-gray-900">{{ atc.name }}</span>
                     {% endfor %}
@@ -32,7 +32,7 @@
                     <span class="ml-auto text-gray-900">{{ lead.reservation}}</span>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
-                    <span class="text-gray-500">Мак-Адрес</span>
+                    <span class="text-gray-500">Mac-address</span>
                     <span class="ml-auto text-gray-900">{{ lead.mac_address }}</span>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
