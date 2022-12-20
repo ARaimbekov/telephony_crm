@@ -7,6 +7,7 @@ from django import contrib
 import random
 import string
 import json
+import requests
 from django.contrib.auth.views import PasswordResetDoneView
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -297,8 +298,15 @@ def lead_list(request):
 
 def lead_detail(request, pk):
     lead = Lead.objects.get(id=pk)
+    phone = str(lead.phone_number)
+    res = requests.get('http://10.90.42.250:8084/phoneinfo?phone=' + phone)
+    atc_ip = res.text[42:50]
+    switch_ip = res.text[169:178]
+
     context = {
-        "lead": lead
+        "lead": lead,
+        "atc_ip": atc_ip,
+        "switch_ip": switch_ip,
     }
     return render(request, "leads/lead_detail.html", context)
 
