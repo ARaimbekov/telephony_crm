@@ -7,7 +7,6 @@ from django import contrib
 import random
 import string
 import json
-import requests
 from django.contrib.auth.views import PasswordResetDoneView
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -298,15 +297,32 @@ def lead_list(request):
 
 def lead_detail(request, pk):
     lead = Lead.objects.get(id=pk)
-    # phone = str(lead.phone_number)
+    phone = str(lead.phone_number)
     # res = requests.get('http://10.90.42.250:8084/phoneinfo?phone=' + phone)
-    # atc_ip = res.text[42:50]
-    # switch_ip = res.text[169:178]
+    # res_json = res.json()
+    res_json = {'phone': '2252', 'status': 'idle', 'ipaddr': '10.2.3.4', 'socketinfo': {'port': 'Gi3/0/41', 'cabinet': '721', 'socket': '715.22', 'discription': '16.03.20_ALFA_721_715.22', 'ipaddr': '10.2.3.40'}}
+    
+    number_api = res_json['phone']
+    atc_ip = res_json['ipaddr']
+    status = res_json['status']
+    soket_info = res_json['socketinfo']
+    port = soket_info['port']
+    cabinet = soket_info['cabinet']
+    socket = soket_info['socket']
+    discription = soket_info['discription']
+    switch_ip = soket_info['ipaddr']
 
     context = {
-        "lead": lead
-        # "atc_ip": atc_ip,
-        # "switch_ip": switch_ip,
+        "lead": lead,
+        "number_api": number_api,
+        "atc_ip": atc_ip,
+        "switch_ip": switch_ip,
+        "status" : status,
+        "port": port,
+        "cabinet": cabinet,
+        "socket": socket,
+        "discription": discription,
+
     }
     return render(request, "leads/lead_detail.html", context)
 
@@ -393,8 +409,16 @@ def lead_create(request):
             else:
                 return render(request, "error_mac_type_failed.html")
         except Exception as e:
+            number_on_mac = request.POST["mac_address"]
+            print(number_on_mac)
+            # number_on_mac = Lead.objects.filter(mac_address__icontains='number_on_mac')
+            # leads = Lead.objects.filter(phone_number__in=Number.objects.filter(name__icontains=search_number_query))
+            mac = Lead.objects.filter(mac_address__icontains=number_on_mac)
+            print(mac)
             context = {
-                'error': 'Такой MAC адрес уже существует'
+                'error': 'Такой MAC адрес уже существует',
+                'mac' : mac,
+
             }
             return render(request, "error.html", context)
 
