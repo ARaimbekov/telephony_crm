@@ -440,16 +440,18 @@ def lead_update(request, pk):
     lead = Lead.objects.get(id=pk)
     company = Company.objects.get(lead=lead)
     model = Apparats.objects.get(lead=lead)
+    atc = Atc.objects.get(lead=lead)
+    atc_instance = Atc.objects.get(name=atc)
     updated_user = request.user.username
-    form = LeadModelForm(instance=lead, initial={'phone_model':model, 'company':company})
-    
+    form = LeadModelForm(instance=lead, initial={'atc': atc, 'phone_model': model, 'company':company})
+    form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc_instance.id)
     if request.method == "POST":
         form = LeadModelForm(request.POST, instance=lead)
         if form.is_valid():
+            form.save()
             lead.updated_user = updated_user
             lead.save()
             lead.mac_address = lead.mac_address.lower()
-            form.save()
             messages.success(request, "Изменения были удачно внесены !")
             return redirect("/leads")
     context = {
