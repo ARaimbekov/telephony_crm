@@ -20,7 +20,7 @@ from agents.mixins import OrganisorAndLoginRequiredMixin
 from .models import Lead, Company, Apparats, Number, Atc, User
 from .forms import *
 from django.db.models import ProtectedError
-
+from django.db import IntegrityError
 
 logger = logging.getLogger(__name__)
 
@@ -707,9 +707,17 @@ def number_create(request):
             if form.is_valid():
                 if "-" in request.POST["name"]:
                     num1, num2 = [int(i)
-                                  for i in request.POST["name"].split('-')]
+                                for i in request.POST["name"].split('-')]
+                           
                     for i in range(num1, num2+1):
-                        Number.objects.create(name=i, atc=atc).save()
+                        number_list = Number.objects.filter().values_list('name', flat=True)
+
+                        if i not in number_list:
+                            try:
+                                Number.objects.create(name=i, atc=atc).save()
+                            
+                            except IntegrityError as my_Except:
+                                pass                
 
                     messages.success(request, "Номера телефонов были успешно внесены !")    
                     return redirect("number")
@@ -731,8 +739,13 @@ def number_create(request):
                     form.save()
                     messages.success(request, "Номер телефона был успешно внесен !")
                     return redirect("number")
+
+
         except Exception as e:
-            return redirect("error")
+            e = 'Данный номер уже существует'
+            context = {"error": e }
+            return render(request, "error.html", context)
+
     context = {
         "form": form
     }

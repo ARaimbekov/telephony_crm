@@ -3,7 +3,7 @@ from os import environ
 import os
 
 
-DEBUG = 'True'
+DEBUG = True
 SECRET_KEY = '0x!b#(1*cd73w$&azzc6p+essg7v=g80ls#z&xcx*mpemx&@9$'
 
 #DEBUG = int(os.environ.get("DEBUG", default=0))
