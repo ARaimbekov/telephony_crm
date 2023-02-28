@@ -724,14 +724,26 @@ def number_create(request):
                 elif " " in request.POST["name"]:
                     num = [int(i) for i in request.POST["name"].split()]
                     for i in num:
-                        Number.objects.create(name=i, atc=atc).save()
+                        number_list = Number.objects.filter().values_list('name', flat=True)
+                        if i not in number_list:
+                            try:
+                                Number.objects.create(name=i, atc=atc).save()
+                            
+                            except IntegrityError as my_Except:
+                                pass                        
                     
                     messages.success(request, "Номера телефонов были успешно внесены !")
                     return redirect("number")
                 elif "," in request.POST["name"]:
                     num = [int(i) for i in request.POST["name"].split(',')]
                     for i in num:
-                        Number.objects.create(name=i, atc=atc).save()
+                        number_list = Number.objects.filter().values_list('name', flat=True)
+                        if i not in number_list:
+                            try:
+                                Number.objects.create(name=i, atc=atc).save()
+                            
+                            except IntegrityError as my_Except:
+                                pass  
 
                     messages.success(request, "Номера телефонов были успешно внесены !")
                     return redirect("number")
