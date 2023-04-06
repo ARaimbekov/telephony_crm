@@ -8,6 +8,7 @@ import random
 import string
 import json
 from django.contrib.auth.views import PasswordResetDoneView
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -162,6 +163,7 @@ class SignupView(generic.CreateView):
         return reverse("leads:users")
 
 
+@login_required
 class LandingPageView(generic.TemplateView):
     template_name = "landing.html"
 
@@ -171,10 +173,12 @@ class LandingPageView(generic.TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
 
+@login_required
 def landing_page(request):
     return render(request, "landing.html")
 
 
+@login_required
 def user_list(request):
     leads = User.objects.filter(is_active=True)
     context = {
@@ -183,6 +187,7 @@ def user_list(request):
     return render(request, "leads/users.html", context)
 
 
+@login_required
 def user_update(request, pk):
     lead = User.objects.get(id=pk)
     form = UserModelForm(instance=lead)
@@ -199,6 +204,7 @@ def user_update(request, pk):
     return render(request, "leads/user_update.html", context)
 
 
+@login_required
 def user_delete(request, pk):
     lead = User.objects.get(id=pk)
     form = UserDelModelForm(instance=lead)
@@ -221,6 +227,7 @@ def user_delete(request, pk):
     return render(request, "leads/user_delete.html", context)
 
 
+@login_required
 def password_change(request, pk):
     user = User.objects.get(id=pk)
     form = SetPasswordForm(user)
@@ -241,7 +248,7 @@ def password_change(request, pk):
 
 
 # LEAD LEAD LEAD LEAD LEAD
-
+@login_required
 def lead_list(request):
     context = {}
     search_number_query = request.GET.get('number', '',)
@@ -295,6 +302,7 @@ def lead_list(request):
     return render(request, "leads/lead_list.html", context)
 
 
+@login_required
 def lead_detail(request, pk):
     lead = Lead.objects.get(id=pk)
     phone = str(lead.phone_number)
@@ -327,6 +335,7 @@ def lead_detail(request, pk):
     return render(request, "leads/lead_detail.html", context)
 
 
+@login_required
 def lead_create(request):
     form = LeadCreateModelForm()
 
@@ -427,7 +436,8 @@ def lead_create(request):
     }
     return render(request, "leads/lead_create.html", context)
 
-    
+
+@login_required    
 def phone_number(request):
     data = json.loads(request.body)
     atc_id = data["id"]
@@ -436,6 +446,7 @@ def phone_number(request):
     return JsonResponse(list(phone_number.values("id", "name")), safe=False)
 
 
+@login_required
 def lead_update(request, pk):
     lead = Lead.objects.get(id=pk)
     company = Company.objects.get(lead=lead)
@@ -461,6 +472,7 @@ def lead_update(request, pk):
     return render(request, "leads/lead_update.html", context)
 
 
+@login_required
 def lead_delete(request, pk):
     lead = Lead.objects.get(id=pk)
     form = LeadDelModelForm(instance=lead)
@@ -484,6 +496,7 @@ def lead_delete(request, pk):
 
 # COMPANY COMPANY COMPANY COMPANY COMPANY
 
+@login_required
 def company_list(request):
     leads = Company.objects.all()
     context = {
@@ -492,6 +505,7 @@ def company_list(request):
     return render(request, "leads/company.html", context)
 
 
+@login_required
 def company_detail(request, pk):
     lead = Company.objects.get(id=pk)
     context = {
@@ -500,6 +514,7 @@ def company_detail(request, pk):
     return render(request, "leads/company_detail.html", context)
 
 
+@login_required
 def company_create(request):
     form = CompanyModelForm()
     if request.method == "POST":
@@ -523,6 +538,7 @@ def company_create(request):
     return render(request, "leads/company_create.html", context)
 
 
+@login_required
 def company_update(request, pk):
     company = Company.objects.get(id=pk)
     form = CompanyModelForm(instance=company)
@@ -539,6 +555,7 @@ def company_update(request, pk):
     return render(request, "leads/company_update.html", context)
 
 
+@login_required
 def company_delete(request, pk):
     lead = Company.objects.get(id=pk)
     form = CompanyDelModelForm(instance=lead)
@@ -571,6 +588,7 @@ def company_delete(request, pk):
 # APPRAT APPRAT APPRAT APPRAT APPRAT APPRAT
 
 
+@login_required
 def apparat_list(request):
     leads = Apparats.objects.all()
     context = {
@@ -579,6 +597,7 @@ def apparat_list(request):
     return render(request, "leads/apparats.html", context)
 
 
+@login_required
 def apparat_create(request):
     form = ApparatModelForm()
     if request.method == "POST":
@@ -601,6 +620,7 @@ def apparat_create(request):
     return render(request, "leads/apparats_create.html", context)
 
 
+@login_required
 def apparat_list(request):
     leads = Apparats.objects.all()
     context = {
@@ -609,6 +629,7 @@ def apparat_list(request):
     return render(request, "leads/apparats.html", context)
 
 
+@login_required
 def apparat_detail(request, pk):
     lead = Apparats.objects.get(id=pk)
     context = {
@@ -617,6 +638,7 @@ def apparat_detail(request, pk):
     return render(request, "leads/apparats_detail.html", context)
 
 
+@login_required
 def apparat_update(request, pk):
     lead = Apparats.objects.get(id=pk)
     form = ApparatModelForm(instance=lead)
@@ -633,6 +655,7 @@ def apparat_update(request, pk):
     return render(request, "leads/apparats_update.html", context)
 
 
+@login_required
 def apparat_delete(request, pk):
     lead = Apparats.objects.get(id=pk)
     form = ApparatDelModelForm(instance=lead)
@@ -662,7 +685,7 @@ def apparat_delete(request, pk):
 
 # NUMBER NUMBER NUMBER NUMBER
 
-
+@login_required
 def number_list(request):
     context={}
     number_query = request.GET.get('number','',)
@@ -690,6 +713,7 @@ def number_list(request):
     return render(request, "leads/number.html", context)
 
 
+@login_required
 def number_detail(request, pk):
     number = Number.objects.get(id=pk)
     context = {
@@ -698,6 +722,7 @@ def number_detail(request, pk):
     return render(request, "leads/lead_detail.html", context)
 
 
+@login_required
 def number_create(request):
     form = NumberModelForm()
     if request.method == "POST":
@@ -764,6 +789,7 @@ def number_create(request):
     return render(request, "leads/number_create.html", context)
 
 
+@login_required
 def number_delete(request, pk):
     lead = Number.objects.get(id=pk)
     form = NumberDelModelForm(instance=lead)
@@ -788,6 +814,7 @@ def number_delete(request, pk):
 
 # ATC ATC ATC ATC ATC ATC
 
+@login_required
 def atc_list(request):
     leads = Atc.objects.all()
     context = {
@@ -796,6 +823,7 @@ def atc_list(request):
     return render(request, "leads/atc.html", context)
 
 
+@login_required
 def atc_detail(request, pk):
     lead = Atc.objects.get(id=pk)
     context = {
@@ -804,6 +832,7 @@ def atc_detail(request, pk):
     return render(request, "leads/atc_detail.html", context)
 
 
+@login_required
 def atc_create(request):
     form = AtcModelForm()
     if request.method == "POST":
@@ -821,6 +850,7 @@ def atc_create(request):
     return render(request, "leads/atc_create.html", context)
 
 
+@login_required
 def atc_update(request, pk):
     lead = Atc.objects.get(id=pk)
     form = AtcModelForm(instance=lead)
@@ -837,6 +867,7 @@ def atc_update(request, pk):
     return render(request, "leads/atc_update.html", context)
 
 
+@login_required
 def atc_delete(request, pk):
     lead = Atc.objects.get(id=pk)
     form = AtcModelForm(instance=lead)
