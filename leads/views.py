@@ -411,7 +411,7 @@ def lead_create(request):
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
                         form.save()
-                        messages.success(request, "Вы успешно создали позицию !")
+                        messages.success(request, "Вы успешно создали позицию, настройки будут применены в течении 10 минут !")
                         return redirect("/leads")
                 else:
                     return render(request, "error_mac_failed.html")
@@ -463,7 +463,7 @@ def lead_update(request, pk):
             lead.updated_user = updated_user
             lead.save()
             lead.mac_address = lead.mac_address.lower()
-            messages.success(request, "Изменения были удачно внесены !")
+            messages.success(request, "В течении 10 минут изменения будут применены !")
             return redirect("/leads")
     context = {
         "form": form,
@@ -798,7 +798,7 @@ def number_delete(request, pk):
         try:
             if form.is_valid():
                 lead.delete()
-                messages.success(request, "Номер телефона был удалена !")
+                messages.success(request, "Номер телефона был удален !")
                 return redirect("number")
             else:
                 return render(request, 'error_number.html')
