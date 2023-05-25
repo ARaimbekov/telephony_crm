@@ -461,8 +461,8 @@ def lead_update(request, pk):
         if form.is_valid():
             form.save()
             lead.updated_user = updated_user
-            lead.save()
             lead.mac_address = lead.mac_address.lower()
+            lead.save()
             messages.success(request, "В течении 10 минут изменения будут применены !")
             return redirect("/leads")
     context = {
