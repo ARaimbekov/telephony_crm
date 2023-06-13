@@ -2,6 +2,14 @@
 
 {% block content %}
 
+<style>
+    .div-3 {
+        background-color: #fff2cc;
+    }
+    .div-4 {
+        background-color: #deeaf6;
+    }
+</style>
 <section class="text-gray-700 body-font overflow-hidden">
     <div class="container px-5 py-24 mx-auto" style="margin-left: -300px; margin-top: -50px;" >
         <div class="lg:w-4/5 mx-auto-info flex flex-wrap">
@@ -31,19 +39,59 @@
                     <span class="text-gray-500">Линия</span>
                     <span class="ml-auto text-gray-900">{{ lead.line }}</span>
                 </div>
+                {% if lead.mac_address == mac %}
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">MAC адрес</span>
                     <span class="ml-auto text-gray-900">{{ lead.mac_address }}</span>
                 </div>
+                {% elif lead.mac_address == '' %}
+                <div class="flex border-t border-gray-300 py-2 div-4">
+                    <span class="text-gray-500">MAC адрес</span>
+                    <span class="ml-auto text-gray-900"> - / {{ mac }}</span>
+                </div>
+                {% elif mac == '' %}
+                <div class="flex border-t border-gray-300 py-2 div-4">
+                    <span class="text-gray-500">MAC адрес</span>
+                    <span class="ml-auto text-gray-900"> {{ lead.mac_address }} / -</span>
+                </div>
+                {% elif lead.mac_address != mac %}
+                <div class="flex border-t border-gray-300 py-2 div-3">
+                    <span class="text-gray-500">MAC адрес</span>
+                    <span class="ml-auto text-gray-900"> {{ lead.mac_address }} / {{mac}} </span>
+                </div>
+                {% endif %}
+                {% if atc_ip_api == switch_ip %}
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">IP адрес</span>
-                    <span class="ml-auto text-gray-900">{{ atc_ip }}/{{ switch_ip }}</span>
+                    <span class="ml-auto text-gray-900"> {{atc_ip_api}} </span>
                 </div>
+                {% elif switch_ip == '' %}
+                <div class="flex border-t border-gray-300 py-2 div-4">
+                    <span class="text-gray-500">IP адрес</span>
+                    <span class="ml-auto text-gray-900"> {{atc_ip_api}} / -  </span>
+                </div>
+                {% elif atc_ip_api == '' %}
+                <div class="flex border-t border-gray-300 py-2 div-4">
+                    <span class="text-gray-500">IP адрес</span>
+                    <span class="ml-auto text-gray-900"> - / {{switch_ip}}  </span>
+                </div>
+                {% elif atc_ip_api != switch_ip %}
+                <div class="flex border-t border-gray-300 py-2 div-3" >
+                    <span class="text-gray-500">IP адрес</span>
+                    
+                    <span class="ml-auto text-gray-900"> {{atc_ip_api}} / {{switch_ip}}  </span>
+                </div>
+
+                {% endif %}
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Модель телефона</span>
                     {% for phone in lead.phone_model.all %}
                     <span class="ml-auto text-gray-900">{{ phone.name }}</span>
                     {% endfor %}
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">useragent</span>
+                    <span class="ml-auto text-gray-900">{{ useragent }}</span>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Статус</span>
@@ -125,7 +173,7 @@
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Коммутатор</span>
-                    <span class="ml-auto text-gray-900"> {{switch_ip}} </span>
+                    <span class="ml-auto text-gray-900">{{ switch }}</span>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Порт</span>
@@ -136,12 +184,12 @@
                     <span class="ml-auto text-gray-900">{{ cabinet }}</span>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
-                    <span class="text-gray-500">Интерфейс</span>
+                    <span class="text-gray-500">Розетка</span>
                     <span class="ml-auto text-gray-900">{{ socket }}</span>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
-                    <span class="text-gray-500">Описание интерфейса</span>
-                    <span class="ml-auto text-gray-900">{{ discription }}</span>
+                    <span class="text-gray-500">Описание порта</span>
+                    <span class="ml-auto text-gray-900">{{ description }}</span>
                 </div>
             </div>
         </div>
