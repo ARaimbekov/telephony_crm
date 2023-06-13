@@ -7,6 +7,7 @@ from django import contrib
 import random
 import string
 import json
+import requests
 from django.contrib.auth.views import PasswordResetDoneView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
