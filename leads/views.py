@@ -298,9 +298,9 @@ def lead_list(request):
 def lead_detail(request, pk):
     lead = Lead.objects.get(id=pk)
     phone = str(lead.phone_number)
-    # res = requests.get('http://10.90.42.250:8084/phoneinfo?phone=' + phone)
-    # res_json = res.json()
-    res_json = {'switch': 'cisco_switch', 'phone': '2252', 'ipaddr': '10.2.3.10', 'useragent':'Polycom/5.5.0.20556 PolycomVVX-VVX_500-UA/5.5.0.20556', 'status': 'idle', 'socketinfo': {'mac':'', 'ipaddr':'10.2.3.4', 'port': 'Gi3/0/41', 'cabinet': '721', 'socket': '715.22', 'description': '16.03.20_ALFA_721_715.22'}}
+    res = requests.get('http://10.90.42.250:8084/phoneinfo?phone=' + phone)
+    res_json = res.json()
+    # res_json = {'switch': 'cisco_switch', 'phone': '2252', 'ipaddr': '10.2.3.10', 'useragent':'Polycom/5.5.0.20556 PolycomVVX-VVX_500-UA/5.5.0.20556', 'status': 'idle', 'socketinfo': {'mac':'', 'ipaddr':'10.2.3.4', 'port': 'Gi3/0/41', 'cabinet': '721', 'socket': '715.22', 'description': '16.03.20_ALFA_721_715.22'}}
     
     # number_api = res_json['phone']
     switch = res_json['switch']
