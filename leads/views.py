@@ -329,7 +329,7 @@ def lead_detail(request, pk):
         "atc_ip_api": atc_ip_api,
         "useragent" : user_agent,
         "switch_ip": switch_ip,
-        "switch" : switch,
+#         "switch" : switch,
         # "status" : status,
         "port": port,
         "cabinet": cabinet,
