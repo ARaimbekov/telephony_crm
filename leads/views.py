@@ -7,6 +7,7 @@ from django import contrib
 import random
 import string
 import json
+import requests
 from django.contrib.auth.views import PasswordResetDoneView
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -309,7 +310,7 @@ def lead_detail(request, pk):
     port = soket_info['port']
     cabinet = soket_info['cabinet']
     socket = soket_info['socket']
-    discription = soket_info['discription']
+    description = soket_info['description']
     switch_ip = soket_info['ipaddr']
 
     context = {
@@ -321,7 +322,7 @@ def lead_detail(request, pk):
         "port": port,
         "cabinet": cabinet,
         "socket": socket,
-        "discription": discription,
+        "description": description,
 
     }
     return render(request, "leads/lead_detail.html", context)
