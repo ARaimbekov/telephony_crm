@@ -2,8 +2,16 @@
 
 {% block content %}
 
+<style>
+    .div-3 {
+        background-color: #fff2cc;
+    }
+    .div-4 {
+        background-color: #deeaf6;
+    }
+</style>
 <section class="text-gray-700 body-font overflow-hidden">
-    <div class="container px-5 py-24 mx-auto">
+    <div class="container px-5 py-24 mx-auto" style="margin-left: -300px; margin-top: -50px;" >
         <div class="lg:w-4/5 mx-auto-info flex flex-wrap">
             <div class="w-half lg:pr-0 lg:py-0 mb-10 lg:mb-1">
                 <div class="w-full flex items-center justify-between space-x-6">
@@ -28,16 +36,112 @@
                     <span class="ml-auto text-gray-900">{{ lead.phone_number}}</span>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Линия</span>
+                    <span class="ml-auto text-gray-900">{{ lead.line }}</span>
+                </div>
+                {% if lead.mac_address == mac %}
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">MAC адрес</span>
+                    <span class="ml-auto text-gray-900">{{ lead.mac_address }}</span>
+                </div>
+                {% elif lead.mac_address == '' %}
+                <div class="flex border-t border-gray-300 py-2 div-4">
+                    <span class="text-gray-500">MAC адрес</span>
+                    <span class="ml-auto text-gray-900"> - / {{ mac }}</span>
+                </div>
+                {% elif mac == '' %}
+                <div class="flex border-t border-gray-300 py-2 div-4">
+                    <span class="text-gray-500">MAC адрес</span>
+                    <span class="ml-auto text-gray-900"> {{ lead.mac_address }} / -</span>
+                </div>
+                {% elif lead.mac_address != mac %}
+                <div class="flex border-t border-gray-300 py-2 div-3">
+                    <span class="text-gray-500">MAC адрес</span>
+                    <span class="ml-auto text-gray-900"> {{ lead.mac_address }} / {{mac}} </span>
+                </div>
+                {% endif %}
+                {% if atc_ip_api == switch_ip %}
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">IP адрес</span>
+                    <span class="ml-auto text-gray-900"> {{atc_ip_api}} </span>
+                </div>
+                {% elif switch_ip == '' %}
+                <div class="flex border-t border-gray-300 py-2 div-4">
+                    <span class="text-gray-500">IP адрес</span>
+                    <span class="ml-auto text-gray-900"> {{atc_ip_api}} / -  </span>
+                </div>
+                {% elif atc_ip_api == '' %}
+                <div class="flex border-t border-gray-300 py-2 div-4">
+                    <span class="text-gray-500">IP адрес</span>
+                    <span class="ml-auto text-gray-900"> - / {{switch_ip}}  </span>
+                </div>
+                {% elif atc_ip_api != switch_ip %}
+                <div class="flex border-t border-gray-300 py-2 div-3" >
+                    <span class="text-gray-500">IP адрес</span>
+                    
+                    <span class="ml-auto text-gray-900"> {{atc_ip_api}} / {{switch_ip}}  </span>
+                </div>
+
+                {% endif %}
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Модель телефона</span>
+                    {% for phone in lead.phone_model.all %}
+                    <span class="ml-auto text-gray-900">{{ phone.name }}</span>
+                    {% endfor %}
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">useragent</span>
+                    <span class="ml-auto text-gray-900">{{ useragent }}</span>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Статус</span>
+                    <span class="ml-auto text-gray-900">{{ status }}</span>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Зарезервирован</span>
                     <span class="ml-auto text-gray-900">{{ lead.reservation}}</span>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
-                    <span class="text-gray-500">Mac-address</span>
-                    <span class="ml-auto text-gray-900">{{ lead.mac_address }}</span>
+                    <span class="text-gray-500">Активен</span>
+                    <span class="ml-auto text-gray-900">{{ lead.active }}</span>
+                </div>
+                {% if user.is_superuser %}
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Пароль &nbsp </span>
+                    <span class="text-indigo-600 hover:text-indigo-900"> <button data-toggle-id="su">
+                        показать/скрыть
+                      </button></span>
+                    <span class="ml-auto text-gray-900"> <form id="su" hidden>
+                        {{ lead.passwd }}
+                      </form></span>
+                </div>
+                {% endif %}        
+    </div>
+
+    <script> 
+        document.onclick = function(event) { var target = event.target;  var id = target.getAttribute('data-toggle-id');
+        if (!id) return;
+        var elem = document.getElementById(id);
+        elem.hidden = !elem.hidden;
+          };
+         </script>
+  </section>
+
+    <div class="container px-5 py-24 mx-auto" style="margin-left: -300px;margin-top: -200px;">
+        <div class="lg:w-4/5 mx-auto-info flex flex-wrap">
+            <div class="w-half lg:pr-0 lg:py-0 mb-10 lg:mb-1">
+                <div class="w-full flex items-center justify-between space-x-6">
+                    <div class="flex-1 truncate">
+                        <div class="flex items-center space-x-3">
+                            <h3 class="text-3xl text-gray-900 font-medium truncate"> &nbsp &nbsp &nbsp &nbsp</h20></h3>
+                        </div>
+                    </div>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
-                    <span class="text-gray-500">Линия</span>
-                    <span class="ml-auto text-gray-900">{{ lead.line }}</span>
+                    <span class="text-gray-500">Компания</span>
+                    {% for company in lead.company.all %}
+                    <span class="ml-auto text-gray-900">{{ company.name }}</span>
+                    {% endfor %}
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Фамилия</span>
@@ -51,17 +155,56 @@
                     <span class="text-gray-500">Отчество</span>
                     <span class="ml-auto text-gray-900">{{ lead.patronymic_name }}</span>
                 </div>
-                <div class="flex border-t border-gray-300 py-2">
-                    <span class="text-gray-500">Модель телефона</span>
-                    {% for phone in lead.phone_model.all %}
-                    <span class="ml-auto text-gray-900">{{ phone.name }}</span>
-                    {% endfor %}
+            </div>
+        </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container px-5 py-24 mx-auto" style="margin-left: 700px; margin-top: -900px;">
+        <div class="lg:w-4/5 mx-auto-info flex flex-wrap">
+            <div class="w-half lg:pr-0 lg:py-0 mb-10 lg:mb-1">
+                <div class="w-full flex items-center justify-between space-x-6">
+                    <div class="flex-1 truncate">
+                        <div class="flex items-center space-x-3">
+                            <h3 class="text-3xl text-gray-900 font-medium truncate">Местоположение</h20></h3>
+                        </div>
+                    </div>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
-                    <span class="text-gray-500">Компания</span>
-                    {% for company in lead.company.all %}
-                    <span class="ml-auto text-gray-900">{{ company.name }}</span>
-                    {% endfor %}
+                    <span class="text-gray-500">Коммутатор</span>
+                    <span class="ml-auto text-gray-900">{{ switch }}</span>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Порт</span>
+                    <span class="ml-auto text-gray-900">{{ port }}</span>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Кабинет</span>
+                    <span class="ml-auto text-gray-900">{{ cabinet }}</span>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Розетка</span>
+                    <span class="ml-auto text-gray-900">{{ socket }}</span>
+                </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Описание порта</span>
+                    <span class="ml-auto text-gray-900">{{ description }}</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="container px-5 py-24 mx-auto"  style="margin-left: 700px; margin-top: -100px;" >
+        <div class="lg:w-4/5 mx-auto-info flex flex-wrap">
+            <div class="w-half lg:pr-0 lg:py-0 mb-10 lg:mb-1">
+                <div class="w-full flex items-center justify-between space-x-6">
+                    <div class="flex-1 truncate">
+                        <div class="flex items-center space-x-3">
+                            <h3 class="text-3xl text-gray-900 font-medium truncate"> &nbsp &nbsp &nbsp &nbsp</h20></h3>
+                        </div>
+                    </div>
                 </div>
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Добавил</span>
@@ -79,23 +222,17 @@
                     <span class="text-gray-500">Время обновления</span>
                     <span class="ml-auto text-gray-900">{{ lead.update_added }}</span>
                 </div>
-                <div class="flex border-t border-gray-300 py-2">
-                    <span class="text-gray-500">Активен</span>
-                    <span class="ml-auto text-gray-900">{{ lead.active }}</span>
-                </div>
-                {% if user.is_superuser %}
-                <div class="flex border-t border-gray-300 py-2">
-                    <span class="text-gray-500">Пароль</span>
-                    <span class="ml-auto text-gray-900">{{ lead.passwd }}</span>
-                </div>
-                {% endif %}
+            </div>
+        </div>
             </div>
         </div>
 
-        <button type='submit' onclick="history.back();" class="text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md" style="margin-left: 550px;">
-            Вернуться назад
-        </button>
-
     </div>
-  </section>
+
+
+
+
+<button type='submit' onclick="history.back();" class="text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md" style="margin-left: 900px">
+    Вернуться назад
+</button>
 {% endblock content %}

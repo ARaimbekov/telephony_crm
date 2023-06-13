@@ -306,31 +306,35 @@ def lead_list(request):
 def lead_detail(request, pk):
     lead = Lead.objects.get(id=pk)
     phone = str(lead.phone_number)
-    # res = requests.get('http://10.90.42.250:8084/phoneinfo?phone=' + phone)
-    # res_json = res.json()
-    res_json = {'phone': '2252', 'status': 'idle', 'ipaddr': '10.2.3.4', 'socketinfo': {'port': 'Gi3/0/41', 'cabinet': '721', 'socket': '715.22', 'discription': '16.03.20_ALFA_721_715.22', 'ipaddr': '10.2.3.40'}}
-    
-    number_api = res_json['phone']
-    atc_ip = res_json['ipaddr']
-    status = res_json['status']
+    res = requests.get('http://10.90.42.250:8084/phoneinfo?phone=' + phone)
+    res_json = res.json()
+    # res_json = {'switch': 'cisco_switch', 'phone': '2252', 'ipaddr': '10.2.3.10', 'useragent':'Polycom/5.5.0.20556 PolycomVVX-VVX_500-UA/5.5.0.20556', 'status': 'idle', 'socketinfo': {'mac':'', 'ipaddr':'10.2.3.4', 'port': 'Gi3/0/41', 'cabinet': '721', 'socket': '715.22', 'description': '16.03.20_ALFA_721_715.22'}}
+    # number_api = res_json['phone']
+    switch = res_json['switch']
+    atc_ip_api = res_json['ipaddr']
+    user_agent = res_json['useragent']
     soket_info = res_json['socketinfo']
+    mac = soket_info['mac']
+    switch_ip = soket_info['ipaddr']
     port = soket_info['port']
     cabinet = soket_info['cabinet']
     socket = soket_info['socket']
-    discription = soket_info['discription']
-    switch_ip = soket_info['ipaddr']
+    description = soket_info['description']
+    
 
     context = {
         "lead": lead,
-        "number_api": number_api,
-        "atc_ip": atc_ip,
+        # "number_api": number_api,
+        "atc_ip_api": atc_ip_api,
+        "useragent" : user_agent,
         "switch_ip": switch_ip,
-        "status" : status,
+        "switch" : switch,
+        # "status" : status,
         "port": port,
         "cabinet": cabinet,
         "socket": socket,
-        "discription": discription,
-
+        "description": description,
+        "mac" : mac,
     }
     return render(request, "leads/lead_detail.html", context)
 
