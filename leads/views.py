@@ -315,6 +315,7 @@ def lead_detail(request, pk):
     atc_ip_api = res_json['ipaddr']
     user_agent = res_json['useragent']
     soket_info = res_json['socketinfo']
+    status = res_json['status']
     mac = soket_info['mac']
     switch_ip = soket_info['ipaddr']
     port = soket_info['port']
@@ -330,7 +331,7 @@ def lead_detail(request, pk):
         "useragent" : user_agent,
         "switch_ip": switch_ip,
 #         "switch" : switch,
-        # "status" : status,
+        "status" : status,
         "port": port,
         "cabinet": cabinet,
         "socket": socket,
