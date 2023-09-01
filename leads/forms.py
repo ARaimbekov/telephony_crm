@@ -68,7 +68,10 @@ class LeadModelForm(forms.ModelForm):
             'updated_user',
             # 'passwd',
         )
-        
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['atc'].widget.attrs.update(atc_id=Lead.id)
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]

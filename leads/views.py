@@ -446,8 +446,12 @@ def lead_create(request):
 @login_required    
 def phone_number(request):
     data = json.loads(request.body)
-    atc_id = data["id"]
+    print("data: ", data)
+    atc_id = data.get("id")
+    if atc_id is None:
+        return JsonResponse({"error": "Missing 'id' parameter"}, status=400)
     numbers = Lead.objects.all().values('phone_number')
+    print('numbers: ', numbers)
     phone_number = Number.objects.filter(atc__id=atc_id).exclude(id__in=numbers)
     return JsonResponse(list(phone_number.values("id", "name")), safe=False)
 

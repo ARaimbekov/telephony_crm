@@ -98,21 +98,24 @@
         }
         return cookieValue;
     }
+    
     const csrftoken = getCookie('csrftoken');
-
-    let atc_field = document.getElementById("div_id_atc")
-    let number_field = document.querySelector("div.relative select[name='phone_number']")
-    atc_field.addEventListener("change", getAtcId)
-
-
+    
+    let atc_field = document.getElementById("div_id_atc").querySelector('[selected]');
+    console.log(atc_field.getAttribute('atc-id'));
+    // console.log(atc_field.getAttribute('class'));
+    let number_field = document.querySelector("div.relative select[name='phone_number']");
+    atc_field.addEventListener("change", getAtcId);
+    
     function getAtcId(e) {
-        let atc_id = e.target.value
-
-
+        let trg = e.target;
+        let atc_id = trg.value;
+        console.log(trg.value);
+    
         const data = { id: atc_id };
-
-        let url = " {% url 'leads:lead-phone' %} "
-
+    
+        let url = "{% url 'leads:lead-phone' %}";
+    
         fetch(url, {
             method: 'POST', // or 'PUT'
             headers: {
@@ -121,30 +124,28 @@
             },
             body: JSON.stringify(data),
         })
-            .then((response) => response.json())
-
-            .then((data) => {
-                console.log('Success:', data);
-
-                if (data.length != 0) {
-                    number_field.innerHTML = `<option value="${data[0]["id"]}" id="number-id-field">${data[0]["name"]}</option>`
-
-
-                    for (let i = 1; i < data.length; i++) {
-                        number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`
-                    }
-
-                } else {
-                    number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номеров</option>'
-
+        .then((response) => response.json())
+        .then((data) => {
+            console.log('Success:', data);
+    
+            if (data.length != 0) {
+                number_field.innerHTML = `<option value="${data[0]["id"]}" id="number-id-field">${data[0]["name"]}</option>`
+    
+                for (let i = 1; i < data.length; i++) {
+                    number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`
                 }
-
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-
+            } else {
+                number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номеров</option>';
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
     }
+    
+    window.addEventListener("DOMContentLoaded", () => {
+        getAtcId({ target: { value: atc_field.value } });
+    });
 </script>
 
 {% endblock content %}
