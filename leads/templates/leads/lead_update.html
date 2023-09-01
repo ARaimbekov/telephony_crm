@@ -102,7 +102,9 @@
     const csrftoken = getCookie('csrftoken');
     
     let atc_field = document.getElementById("div_id_atc").querySelector('[selected]');
-    console.log(atc_field.getAttribute('atc-id'));
+    let atc_name = atc_field.textContent;
+    // console.log(atc_field.textContent);
+    // console.log(atc_field.getAttribute('atc-id'));
     // console.log(atc_field.getAttribute('class'));
     let number_field = document.querySelector("div.relative select[name='phone_number']");
     atc_field.addEventListener("change", getAtcId);
@@ -112,7 +114,7 @@
         let atc_id = trg.value;
         console.log(trg.value);
     
-        const data = { id: atc_id };
+        const data = { id: atc_id, atc_name: atc_name };
     
         let url = "{% url 'leads:lead-phone' %}";
     

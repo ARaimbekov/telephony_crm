@@ -447,11 +447,14 @@ def lead_create(request):
 def phone_number(request):
     data = json.loads(request.body)
     print("data: ", data)
-    atc_id = data.get("id")
-    if atc_id is None:
-        return JsonResponse({"error": "Missing 'id' parameter"}, status=400)
+    # atc_id = data.get("id")
+    # if atc_id is None:
+    #     return JsonResponse({"error": "Missing 'id' parameter"}, status=400
+    atc = Atc.objects.filter(name=data['atc_name']).first()
+    atc_id = atc.id
+    print(atc, atc_id)
     numbers = Lead.objects.all().values('phone_number')
-    print('numbers: ', numbers)
+    # print('numbers: ', numbers)
     phone_number = Number.objects.filter(atc__id=atc_id).exclude(id__in=numbers)
     return JsonResponse(list(phone_number.values("id", "name")), safe=False)
 
