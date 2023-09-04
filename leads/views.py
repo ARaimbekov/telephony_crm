@@ -372,7 +372,6 @@ def lead_create(request):
                         result = result.lower()
                         temp['mac_address'] = result
                         temp['created_user'] = request.user.username
-                        print(request.POST)
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
                         form.save()
@@ -444,10 +443,33 @@ def lead_create(request):
 
 
 @login_required    
+def phone_number_create(request):
+    data = json.loads(request.body)
+    print(data)
+    atc_id = data.get("id")
+    if atc_id is None:
+        return JsonResponse({"error": "Missing 'id' parameter"}, status=400)
+    numbers = Lead.objects.all().values('phone_number')
+    phone_number = Number.objects.filter(atc__id=atc_id).exclude(id__in=numbers)
+    return JsonResponse(list(phone_number.values("id", "name")), safe=False)
+
+
+@login_required    
 def phone_number(request):
     data = json.loads(request.body)
     atc_id = data["id"]
+    atc_name = data['atc_name']
+    current_number = data['current_number']
+    if not atc_id:
+        atc_id = Atc.objects.filter(name=atc_name).first().id
     numbers = Lead.objects.all().values('phone_number')
+    current_number = Number.objects.filter(name=current_number)
+    number_id = Number.objects.filter(atc_id=atc_id)
+    if set(current_number).intersection(set(number_id)):
+        phone_number = Number.objects.filter(atc__id=atc_id).exclude(id__in=numbers).union(current_number)
+        print('СССС текущим', phone_number)
+        return JsonResponse(list(phone_number.values("id", "name")), safe=False)
+    
     phone_number = Number.objects.filter(atc__id=atc_id).exclude(id__in=numbers)
     return JsonResponse(list(phone_number.values("id", "name")), safe=False)
 
@@ -460,8 +482,12 @@ def lead_update(request, pk):
     atc = Atc.objects.get(lead=lead)
     atc_instance = Atc.objects.get(name=atc)
     updated_user = request.user.username
+    my_number = lead.phone_number
+    my_num_obj = Number.objects.filter(name=my_number).all()
+    numbers = Lead.objects.all().values('phone_number')
+
     form = LeadModelForm(instance=lead, initial={'atc': atc, 'phone_model': model, 'company':company})
-    form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc_instance.id)
+    form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc_instance.id).exclude(id__in=numbers).all().union(my_num_obj)
     if request.method == "POST":
         form = LeadModelForm(request.POST, instance=lead)
         if form.is_valid():
@@ -527,7 +553,6 @@ def company_create(request):
         form = CompanyModelForm(request.POST)
         try:
             if form.is_valid():
-                print(request.POST)
                 form.save()
                 messages.success(request, "Создание компании прошло успешно !")
                 return redirect("company")
@@ -574,7 +599,6 @@ def company_delete(request, pk):
                     messages.success(request, "Компияния была удалена !")
                     return redirect("company")
                 else:
-                    print("hahtung")
                     return render(request, "error_company.html")
         
         

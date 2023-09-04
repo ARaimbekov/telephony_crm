@@ -101,6 +101,8 @@
     const csrftoken = getCookie('csrftoken');
 
     let atc_field = document.getElementById("div_id_atc")
+    let atc_name = document.getElementById("div_id_atc").querySelector('[selected]').textContent;
+    let current_number = document.getElementById("div_id_phone_number").querySelector('[selected]').textContent;
     let number_field = document.querySelector("div.relative select[name='phone_number']")
     atc_field.addEventListener("change", getAtcId)
 
@@ -109,7 +111,7 @@
         let atc_id = e.target.value
 
 
-        const data = { id: atc_id };
+        const data = { id: atc_id, atc_name: atc_name, current_number };
 
         let url = " {% url 'leads:lead-phone' %} "
 

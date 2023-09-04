@@ -13,6 +13,7 @@ urlpatterns = [
     path('create/', lead_create, name='lead-create'),
     # path('phones/', phones, name='phones'),
     path('phone/', phone_number, name='lead-phone'),
+    path('phone_create/', phone_number_create, name='lead-phone-create'),
     path('users/', user_list, name='users'),
     path('<int:pk>/user_update/', user_update, name='user_update'),
     path("<int:pk>/password_change/", password_change, name="password_change"),
