@@ -8,6 +8,7 @@ import random
 import string
 import json
 import requests
+import shortuuid
 from django.contrib.auth.views import PasswordResetDoneView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -485,18 +486,27 @@ def lead_update(request, pk):
     my_number = lead.phone_number
     my_num_obj = Number.objects.filter(name=my_number).all()
     numbers = Lead.objects.all().values('phone_number')
+    current_mac = lead.mac_address
 
-    form = LeadModelForm(instance=lead, initial={'atc': atc, 'phone_model': model, 'company':company})
+    form = LeadModelForm(instance=lead, initial={'atc': atc, 'phone_model': model, 'company': company})
     form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc_instance.id).exclude(id__in=numbers).all().union(my_num_obj)
+
     if request.method == "POST":
         form = LeadModelForm(request.POST, instance=lead)
         if form.is_valid():
             form.save()
             lead.updated_user = updated_user
             lead.mac_address = lead.mac_address.lower()
+            print(lead.mac_address)
+            # Обновить пароль, если MAC-адрес обновлен
+            if current_mac != lead.mac_address:
+                print('HAHAHAHA')
+                lead.passwd = shortuuid.uuid()
+
             lead.save()
             messages.success(request, "В течении 10 минут изменения будут применены !")
             return redirect("/leads")
+
     context = {
         "form": form,
         "lead": lead
