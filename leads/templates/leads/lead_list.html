@@ -2,13 +2,11 @@
 
 {% block content %}    
 
-
 <h20 class="grays">Всего позиций : {{ total_number }}</h20>
 <h20 class="grays">Зарезервированых номеров : {{reserved_number}}</h20>
 <h20 class="grays">Количество номеров : {{all_number}}</h20>
 <h20 class="grays">Свободных номеров : {{free_number}}</h20>
 <h20 class="grays">Количество ATC :  {{all_atc}}</h20>
-
 
 <section class="text-gray-700 body-font">
     
@@ -30,148 +28,162 @@
             </div>
         </div>
         
+        <!-- Форма поиска -->
         <form style="padding-left: 300px;" action="{% url 'leads:lead-list' %}">
             <div class="form-group">
-            <div class="row">
-                <input class="mr-sm-2" type="search" placeholder="Номер" style="border: 2px solid rgb(139, 139, 155); "
-                    name="number">
-                <input class="mr-sm-2" type="search" placeholder="Mac-address" style="border: 2px solid rgb(139, 139, 155);"
-                    name="mac">
-                <input class="mr-sm-2" type="search" placeholder="Фамилия" style="border: 2px solid rgb(139, 139, 155);" 
-                name="name">
-            
-                <button class="text-gray-500 hover:text-blue-500" type="submit">Поиск/Сбросить</button>
-        </div>
-    </div>
-        </form> 
-        
+                <div class="row">
+                    <!-- Существующие поля поиска -->
+                    <input class="mr-sm-2" type="search" placeholder="Номер" style="border: 2px solid rgb(139, 139, 155);"
+                        name="number">
+                    <input class="mr-sm-2" type="search" placeholder="Mac-address" style="border: 2px solid rgb(139, 139, 155);"
+                        name="mac">
+                    <input class="mr-sm-2" type="search" placeholder="Фамилия" style="border: 2px solid rgb(139, 139, 155);" 
+                        name="name">
 
+                    <!-- Новые поля поиска -->
+                    <select class="mr-sm-2" style="border: 2px solid rgb(139, 139, 155);" name="record_calls">
+                        <option value="">Запись разговоров</option>
+                        <option value="true">Да</option>
+                        <option value="false">Нет</option>
+                    </select>
+
+                    <select class="mr-sm-2" style="border: 2px solid rgb(139, 139, 155);" name="external_line_access">
+                        <option value="">Доступ к внешним линиям</option>
+                        <option value="локальные_МГ">Локальные МГ</option>
+                        <option value="локальные_МГ_МН">Локальные МГ и МН</option>
+                        <option value="локальные">Локальные</option>
+                    </select>
+
+                    <input class="mr-sm-2" type="search" placeholder="Переадресация" style="border: 2px solid rgb(139, 139, 155);"
+                        name="call_forwarding">
+
+                    <button class="text-gray-500 hover:text-blue-500" type="submit">Поиск/Сбросить</button>
+                </div>
+            </div>
+        </form> 
+
+        <!-- Остальная часть таблицы -->
         <div class="flex flex-col w-full" style="width: 100cm; margin-left: -120px;">
             <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                <table class="min-w-full divide-y divide-gray-200"> 
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            АТС
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Номер телефона
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Мак-Адрес
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Линия
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            ФИО
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Модель телефона
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Компания
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Активен
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Зарезервирован
-                            </th>
-                            <th scope="col" class="relative px-6 py-3">
-                            <span class="sr-only">Обзор</span>
-                            </th>
-                            <th scope="col" class="relative px-6 py-3">
-                            <span class="sr-only">Изменить</span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for lead in page.object_list %}
-                            <tr class="bg-white">
-                                {% for atc in lead.atc.all %}
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ atc.name }}
-                                </td>
-                                {% endfor %} 
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.phone_number }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.mac_address }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.line }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.last_name }} 
-                                    {{ lead.first_name }}
-                                    {{ lead.patronymic_name }}
-                                </td>
-                                {% for phone in lead.phone_model.all %}
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ phone.name }}
-                                </td>
+                <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                    <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200"> 
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        АТС
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Номер телефона
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Мак-Адрес
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Линия
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        ФИО
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Модель телефона
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Компания
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Активен
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Зарезервирован
+                                    </th>
+                                    <th scope="col" class="relative px-6 py-3">
+                                        <span class="sr-only">Обзор</span>
+                                    </th>
+                                    <th scope="col" class="relative px-6 py-3">
+                                        <span class="sr-only">Изменить</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lead in page.object_list %}
+                                    <tr class="bg-white">
+                                        {% for atc in lead.atc.all %}
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ atc.name }}
+                                            </td>
+                                        {% endfor %} 
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ lead.phone_number }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ lead.mac_address }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ lead.line }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ lead.last_name }} 
+                                            {{ lead.first_name }}
+                                            {{ lead.patronymic_name }}
+                                        </td>
+                                        {% for phone in lead.phone_model.all %}
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ phone.name }}
+                                            </td>
+                                        {% endfor %}
+                                        {% for company in lead.company.all %}
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ company.name }}
+                                            </td>
+                                        {% endfor %}
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ lead.active }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ lead.reservation }}
+                                        </td>   
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <a href="{% url 'leads:lead-detail' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
+                                                Обзор
+                                            </a>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <a href="{% url 'leads:lead-update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
+                                                Изменить
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <p>На данный момент нет никаких позиций</p>
                                 {% endfor %}
-                                {% for company in lead.company.all %}
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ company.name }}
-                                </td>
-                                {% endfor %}
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.active }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ lead.reservation }}
-                                </td>   
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="{% url 'leads:lead-detail' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
-                                        Обзор
-                                    </a>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="{% url 'leads:lead-update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
-                                        Изменить
-                                    </a>
-                                </td>
-                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="page_id" class="container">
+                        <div class="" id="pageStyle">
+                            {% if page.has_previous %}
+                                <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page=1">Начало</a>
+                                <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.previous_page_number }}">Предыдуший</a>
+                            {% endif %}
+                            
+                            {% for num in page.paginator.page_range %}
+                                {% if page.number == num %}
+                                    <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ num }}">{{ num }}</a>
+                                {% elif num > page.number|add:'-2' and num < page.number|add:'2' %}
+                                    <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ num }}">{{ num }}</a>
+                                {% endif %}
+                            {% endfor %}
 
-                        {% empty %}
-
-                        <p>На данный момент нет никаких позиций</p>
-                        
-                        {% endfor %}
-
-                    </tbody>
-                </table>
-                </div>
-                <div id="page_id "class="container">
-                    <div class="" id="pageStyle">
-                    {% if page.has_previous %}
-                        <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page=1">Начало</a>
-                        <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.previous_page_number }}">Предыдуший</a>
-                    {% endif %}
-                    
-                    {% for num in page.paginator.page_range %}
-                        {% if page.number == num %}
-                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page= {{ num }} ">{{ num }}</a>
-                        {% elif num > page.number|add:'-2' and num < page.number|add:'2' %}
-                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page= {{ num }} ">{{ num }}</a>
-                        {% endif %}
-                    {% endfor %}
-
-                    {% if page.has_next %}
-                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.next_page_number }}">Следуюшая</a>
-                            <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.paginator.num_pages }}">Конец</a>
-                    {% endif %}
+                            {% if page.has_next %}
+                                <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.next_page_number }}">Следуюшая</a>
+                                <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.paginator.num_pages }}">Конец</a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
-            </div>
         </div>
-  
-        
     </div>
 </section>
 {% endblock content %}

@@ -16,11 +16,14 @@
                 <a href="{% url 'leads:lead-update' lead.pk %}" class="flex-grow text-indigo-500 border-b-2 border-indigo-500 py-2 text-lg px-1">
                     Обновляемая информация
                 </a>
+                <!-- Добавляем ссылку на обзор -->
+                <a href="{% url 'leads:lead-detail' lead.pk %}" class="flex-grow text-indigo-500 border-b-2 border-indigo-500 py-2 text-lg px-1 ml-4">
+                    Обзор
+                </a>
             </div>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
 
-                
                 <div class="row">
                     <div class="col-6">
                         {{ form.atc | as_crispy_field }}
@@ -28,7 +31,6 @@
                     <div class="col-6">
                         {{ form.phone_number | as_crispy_field }}
                     </div>
-            
                 </div>
                 <div class="row">
                     <div class="col-2">
@@ -61,6 +63,19 @@
                     </div>
                     <div class="col-2">
                         {{ form.active | as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- Новый блок для новых полей -->
+                <div class="row mt-4">
+                    <div class="col-4">
+                        {{ form.record_calls | as_crispy_field }}
+                    </div>
+                    <div class="col-4">
+                        {{ form.external_line_access | as_crispy_field }}
+                    </div>
+                    <div class="col-4">
+                        {{ form.call_forwarding | as_crispy_field }}
                     </div>
                 </div>
 

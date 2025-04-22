@@ -24,6 +24,8 @@ from .models import Lead, Company, Apparats, Number, Atc, User
 from .forms import *
 from django.db.models import ProtectedError
 from django.db import IntegrityError
+from django.shortcuts import get_object_or_404, render
+
 
 logger = logging.getLogger(__name__)
 
@@ -253,30 +255,39 @@ def password_change(request, pk):
 @login_required
 def lead_list(request):
     context = {}
-    search_number_query = request.GET.get('number', '',)
-    search_mac_query = request.GET.get('mac', '',)
-    search_name_query = request.GET.get('name', '', )
+    search_number_query = request.GET.get('number', '')
+    search_mac_query = request.GET.get('mac', '')
+    search_name_query = request.GET.get('name', '')
+    search_record_calls = request.GET.get('record_calls', '')
+    search_external_line_access = request.GET.get('external_line_access', '')
+    search_call_forwarding = request.GET.get('call_forwarding', '')
     page_list = request.GET.get('page')
-    
 
+    leads = Lead.objects.all()
+
+    # Фильтрация по существующим полям
     if search_number_query:
-        leads = Lead.objects.filter(phone_number__in=Number.objects.filter(
-            name__icontains=search_number_query))
-        context['leads'] = leads
-    elif search_mac_query:
-        leads = Lead.objects.filter(mac_address__icontains=search_mac_query)
-        context['leads'] = leads
-    elif search_name_query:
-        leads = Lead.objects.filter(last_name__icontains=search_name_query)
-        context['leads'] = leads
+        leads = leads.filter(phone_number__name__icontains=search_number_query)
+    if search_mac_query:
+        leads = leads.filter(mac_address__icontains=search_mac_query)
+    if search_name_query:
+        leads = leads.filter(
+            Q(last_name__icontains=search_name_query) |
+            Q(first_name__icontains=search_name_query) |
+            Q(patronymic_name__icontains=search_name_query)
+        )
 
-    else:
-        leads = Lead.objects.order_by('-update_added')
-        context['leads'] = leads
-    
-    
+    # Фильтрация по новым полям
+    if search_record_calls:
+        leads = leads.filter(record_calls=(search_record_calls == "true"))
+    if search_external_line_access:
+        leads = leads.filter(external_line_access=search_external_line_access)
+    if search_call_forwarding:
+        leads = leads.filter(call_forwarding__icontains=search_call_forwarding)
+
+    # Пагинация
     paginator = Paginator(leads, 15)
-        
+
     try:
         page = paginator.page(page_list)
     except PageNotAnInteger:
@@ -284,18 +295,17 @@ def lead_list(request):
     except EmptyPage:
         page = paginator.page(paginator.num_pages)
 
-    # context['page'] = page
+    # Дополнительные данные для контекста
     reserved_number = Lead.objects.filter(reservation=True).count()
     total_number = Lead.objects.count()
-    # total_users = User.objects.count()   
     free_number = Number.objects.count() - total_number
     all_number = Number.objects.count()
     all_atc = Atc.objects.count()
 
     context = {
-        "page": page, 
+        "page": page,
         "total_number": total_number,
-        "reserved_number" : reserved_number,
+        "reserved_number": reserved_number,
         "free_number": free_number,
         "all_number": all_number,
         "all_atc": all_atc,
@@ -306,41 +316,56 @@ def lead_list(request):
 
 @login_required
 def lead_detail(request, pk):
-    lead = Lead.objects.get(id=pk)
-    phone = str(lead.phone_number)
-    res = requests.get('http://10.90.42.250:8084/phoneinfo?phone=' + phone)
-    res_json = res.json()
-    # res_json = {'switch': 'cisco_switch', 'phone': '2252', 'ipaddr': '10.2.3.10', 'useragent':'Polycom/5.5.0.20556 PolycomVVX-VVX_500-UA/5.5.0.20556', 'status': 'idle', 'socketinfo': {'mac':'', 'ipaddr':'10.2.3.4', 'port': 'Gi3/0/41', 'cabinet': '721', 'socket': '715.22', 'description': '16.03.20_ALFA_721_715.22'}}
-    # number_api = res_json['phone']
-#     switch = res_json['switch']
-    atc_ip_api = res_json['ipaddr']
-    user_agent = res_json['useragent']
-    soket_info = res_json['socketinfo']
-    status = res_json['status']
-    mac = soket_info['mac']
-    switch_ip = soket_info['ipaddr']
-    port = soket_info['port']
-    cabinet = soket_info['cabinet']
-    socket = soket_info['socket']
-    description = soket_info['description']
+    # Получаем объект Lead или возвращаем 404 ошибку, если объект не найден
+    lead = get_object_or_404(Lead, id=pk)
     
+    # Преобразуем номер телефона в строку для API-запроса
+    phone = str(lead.phone_number)
 
+    try:
+        # Выполняем запрос к внешнему API
+        res = requests.get(f'http://10.90.42.250:8084/phoneinfo?phone={phone}', timeout=5)
+        res.raise_for_status()  # Проверяем HTTP-статус ответа
+        res_json = res.json()
+    except requests.RequestException as e:
+        # Если API недоступен, возвращаем страницу с ошибкой
+        return render(request, "leads/lead_detail.html", {
+            "lead": lead,
+            "error": f"Ошибка при получении данных из API: {e}"
+        })
+
+    # Обработка данных из API
+    atc_ip_api = res_json.get('ipaddr', 'Неизвестно')
+    user_agent = res_json.get('useragent', 'Неизвестно')
+    soket_info = res_json.get('socketinfo', {})
+    status = res_json.get('status', 'Неизвестно')
+    mac = soket_info.get('mac', 'Неизвестно')
+    switch_ip = soket_info.get('ipaddr', 'Неизвестно')
+    port = soket_info.get('port', 'Неизвестно')
+    cabinet = soket_info.get('cabinet', 'Неизвестно')
+    socket = soket_info.get('socket', 'Неизвестно')
+    description = soket_info.get('description', 'Неизвестно')
+
+    # Формируем контекст для шаблона
     context = {
         "lead": lead,
-        # "number_api": number_api,
         "atc_ip_api": atc_ip_api,
-        "useragent" : user_agent,
+        "useragent": user_agent,
         "switch_ip": switch_ip,
-#         "switch" : switch,
-        "status" : status,
+        "status": status,
         "port": port,
         "cabinet": cabinet,
         "socket": socket,
         "description": description,
-        "mac" : mac,
+        "mac": mac,
+        # Новые поля из модели Lead
+        "record_calls": lead.record_calls,
+        "external_line_access": lead.get_external_line_access_display(),  # Для отображения текстового значения выбора
+        "call_forwarding": lead.call_forwarding or "Не указано",  # Если поле пустое, показываем "Не указано"
     }
-    return render(request, "leads/lead_detail.html", context)
 
+    # Рендерим шаблон с контекстом
+    return render(request, "leads/lead_detail.html", context)
 
 @login_required
 def lead_create(request):

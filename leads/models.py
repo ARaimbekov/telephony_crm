@@ -70,6 +70,24 @@ class Lead(models.Model):
     passwd = ShortUUIDField(max_length=22, editable=False, default=shortuuid.uuid, verbose_name='Пароль')
     updated_user = models.CharField(max_length=20, blank=True, verbose_name='Обновил')
     created_user = models.CharField(max_length=20, blank=True, verbose_name='Добавил')
+    record_calls = models.BooleanField(default=False, verbose_name='Запись разговоров') 
+    external_line_access = models.CharField(
+        max_length=20,
+        choices=[
+            ('локальные_МГ', 'Локальные МГ'),
+            ('локальные_МГ_МН', 'Локальные МГ и МН'),
+            ('локальные', 'Локальные'),
+        ],
+        default='локальные_МГ',
+        verbose_name='Доступ к внешним линиям'
+    )  # Выпадающий список
+    call_forwarding = models.CharField(
+        max_length=11,
+        blank=True,
+        null=True,
+        validators=[RegexValidator(r'^\d{0,11}$', message="Поле должно содержать только цифры и быть не длиннее 11 символов.")],
+        verbose_name='Переадресация'
+    )  # Текстовое поле для переадресации
 
     class Meta:
         unique_together = ['mac_address', 'line']

@@ -16,20 +16,7 @@ User = get_user_model()
 class LeadCreateModelForm(forms.ModelForm):
     class Meta:
         model = Lead
-        fields = (
-            'atc',
-            'phone_number',
-            'reservation',
-            'mac_address',
-            'line',
-            'last_name',
-            'first_name',
-            'patronymic_name',
-            'phone_model',
-            'company',
-            'active',
-            'created_user',
-        )
+        fields = '__all__'
 
     def __init__(self,*args,**kwargs):
         super(LeadCreateModelForm, self).__init__(*args,**kwargs)
@@ -53,21 +40,7 @@ class LeadCreateModelForm(forms.ModelForm):
 class LeadModelForm(forms.ModelForm):
     class Meta:
         model = Lead
-        fields = (
-            'atc',
-            'phone_number',
-            'mac_address',
-            'first_name',
-            'last_name',
-            'patronymic_name',
-            'phone_model',
-            'company',
-            'line',
-            'active',
-            'reservation',
-            'updated_user',
-            # 'passwd',
-        )
+        fields = '__all__'
         
 
     def clean_first_name(self):
