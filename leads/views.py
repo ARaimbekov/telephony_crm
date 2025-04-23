@@ -52,6 +52,9 @@ def export_to_csv(reuest):
         'active',
         'passwd',
         'reservation',
+        'record_calls',
+        'external_line_access',
+        'call_forwarding',
     ])
 
     rows = leads.values_list(
@@ -70,6 +73,9 @@ def export_to_csv(reuest):
         'active',
         'passwd',
         'reservation',
+        'record_calls',
+        'external_line_access',
+        'call_forwarding',
     )
 
     for row in rows:
@@ -114,7 +120,10 @@ def export_to_exel(request):
         'atc_ip',
         'date_added',
         'update_added',
-        'active'
+        'active',
+        'record_calls',
+        'external_line_access',
+        'call_forwarding',
     )
 
     for col_num in range(len(columns)):
@@ -133,7 +142,10 @@ def export_to_exel(request):
         'atc',
         'date_added',
         'update_added',
-        'active'
+        'active',
+        'record_calls',
+        'external_line_access',
+        'call_forwarding',
     )
 
     for row in rows:
