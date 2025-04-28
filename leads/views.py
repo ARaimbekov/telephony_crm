@@ -29,13 +29,15 @@ from django.shortcuts import get_object_or_404, render
 
 logger = logging.getLogger(__name__)
 
-
-def export_to_csv(reuest):
-    row_num = 0
+def export_to_csv(request):
     leads = Lead.objects.all()
-    response = HttpResponse('')
+    response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename=profile_export.csv'
-    writer = csv.writer(response,  delimiter=';', quotechar=',')
+    
+    # Создаем объект writer для записи CSV
+    writer = csv.writer(response, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    
+    # Заголовки столбцов
     writer.writerow([
         'first_name',
         'last_name',
@@ -55,8 +57,10 @@ def export_to_csv(reuest):
         'record_calls',
         'external_line_access',
         'call_forwarding',
+        'timezone',
     ])
 
+    # Получаем данные из базы
     rows = leads.values_list(
         'first_name',
         'last_name',
@@ -76,23 +80,32 @@ def export_to_csv(reuest):
         'record_calls',
         'external_line_access',
         'call_forwarding',
+        'timezone',
     )
 
+    # Обработка каждой строки
     for row in rows:
         row_list = list(row)
-        row_list[3] = Number.objects.get(pk=row_list[3])
-        row_list[5] = Apparats.objects.get(pk=row_list[5])
-        row_list[6] = Company.objects.get(pk=row_list[6])
+        
+        # Преобразуем связанные объекты
+        row_list[3] = Number.objects.get(pk=row_list[3])  # phone_number
+        row_list[5] = Apparats.objects.get(pk=row_list[5])  # phone_model
+        row_list[6] = Company.objects.get(pk=row_list[6])  # company
+        
+        # Получаем IP-адрес ATC
         ip_addr = Atc.objects.filter(pk=row_list[8]).values('ip_address')
+        address = ""
         for i in ip_addr:
-            address = (i['ip_address'])
+            address = i['ip_address']
+        row_list[9] = address  # atc_ip
+        row_list[8] = Atc.objects.get(pk=row_list[8])  # atc_name
+        
+        # Убираем кавычки для timezone
+        if row_list[18]:  # timezone
+            row_list[18] = str(row_list[18])  # Просто преобразуем в строку без кавычек
 
-        row_list[9] = address
-        row_list[8] = Atc.objects.get(pk=row_list[8])
-
-
-        row = tuple(row_list)
-        writer.writerow(row)
+        # Записываем строку в CSV
+        writer.writerow(row_list)
 
     return response
 
@@ -124,6 +137,7 @@ def export_to_exel(request):
         'record_calls',
         'external_line_access',
         'call_forwarding',
+        'timezone',
     )
 
     for col_num in range(len(columns)):
@@ -146,6 +160,7 @@ def export_to_exel(request):
         'record_calls',
         'external_line_access',
         'call_forwarding',
+        'timezone',
     )
 
     for row in rows:

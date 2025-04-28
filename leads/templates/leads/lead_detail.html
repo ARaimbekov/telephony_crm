@@ -91,6 +91,10 @@
                     <span class="text-gray-500">Активен</span>
                     <span class="ml-auto text-gray-900">{{ lead.active }}</span>
                 </div>
+                <div class="flex border-t border-gray-300 py-2">
+                    <span class="text-gray-500">Часовой пояс</span>
+                    <span class="ml-auto text-gray-900">{{ lead.get_timezone_display }}</span>
+                </div>
                 {% if user.is_superuser %}
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Пароль &nbsp </span>

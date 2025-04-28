@@ -32,6 +32,12 @@ class LeadManager(models.Manager):
 
 class Lead(models.Model):
 
+    TIMEZONE_CHOICES = (
+        ('+8', 'Иркутск +8'),
+        ('+3', 'Москва +3'),
+        ('+7', 'Новосибирск +7'),
+        ('+9', 'Якутск +9'),
+    )
     CHOICES = (
         ('1', '1'),
         ('2', '2'),
@@ -88,6 +94,13 @@ class Lead(models.Model):
         validators=[RegexValidator(r'^\d{0,11}$', message="Поле должно содержать только цифры и быть не длиннее 11 символов.")],
         verbose_name='Переадресация'
     )  # Текстовое поле для переадресации
+
+    timezone = models.CharField(
+    max_length=3,
+    choices=TIMEZONE_CHOICES,
+    default='+8',  # Значение по умолчанию - Иркутск
+    verbose_name='Часовой пояс'
+    )
 
     class Meta:
         unique_together = ['mac_address', 'line']
