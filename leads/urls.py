@@ -38,4 +38,8 @@ urlpatterns = [
 
     path('export_table/', export_to_csv, name='export_table'),
     path('export_to_exel/', export_to_exel, name='export_table_exel'),
+    
+    path('upload-numbers/', upload_numbers, name='upload_numbers'),
+    path('upload-mac/', upload_mac, name='upload_mac'),
+    path('change-atc/', change_atc_view, name='change_atc'),
 ]

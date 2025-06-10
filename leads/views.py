@@ -26,6 +26,11 @@ from django.db.models import ProtectedError
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
 from django.db.models import Q
+from django.core.files.uploadedfile import UploadedFile
+import tempfile
+import os
+# from .migration_functions import migrate_numbers, migrate_mac, change_atc
+
 
 
 
@@ -1000,3 +1005,58 @@ class LeadJsonView(generic.View):
             "qs": qs,
         })
 
+
+def upload_numbers(request):
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        csv_file: UploadedFile = request.FILES['csv_file']
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp:
+            for chunk in csv_file.chunks():
+                tmp.write(chunk)
+            tmp_path = tmp.name
+        try:
+            migrate_numbers(tmp_path)
+            os.unlink(tmp_path)
+            return redirect("leads:lead-list")
+        except Exception as e:
+            return render(request, "error.html", {"error": f"Ошибка при импорте номеров: {e}"})
+    return render(request, "leads/upload.html")
+
+
+def upload_mac(request):
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        csv_file: UploadedFile = request.FILES['csv_file']
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp:
+            for chunk in csv_file.chunks():
+                tmp.write(chunk)
+            tmp_path = tmp.name
+        try:
+            migrate_mac(tmp_path)
+            os.unlink(tmp_path)
+            return redirect("leads:lead-list")
+        except Exception as e:
+            return render(request, "error.html", {"error": f"Ошибка при импорте MAC-адресов: {e}"})
+    return render(request, "leads/upload.html")
+
+
+def change_atc_view(request):
+    if request.method == 'POST' and request.FILES.get('csv_file') and 'atc_id' in request.POST:
+        csv_file: UploadedFile = request.FILES['csv_file']
+        atc_id = request.POST.get('atc_id')
+        try:
+            atc_id = int(atc_id)
+        except ValueError:
+            return render(request, "error.html", {"error": "Неверный формат ATC ID"})
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as tmp:
+            for chunk in csv_file.chunks():
+                tmp.write(chunk)
+            tmp_path = tmp.name
+        try:
+            change_atc(tmp_path, atc_id)
+            os.unlink(tmp_path)
+            return redirect("leads:lead-list")
+        except Exception as e:
+            return render(request, "error.html", {"error": f"Ошибка при изменении АТС: {e}"})
+
+    # Если GET — отображаем форму с полем ATC ID
+    return render(request, "leads/change_atc_form.html")

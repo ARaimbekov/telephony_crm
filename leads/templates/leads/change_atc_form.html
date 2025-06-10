@@ -1,0 +1,12 @@
+<!-- templates/leads/change_atc_form.html -->
+<h2>Изменение АТС</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label for="atc_id">ATC ID:</label>
+    <input type="number" id="atc_id" name="atc_id" required><br><br>
+
+    <label for="csv_file">Файл с номерами:</label>
+    <input type="file" id="csv_file" name="csv_file" accept=".txt,.csv" required><br><br>
+
+    <button type="submit">Обновить АТС</button>
+</form>

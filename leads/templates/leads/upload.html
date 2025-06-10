@@ -1,0 +1,7 @@
+<!-- templates/leads/upload.html -->
+<h2>Загрузите CSV-файл</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="csv_file" accept=".csv" required>
+    <button type="submit">Загрузить</button>
+</form>
