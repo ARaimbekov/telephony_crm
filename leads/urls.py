@@ -1,7 +1,7 @@
 
 from django.urls import path
 from .views import *
-from leads.views import UploadNumbersAPI, UploadMacAPI, ChangeAtcAPI
+from .views import ChangeAtcAPI, UploadMacAPI, UploadNumbersAPI
 
 app_name = "leads"
 
@@ -40,7 +40,7 @@ urlpatterns = [
     path('export_table/', export_to_csv, name='export_table'),
     path('export_to_exel/', export_to_exel, name='export_table_exel'),
     
-    path('api/upload-numbers/', UploadNumbersAPI.as_view(), name='api_upload_numbers'),
-    path('api/upload-mac/', UploadMacAPI.as_view(), name='api_upload_mac'),
     path('api/change-atc/', ChangeAtcAPI.as_view(), name='api_change_atc'),
+    path('api/upload-mac/', UploadMacAPI.as_view(), name='api_upload_mac'),
+    path('api/upload-numbers/', UploadNumbersAPI.as_view(), name='api_upload_numbers'),
 ]

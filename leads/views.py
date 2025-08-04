@@ -30,6 +30,9 @@ from django.core.files.uploadedfile import UploadedFile
 import tempfile
 import os
 from .migration_functions import migrate_numbers, migrate_mac, change_atc
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views import View
 
 
 
