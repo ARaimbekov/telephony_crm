@@ -29,7 +29,8 @@ from django.db.models import Q
 from django.core.files.uploadedfile import UploadedFile
 import tempfile
 import os
-# from .migration_functions import migrate_numbers, migrate_mac, change_atc
+from .migration_functions import migrate_numbers, migrate_mac, change_atc
+
 
 
 
@@ -1006,57 +1007,116 @@ class LeadJsonView(generic.View):
         })
 
 
-def upload_numbers(request):
-    if request.method == 'POST' and request.FILES.get('csv_file'):
-        csv_file: UploadedFile = request.FILES['csv_file']
+# def upload_numbers(request):
+#     if request.method == 'POST' and request.FILES.get('csv_file'):
+#         csv_file: UploadedFile = request.FILES['csv_file']
+#         with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp:
+#             for chunk in csv_file.chunks():
+#                 tmp.write(chunk)
+#             tmp_path = tmp.name
+#         try:
+#             migrate_numbers(tmp_path)
+#             os.unlink(tmp_path)
+#             return redirect("leads:lead-list")
+#         except Exception as e:
+#             return render(request, "error.html", {"error": f"Ошибка при импорте номеров: {e}"})
+#     return render(request, "leads/upload.html")
+
+
+# def upload_mac(request):
+#     if request.method == 'POST' and request.FILES.get('csv_file'):
+#         csv_file: UploadedFile = request.FILES['csv_file']
+#         with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp:
+#             for chunk in csv_file.chunks():
+#                 tmp.write(chunk)
+#             tmp_path = tmp.name
+#         try:
+#             migrate_mac(tmp_path)
+#             os.unlink(tmp_path)
+#             return redirect("leads:lead-list")
+#         except Exception as e:
+#             return render(request, "error.html", {"error": f"Ошибка при импорте MAC-адресов: {e}"})
+#     return render(request, "leads/upload.html")
+
+
+# def change_atc_view(request):
+#     if request.method == 'POST' and request.FILES.get('csv_file') and 'atc_id' in request.POST:
+#         csv_file: UploadedFile = request.FILES['csv_file']
+#         atc_id = request.POST.get('atc_id')
+#         try:
+#             atc_id = int(atc_id)
+#         except ValueError:
+#             return render(request, "error.html", {"error": "Неверный формат ATC ID"})
+        
+#         with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as tmp:
+#             for chunk in csv_file.chunks():
+#                 tmp.write(chunk)
+#             tmp_path = tmp.name
+#         try:
+#             change_atc(tmp_path, atc_id)
+#             os.unlink(tmp_path)
+#             return redirect("leads:lead-list")
+#         except Exception as e:
+#             return render(request, "error.html", {"error": f"Ошибка при изменении АТС: {e}"})
+
+#     # Если GET — отображаем форму с полем ATC ID
+#     return render(request, "leads/change_atc_form.html")
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UploadNumbersAPI(View):
+    def post(self, request):
+        file = request.FILES.get('csv_file')
+        if not file:
+            return JsonResponse({'error': 'Файл не передан'}, status=400)
         with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp:
-            for chunk in csv_file.chunks():
+            for chunk in file.chunks():
                 tmp.write(chunk)
             tmp_path = tmp.name
         try:
             migrate_numbers(tmp_path)
             os.unlink(tmp_path)
-            return redirect("leads:lead-list")
+            return JsonResponse({'success': True})
         except Exception as e:
-            return render(request, "error.html", {"error": f"Ошибка при импорте номеров: {e}"})
-    return render(request, "leads/upload.html")
+            return JsonResponse({'error': str(e)}, status=500)
 
 
-def upload_mac(request):
-    if request.method == 'POST' and request.FILES.get('csv_file'):
-        csv_file: UploadedFile = request.FILES['csv_file']
+@method_decorator(csrf_exempt, name='dispatch')
+class UploadMacAPI(View):
+    def post(self, request):
+        file = request.FILES.get('csv_file')
+        if not file:
+            return JsonResponse({'error': 'Файл не передан'}, status=400)
         with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp:
-            for chunk in csv_file.chunks():
+            for chunk in file.chunks():
                 tmp.write(chunk)
             tmp_path = tmp.name
         try:
             migrate_mac(tmp_path)
             os.unlink(tmp_path)
-            return redirect("leads:lead-list")
+            return JsonResponse({'success': True})
         except Exception as e:
-            return render(request, "error.html", {"error": f"Ошибка при импорте MAC-адресов: {e}"})
-    return render(request, "leads/upload.html")
+            return JsonResponse({'error': str(e)}, status=500)
 
 
-def change_atc_view(request):
-    if request.method == 'POST' and request.FILES.get('csv_file') and 'atc_id' in request.POST:
-        csv_file: UploadedFile = request.FILES['csv_file']
+@method_decorator(csrf_exempt, name='dispatch')
+class ChangeAtcAPI(View):
+    def post(self, request):
+        file = request.FILES.get('csv_file')
         atc_id = request.POST.get('atc_id')
+        if not file or not atc_id:
+            return JsonResponse({'error': 'Не хватает файла или atc_id'}, status=400)
         try:
             atc_id = int(atc_id)
         except ValueError:
-            return render(request, "error.html", {"error": "Неверный формат ATC ID"})
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as tmp:
-            for chunk in csv_file.chunks():
+            return JsonResponse({'error': 'atc_id должен быть числом'}, status=400)
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp:
+            for chunk in file.chunks():
                 tmp.write(chunk)
             tmp_path = tmp.name
         try:
             change_atc(tmp_path, atc_id)
             os.unlink(tmp_path)
-            return redirect("leads:lead-list")
+            return JsonResponse({'success': True})
         except Exception as e:
-            return render(request, "error.html", {"error": f"Ошибка при изменении АТС: {e}"})
-
-    # Если GET — отображаем форму с полем ATC ID
-    return render(request, "leads/change_atc_form.html")
+            return JsonResponse({'error': str(e)}, status=500)
