@@ -1185,3 +1185,20 @@ def api_change_atc(request):
         "target_atc_id": atc.id,
         "numbers_in_request": len(numbers)
     }, status=200)
+
+
+# @login_required
+# def api_atc_list(request):
+#     """
+#     Возвращает список всех ATC в формате JSON: [{"id": 1, "name": "ATC Москва"}, ...]
+#     """
+#     atcs = Atc.objects.all().values('id', 'name')
+#     return JsonResponse(list(atcs), safe=False)
+
+def _staff_check(user):
+    return user.is_authenticated and user.is_staff
+
+@user_passes_test(_staff_check)
+def api_atc_list(request):
+    atcs = Atc.objects.all().values('id', 'name')
+    return JsonResponse(list(atcs), safe=False)
