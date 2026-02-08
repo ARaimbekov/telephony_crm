@@ -30,6 +30,43 @@ class LeadManager(models.Manager):
         return super().get_queryset()
 
 
+class SyncSettings(models.Model):
+    interval_hours = models.PositiveIntegerField(default=24, verbose_name='Интервал синхронизации (часы)')
+    last_sync = models.DateTimeField(null=True, blank=True, verbose_name='Дата последней синхронизации')
+    night_only = models.BooleanField(default=True, verbose_name='Только ночью (00:00–06:00)')
+
+    class Meta:
+        verbose_name = 'Настройки синхронизации'
+        verbose_name_plural = 'Настройки синхронизации'
+
+    @classmethod
+    def get_settings(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class Employee(models.Model):
+    guid = models.CharField(max_length=36, unique=True, verbose_name='GUID_NSI')
+    full_name = models.CharField(max_length=150, verbose_name='ФИО полностью')
+    last_name = models.CharField(max_length=50, blank=True, verbose_name='Фамилия')
+    first_name = models.CharField(max_length=50, blank=True, verbose_name='Имя')
+    patronymic_name = models.CharField(max_length=50, blank=True, verbose_name='Отчество')
+    sam_account_name = models.CharField(max_length=100, blank=True, unique=True, verbose_name='Логин AD')
+    email = models.EmailField(max_length=254, blank=True, verbose_name='Email')
+    company = models.ForeignKey('Company', on_delete=models.PROTECT, verbose_name='Компания')
+    department = models.CharField(max_length=150, blank=True, verbose_name='Подразделение')
+    job_title = models.CharField(max_length=150, blank=True, verbose_name='Должность')
+    active = models.BooleanField(default=True, verbose_name='Активен')
+    synced_at = models.DateTimeField(auto_now=True, verbose_name='Дата синхронизации')
+
+    def __str__(self):
+        return f"{self.full_name} ({self.company.name if self.company else '—'})"
+
+    class Meta:
+        verbose_name = 'Сотрудник (синхр. из AD)'
+        verbose_name_plural = 'Сотрудники (синхр. из AD)'
+
+
 class Lead(models.Model):
 
     TIMEZONE_CHOICES = (
@@ -77,6 +114,10 @@ class Lead(models.Model):
     updated_user = models.CharField(max_length=20, blank=True, verbose_name='Обновил')
     created_user = models.CharField(max_length=20, blank=True, verbose_name='Добавил')
     record_calls = models.BooleanField(default=False, verbose_name='Запись разговоров') 
+    
+    employees = models.ManyToManyField(Employee, blank=True, verbose_name='Привязанные сотрудники')
+    display_name = models.CharField(max_length=150, blank=True, verbose_name='Отображаемое имя')
+
     external_line_access = models.CharField(
         max_length=20,
         choices=[
