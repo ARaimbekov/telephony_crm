@@ -63,11 +63,16 @@ def api_employee_search(request):
 
     data = []
     for e in qs:
-        label = f"{e.full_name} — {e.company_text} — {e.department} — {e.job_title}"
-        data.append({"id": e.id, "text": label})
+        label = f"{e.full_name} — {e.company_text} — {e.job_title}"
+        data.append({
+            "id": e.id,
+            "text": label,
+            "full_name": e.full_name,   # нужно для автозаполнения ФИО
+        })
 
     return JsonResponse({"results": data})
 
+    
 def _save_upload_to_temp(upload: UploadedFile) -> str:
     suffix = f"_{now().strftime('%Y%m%d_%H%M%S')}.csv"
     fd, path = tempfile.mkstemp(prefix="upload_", suffix=suffix)

@@ -1,3 +1,6 @@
+{# =========================
+  templates/leads/lead_update.html
+  ========================= #}
 {% extends "base.html" %}
 {% load tailwind_filters %}
 {% load crispy_forms_tags %}
@@ -12,194 +15,226 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <section class="text-gray-700 body-font overflow-hidden">
-    <div class="container px-5 py-24 mx-auto" style="margin-top:-100px;">
-      <div class="lg:w-4/5 mx-auto flex flex-wrap">
-        <div class="w-full lg:pr-10 lg:py-6 mb-6 lg:mb-0">
-            <h2 class="text-gray-900 text-3xl title-font font-medium mb-4">Телефоны (MAC)</h2>
+  <div class="container px-5 py-24 mx-auto" style="margin-top:-100px;">
+    <div class="lg:w-4/5 mx-auto flex flex-wrap">
+      <div class="w-full lg:pr-10 lg:py-6 mb-6 lg:mb-0">
+        <h2 class="text-gray-900 text-3xl title-font font-medium mb-4">Телефоны (MAC)</h2>
 
-            <div class="flex mb-4">
-                <a href="{% url 'leads:lead-update' lead.pk %}"
-                   class="flex-grow text-indigo-500 border-b-2 border-indigo-500 py-2 text-lg px-1">
-                    Обновляемая информация
-                </a>
-                <a href="{% url 'leads:lead-detail' lead.pk %}"
-                   class="flex-grow text-indigo-500 border-b-2 border-indigo-500 py-2 text-lg px-1 ml-4">
-                    Обзор
-                </a>
+        <div class="flex mb-4">
+          <a href="{% url 'leads:lead-update' lead.pk %}"
+             class="flex-grow text-indigo-500 border-b-2 border-indigo-500 py-2 text-lg px-1">
+            Обновляемая информация
+          </a>
+          <a href="{% url 'leads:lead-detail' lead.pk %}"
+             class="flex-grow text-indigo-500 border-b-2 border-indigo-500 py-2 text-lg px-1 ml-4">
+            Обзор
+          </a>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <div class="row">
+            <div class="col-6">
+              {{ form.atc | as_crispy_field }}
             </div>
-
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-
-                <div class="row">
-                    <div class="col-6">
-                        {{ form.atc | as_crispy_field }}
-                    </div>
-                    <div class="col-6">
-                        {{ form.phone_number | as_crispy_field }}
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-2">
-                        {{ form.reservation | as_crispy_field }}
-                    </div>
-                    <div class="col-6">
-                        {{ form.mac_address | as_crispy_field }}
-                    </div>
-                    <div class="col-4">
-                        {{ form.line | as_crispy_field }}
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-4">
-                        {{ form.last_name | as_crispy_field }}
-                    </div>
-                    <div class="col-4">
-                        {{ form.first_name | as_crispy_field }}
-                    </div>
-                    <div class="col-4">
-                        {{ form.patronymic_name | as_crispy_field }}
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-5">
-                        {{ form.phone_model | as_crispy_field }}
-                    </div>
-                    <div class="col-5">
-                        {{ form.company | as_crispy_field }}
-                    </div>
-                    <div class="col-2">
-                        {{ form.active | as_crispy_field }}
-                    </div>
-                </div>
-
-                <!-- ✅ Новые поля: display_name + employees -->
-                <div class="row mt-3">
-                    <div class="col-6">
-                        {{ form.display_name | as_crispy_field }}
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-12">
-                        {{ form.employees | as_crispy_field }}
-                        <small class="text-muted">
-                            Начни вводить ФИО / компанию / отдел / должность — появятся совпадения.
-                        </small>
-                    </div>
-                </div>
-
-                <!-- Твои существующие поля -->
-                <div class="row mt-4">
-                    <div class="col-4">
-                        {{ form.record_calls | as_crispy_field }}
-                    </div>
-                    <div class="col-4">
-                        {{ form.external_line_access | as_crispy_field }}
-                    </div>
-                    <div class="col-4">
-                        {{ form.call_forwarding | as_crispy_field }}
-                    </div>
-                </div>
-
-                <div class="row mt-4">
-                    <div class="col-6">
-                        {{ form.timezone | as_crispy_field }}
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-center">
-                    <button type="submit" id="buttonStyle"
-                        class="col-6 text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">
-                        Готово
-                    </button>
-                </div>
-            </form>
-
-            <div class="mt-5 py-5 border-t border-gray-200">
-                <a href="{% url 'leads:lead-delete' lead.pk %}"
-                   class="w-1/2 mt-3 text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">
-                    Удалить
-                </a>
+            <div class="col-6">
+              {{ form.phone_number | as_crispy_field }}
             </div>
+          </div>
+
+          <div class="row">
+            <div class="col-2">
+              {{ form.reservation | as_crispy_field }}
+            </div>
+            <div class="col-6">
+              {{ form.mac_address | as_crispy_field }}
+            </div>
+            <div class="col-4">
+              {{ form.line | as_crispy_field }}
+            </div>
+          </div>
+
+          <!-- ✅ Выбор сотрудников вместо ручного ФИО -->
+          <div class="row mt-3">
+            <div class="col-12">
+              {{ form.employees | as_crispy_field }}
+              <small class="text-muted">
+                Начни вводить ФИО / компанию / должность — появятся совпадения.
+              </small>
+            </div>
+          </div>
+
+          <!-- ✅ Скрытые поля ФИО -->
+          <div style="display:none;">
+            {{ form.last_name }}
+            {{ form.first_name }}
+            {{ form.patronymic_name }}
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-5">
+              {{ form.phone_model | as_crispy_field }}
+            </div>
+            <div class="col-5">
+              {{ form.company | as_crispy_field }}
+            </div>
+            <div class="col-2">
+              {{ form.active | as_crispy_field }}
+            </div>
+          </div>
+
+          <!-- ✅ display_name -->
+          <div class="row mt-3">
+            <div class="col-6">
+              {{ form.display_name | as_crispy_field }}
+            </div>
+          </div>
+
+          <!-- Твои существующие поля -->
+          <div class="row mt-4">
+            <div class="col-4">
+              {{ form.record_calls | as_crispy_field }}
+            </div>
+            <div class="col-4">
+              {{ form.external_line_access | as_crispy_field }}
+            </div>
+            <div class="col-4">
+              {{ form.call_forwarding | as_crispy_field }}
+            </div>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-6">
+              {{ form.timezone | as_crispy_field }}
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-center">
+            <button type="submit" id="buttonStyle"
+                    class="col-6 text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">
+              Готово
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-5 py-5 border-t border-gray-200">
+          <a href="{% url 'leads:lead-delete' lead.pk %}"
+             class="w-1/2 mt-3 text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">
+            Удалить
+          </a>
         </div>
       </div>
     </div>
+  </div>
 </section>
 
 <script>
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
         }
-        return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken');
-
-    let atc_field = document.getElementById("div_id_atc")
-    let atc_name = document.getElementById("div_id_atc").querySelector('[selected]').textContent;
-    let current_number = document.getElementById("div_id_phone_number").querySelector('[selected]').textContent;
-    let number_field = document.querySelector("div.relative select[name='phone_number']")
-    atc_field.addEventListener("change", getAtcId)
-
-    function getAtcId(e) {
-        let atc_id = e.target.value
-        const data = { id: atc_id, atc_name: atc_name, current_number };
-        let url = " {% url 'leads:lead-phone' %} "
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify(data),
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.length != 0) {
-                number_field.innerHTML = `<option value="${data[0]["id"]}" id="number-id-field">${data[0]["name"]}</option>`
-                for (let i = 1; i < data.length; i++) {
-                    number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`
-                }
-            } else {
-                number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номеров</option>'
-            }
-        })
-        .catch((error) => console.error('Error:', error));
-    }
-</script>
-
-<!-- ✅ Select2 employees -->
-<script>
-$(document).ready(function() {
-  $("#id_employees").select2({
-    width: "100%",
-    placeholder: "Выберите сотрудников...",
-    ajax: {
-      url: "{% url 'leads:api-employee-search' %}",
-      dataType: "json",
-      delay: 250,
-      data: function(params) {
-        return { q: params.term || "" };
-      },
-      processResults: function(data) {
-        return data;
       }
     }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  let atc_field = document.getElementById("div_id_atc")
+  let atc_name = document.getElementById("div_id_atc").querySelector('[selected]').textContent;
+  let current_number = document.getElementById("div_id_phone_number").querySelector('[selected]').textContent;
+  let number_field = document.querySelector("div.relative select[name='phone_number']")
+  atc_field.addEventListener("change", getAtcId)
+
+  function getAtcId(e) {
+    let atc_id = e.target.value
+    const data = { id: atc_id, atc_name: atc_name, current_number };
+    let url = " {% url 'leads:lead-phone' %} "
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken
+      },
+      body: JSON.stringify(data),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.length != 0) {
+        number_field.innerHTML = `<option value="${data[0]["id"]}" id="number-id-field">${data[0]["name"]}</option>`
+        for (let i = 1; i < data.length; i++) {
+          number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`
+        }
+      } else {
+        number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номеров</option>'
+      }
+    })
+    .catch((error) => console.error('Error:', error));
+  }
+</script>
+
+<!-- ✅ Select2 employees + автозаполнение скрытых ФИО -->
+<script>
+  function fillNameFieldsFromFullName(fullName) {
+    if (!fullName) return;
+
+    const parts = fullName.trim().split(/\s+/);
+    const last = parts[0] || "";
+    const first = parts[1] || "";
+    const patronymic = parts.slice(2).join(" ") || "";
+
+    const ln = document.getElementById("id_last_name");
+    const fn = document.getElementById("id_first_name");
+    const pn = document.getElementById("id_patronymic_name");
+
+    if (ln) ln.value = last;
+    if (fn) fn.value = first;
+    if (pn) pn.value = patronymic;
+  }
+
+  $(document).ready(function() {
+    $("#id_employees").select2({
+      width: "100%",
+      placeholder: "Выберите сотрудников...",
+      ajax: {
+        url: "{% url 'leads:api-employee-search' %}",
+        dataType: "json",
+        delay: 250,
+        data: function(params) {
+          return { q: params.term || "" };
+        },
+        processResults: function(data) {
+          return data;
+        }
+      }
+    });
+
+    $("#id_employees").on("select2:select", function(e) {
+      const d = e.params.data || {};
+      fillNameFieldsFromFullName(d.full_name);
+    });
+
+    $("#id_employees").on("select2:unselect", function() {
+      const selected = $("#id_employees").select2("data");
+      if (selected && selected.length > 0) {
+        fillNameFieldsFromFullName(selected[0].full_name);
+      } else {
+        const ln = document.getElementById("id_last_name");
+        const fn = document.getElementById("id_first_name");
+        const pn = document.getElementById("id_patronymic_name");
+        if (ln) ln.value = "";
+        if (fn) fn.value = "";
+        if (pn) pn.value = "";
+      }
+    });
   });
-});
 </script>
 
 {% endblock content %}
