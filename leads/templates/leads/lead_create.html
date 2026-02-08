@@ -54,7 +54,7 @@
       </div>
     </div>
 
-    <!-- ✅ Скрытые поля ФИО (чтобы старый backend сохранил ФИО как раньше) -->
+    <!-- ✅ Скрытые поля ФИО (для совместимости со старой логикой) -->
     <div style="display:none;">
       {{ form.last_name }}
       {{ form.first_name }}
@@ -163,16 +163,21 @@
 <!-- ✅ Select2 employees + автозаполнение скрытых ФИО -->
 <script>
   function fillNameFieldsFromFullName(fullName) {
-    if (!fullName) return;
+    const ln = document.getElementById("id_last_name");
+    const fn = document.getElementById("id_first_name");
+    const pn = document.getElementById("id_patronymic_name");
+
+    if (!fullName) {
+      if (ln) ln.value = "";
+      if (fn) fn.value = "";
+      if (pn) pn.value = "";
+      return;
+    }
 
     const parts = fullName.trim().split(/\s+/);
     const last = parts[0] || "";
     const first = parts[1] || "";
     const patronymic = parts.slice(2).join(" ") || "";
-
-    const ln = document.getElementById("id_last_name");
-    const fn = document.getElementById("id_first_name");
-    const pn = document.getElementById("id_patronymic_name");
 
     if (ln) ln.value = last;
     if (fn) fn.value = first;
@@ -180,9 +185,13 @@
   }
 
   $(document).ready(function() {
+    // 🔧 ВАЖНО: если crispy не отрендерил multiple, принудительно включаем multi
+    $("#id_employees").attr("multiple", "multiple");
+
     $("#id_employees").select2({
       width: "100%",
       placeholder: "Выберите сотрудников...",
+      closeOnSelect: false,
       ajax: {
         url: "{% url 'leads:api-employee-search' %}",
         dataType: "json",
@@ -196,25 +205,11 @@
       }
     });
 
-    $("#id_employees").on("select2:select", function(e) {
-      const d = e.params.data || {};
-      fillNameFieldsFromFullName(d.full_name);
-    });
-
-    $("#id_employees").on("select2:unselect", function() {
-      const selected = $("#id_employees").select2("data");
-      if (selected && selected.length > 0) {
-        fillNameFieldsFromFullName(selected[0].full_name);
-      } else {
-        // очистка
-        fillNameFieldsFromFullName("");
-        const ln = document.getElementById("id_last_name");
-        const fn = document.getElementById("id_first_name");
-        const pn = document.getElementById("id_patronymic_name");
-        if (ln) ln.value = "";
-        if (fn) fn.value = "";
-        if (pn) pn.value = "";
-      }
+    // при выборе — берём первого выбранного и заполняем скрытые ФИО
+    $("#id_employees").on("select2:select select2:unselect", function() {
+      const selected = $("#id_employees").select2("data") || [];
+      const first = selected[0] || null;
+      fillNameFieldsFromFullName(first ? (first.full_name || first.text || "") : "");
     });
   });
 </script>

@@ -18,19 +18,23 @@ class LeadCreateModelForm(forms.ModelForm):
         model = Lead
         fields = "__all__"
         widgets = {
-            "employees": forms.SelectMultiple(),
+            "employees": forms.SelectMultiple(attrs={"multiple": "multiple"}),
         }
 
-    def __init__(self,*args,**kwargs):
-        super(LeadCreateModelForm, self).__init__(*args,**kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
         self.fields['atc'].empty_label = "ATC не выбрана"
         self.fields['phone_number'].empty_label = "номер телефона не выбран"
-        self.fields['company'].widget.attrs.update({"data-placeholder": "компания не выбрана"})
-        self.fields['phone_model'].widget.attrs.update({"data-placeholder": "модель телефона не выбрана"})
-        if "employees" in self.fields:
-            self.fields["employees"].queryset = Employee.objects.filter(sync_status="active").order_by("full_name")
-            self.fields["employees"].required = False
-            self.fields["employees"].widget.attrs.update({"id": "id_employees"})
+        self.fields['company'].empty_label = "компания не выбрана"
+        self.fields['phone_model'].empty_label = "модель телефона не выбрана"
+
+        # важно: поле не обязательно
+        self.fields["employees"].required = False
+
+        # важно: не грузим 12к option'ов в HTML
+        self.fields["employees"].queryset = Employee.objects.none()
+
 
 
         
@@ -81,7 +85,16 @@ class LeadCreateModelForm(forms.ModelForm):
 class LeadModelForm(forms.ModelForm):
     class Meta:
         model = Lead
-        fields = '__all__'
+        fields = "__all__"
+        widgets = {
+            "employees": forms.SelectMultiple(attrs={"multiple": "multiple"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["employees"].required = False
+        self.fields["employees"].queryset = Employee.objects.none()
+
         
 
     def clean_first_name(self):
