@@ -28,3 +28,12 @@ services:
       - POSTGRES_PASSWORD=postgres
     depends_on:
       - db
+
+  portal:
+    image: nginx:alpine
+    container_name: service_portal
+    volumes:
+      - ./portal:/usr/share/nginx/html:ro
+    ports:
+      - "8081:80"
+    restart: always

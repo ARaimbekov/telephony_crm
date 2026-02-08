@@ -26,10 +26,33 @@ from django.db.models import ProtectedError
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
 from django.db.models import Q
+from django.core.files.uploadedfile import UploadedFile 
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import user_passes_test
+from django.utils.timezone import now
+import tempfile
+import os
+from django.db import transaction
+
+
+from .migrations_utils import migrate_numbers, migrate_mac, change_atc
 
 
 
 logger = logging.getLogger(__name__)
+
+def _save_upload_to_temp(upload: UploadedFile) -> str:
+    suffix = f"_{now().strftime('%Y%m%d_%H%M%S')}.csv"
+    fd, path = tempfile.mkstemp(prefix="upload_", suffix=suffix)
+    with os.fdopen(fd, 'wb') as dst:
+        for chunk in upload.chunks():
+            dst.write(chunk)
+    return path
+
+def _staff_check(user):
+    return user.is_authenticated and user.is_staff
+
 
 def export_to_csv(request):
     leads = Lead.objects.all()
@@ -1000,3 +1023,182 @@ class LeadJsonView(generic.View):
             "qs": qs,
         })
 
+
+@csrf_exempt
+@require_POST
+@user_passes_test(_staff_check)
+def api_migrate_numbers(request):
+    upload = request.FILES.get('file')
+    if not upload:
+        return JsonResponse({"ok": False, "error": "missing file"}, status=400)
+
+    temp_path = _save_upload_to_temp(upload)
+    created, errors = 0, []
+
+    with transaction.atomic():
+        with open(temp_path, 'r', encoding='utf-8') as f:
+            for raw in f:
+                try:
+                    parts = raw.split(';')
+                    number = parts[1].strip()
+                    atc_ip = parts[6].strip()
+                    if number and atc_ip:
+                        atc = Atc.objects.filter(ip_address=atc_ip).first()
+                        Number.objects.create(name=number, atc=atc)
+                        created += 1
+                except Exception as e:
+                    errors.append({"line": raw.strip(), "error": str(e)})
+
+    os.remove(temp_path)
+    return JsonResponse({"ok": True, "created": created, "errors": errors}, status=201)
+
+
+@csrf_exempt
+@require_POST
+@user_passes_test(_staff_check)
+def api_migrate_mac(request):
+    upload = request.FILES.get('file')
+    if not upload:
+        return JsonResponse({"ok": False, "error": "missing file"}, status=400)
+
+    company_name = request.POST.get('company_name')
+    temp_path = _save_upload_to_temp(upload)
+
+    created, reservations, errors = 0, 0, []
+    with transaction.atomic():
+        try:
+            default_company = None
+            if company_name:
+                default_company = Company.objects.filter(name=company_name).first()
+                if not default_company:
+                    return JsonResponse({"ok": False, "error": f'company "{company_name}" not found'}, status=400)
+
+            with open(temp_path, 'r', encoding='utf-8') as f:
+                for raw in f:
+                    try:
+                        line = raw.strip().split(';')
+                        if len(line) == 0:
+                            continue
+                        number = Number.objects.filter(name=line[1].strip()).first()
+                        mac_address = line[2].strip().lower()
+                        phone_line = line[4].strip()
+                        password = line[5].strip()
+                        atc_ip = line[6].strip()
+                        full_name = line[7].strip()
+                        atc = Atc.objects.filter(ip_address=atc_ip).first()
+
+                        param = {
+                            'phone_number': number,
+                            'mac_address': mac_address,
+                            'line': phone_line,
+                            'reservation': False,
+                            'passwd': password,
+                            'updated_user': request.user.username,
+                            'created_user': request.user.username,
+                        }
+
+                        if re.match(r'^\w*\s\w[.]\w[.]', full_name):
+                            full_name_parts = full_name.split()
+                            param['last_name'] = full_name_parts[0][:20]
+                            _io = full_name_parts[1].split('.')
+                            param['first_name'] = _io[0]
+                            param['patronymic_name'] = _io[1]
+                        else:
+                            param['last_name'] = full_name[:20]
+
+                        if len(mac_address) != 12 or mac_address == '000000000000':
+                            param['reservation'] = True
+
+                        mac_obj = Lead.objects.create(**param)
+                        mac_obj.company.add(default_company if company_name else Company.objects.filter(name='OOO "ИНК"').first())
+                        if atc:
+                            mac_obj.atc.add(atc)
+
+                        if param['reservation']:
+                            letters = string.digits
+                            while True:
+                                try:
+                                    new_mac = '000000' + ''.join(random.choice(letters) for _ in range(6))
+                                    mac_obj.mac_address = new_mac
+                                    mac_obj.phone_model.add(Apparats.objects.filter(name='Телефон_отсутствует').first())
+                                    mac_obj.save()
+                                    reservations += 1
+                                    break
+                                except Exception:
+                                    pass
+                        else:
+                            mac_obj.phone_model.add(Apparats.objects.filter(name=line[3]).first())
+                            mac_obj.save()
+
+                        created += 1
+                    except Exception as ie:
+                        errors.append({"line": raw.strip(), "error": str(ie)})
+        finally:
+            os.remove(temp_path)
+
+    return JsonResponse({"ok": True, "created": created, "reservations": reservations, "errors": errors}, status=201)
+
+
+@csrf_exempt
+@require_POST
+@user_passes_test(_staff_check)
+def api_change_atc(request):
+    upload = request.FILES.get('file')
+    atc_id = request.POST.get('atc_id')
+
+    if not upload:
+        return JsonResponse({"ok": False, "error": "missing file"}, status=400)
+    if not atc_id or not atc_id.isdigit():
+        return JsonResponse({"ok": False, "error": "invalid or missing atc_id"}, status=400)
+
+    # читаем номера из файла
+    content = upload.read().decode('utf-8', errors='ignore')
+    raw_numbers = [ln.strip() for ln in content.splitlines() if ln.strip()]
+    # на всякий: уберём всё, что не цифры/плюс/диез
+    numbers = []
+    for n in raw_numbers:
+        n_norm = n.strip()
+        # если там точка/запятая/пробел — оставим как есть, у тебя номера — простые (например "200")
+        numbers.append(n_norm)
+
+    try:
+        atc = Atc.objects.get(pk=int(atc_id))
+    except Atc.DoesNotExist:
+        return JsonResponse({"ok": False, "error": f"ATC id={atc_id} not found"}, status=404)
+
+    with transaction.atomic():
+        # 1) обновляем atc у самих номеров
+        updated_numbers = Number.objects.filter(name__in=numbers).update(atc=atc)
+
+        # 2) у всех лидов, чьи номера попали в список, заменяем m2m atc на новую
+        leads_qs = Lead.objects.select_for_update().filter(phone_number__name__in=numbers)
+        changed_leads = 0
+        for lead in leads_qs:
+            # поведение как в твоём SQL: «заменить» связку на новую АТС
+            lead.atc.set([atc])
+            changed_leads += 1
+
+    return JsonResponse({
+        "ok": True,
+        "updated_numbers": updated_numbers,
+        "changed_leads": changed_leads,
+        "target_atc_id": atc.id,
+        "numbers_in_request": len(numbers)
+    }, status=200)
+
+
+# @login_required
+# def api_atc_list(request):
+#     """
+#     Возвращает список всех ATC в формате JSON: [{"id": 1, "name": "ATC Москва"}, ...]
+#     """
+#     atcs = Atc.objects.all().values('id', 'name')
+#     return JsonResponse(list(atcs), safe=False)
+
+def _staff_check(user):
+    return user.is_authenticated and user.is_staff
+
+@user_passes_test(_staff_check)
+def api_atc_list(request):
+    atcs = Atc.objects.all().values('id', 'name')
+    return JsonResponse(list(atcs), safe=False)

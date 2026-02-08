@@ -38,4 +38,10 @@ urlpatterns = [
 
     path('export_table/', export_to_csv, name='export_table'),
     path('export_to_exel/', export_to_exel, name='export_table_exel'),
+    # API endpoints
+    path('api/migrate-numbers/', api_migrate_numbers, name='api-migrate-numbers'),
+    path('api/migrate-mac/', api_migrate_mac, name='api-migrate-mac'),
+    path('api/change-atc/', api_change_atc, name='api-change-atc'),
+    path('api/atc-list/', api_atc_list, name='api-atc-list'),
+
 ]
