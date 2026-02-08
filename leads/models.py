@@ -11,8 +11,46 @@ from django_extensions.db.fields import ShortUUIDField
 from django.core.validators import MinLengthValidator
 import shortuuid
 import datetime
+from django.utils import timezone
 
 
+
+class Employee(models.Model):
+    guid = models.CharField(max_length=64, unique=True, db_index=True, verbose_name="GUID")
+
+    full_name = models.CharField(max_length=100, blank=True, verbose_name="ФИО")
+    first_name = models.CharField(max_length=50, blank=True, verbose_name="Имя")
+    last_name = models.CharField(max_length=50, blank=True, verbose_name="Фамилия")
+    patronymic_name = models.CharField(max_length=50, blank=True, verbose_name="Отчество")
+
+    sam_account_name = models.CharField(max_length=100, blank=True, db_index=True, verbose_name="Логин AD")
+    email = models.EmailField(max_length=254, blank=True, verbose_name="Email")
+
+    company_text = models.CharField(max_length=255, blank=True, verbose_name="Компания (из MSSQL текстом)")
+    department = models.CharField(max_length=150, blank=True, verbose_name="Подразделение")
+    job_title = models.CharField(max_length=150, blank=True, verbose_name="Должность")
+
+    sync_status = models.CharField(max_length=20, default="active", db_index=True, verbose_name="Статус")
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата удаления")
+
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.guid} {self.full_name}"
+
+
+class SyncSettings(models.Model):
+    interval_hours = models.PositiveIntegerField(default=24, verbose_name="Интервал, часы")
+    night_only = models.BooleanField(default=True, verbose_name="Только ночью")
+    night_start_hour = models.PositiveIntegerField(default=0, verbose_name="Ночь старт (час)")
+    night_end_hour = models.PositiveIntegerField(default=6, verbose_name="Ночь конец (час)")
+    last_sync = models.DateTimeField(null=True, blank=True, verbose_name="Последняя синхронизация")
+
+    @classmethod
+    def get_settings(cls):
+        obj, _ = cls.objects.get_or_create(id=1)
+        return obj
 
 class User(AbstractUser):
     is_organisor = models.BooleanField(default=True)
