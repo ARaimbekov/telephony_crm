@@ -1,6 +1,7 @@
 import pyodbc
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.db import IntegrityError
 from leads.models import Employee, Company, SyncSettings
 
 class Command(BaseCommand):
@@ -10,29 +11,32 @@ class Command(BaseCommand):
         settings = SyncSettings.get_settings()
         now = timezone.now()
 
-        # Проверка, пора ли синхронизировать
+        # Проверка интервала
         if settings.last_sync:
             hours_passed = (now - settings.last_sync).total_seconds() / 3600
             if hours_passed < settings.interval_hours:
                 self.stdout.write(self.style.WARNING(
-                    f'Ещё рано: прошло {hours_passed:.1f} часов из {settings.interval_hours}'
+                    f'Ещё рано для синхронизации: прошло {hours_passed:.1f} часов из {settings.interval_hours}'
                 ))
                 return
 
-        if settings.night_only and not (0 <= now.hour < 6):
-            self.stdout.write(self.style.WARNING('Синхронизация только ночью (00:00–06:00)'))
-            return
+        # Проверка ночного времени
+#        if settings.night_only and not (0 <= now.hour < 6):
+#            self.stdout.write(self.style.WARNING('Синхронизация только ночью (00:00–06:00)'))
+#            return
 
-        # Строка подключения (твои реальные данные)
+        # Строка подключения к MSSQL
         conn_str = (
             'DRIVER={ODBC Driver 18 for SQL Server};'
             'SERVER=ink-sqlsrv-dwh;'
             'DATABASE=DWH;'
             'UID=info_conferences;'
-            'PWD=lzxV9TF);*jpucr9BkXb;'
+            'PWD={lzxV9TF);*jpucr9BkXb};'
+            'Encrypt=no;'
             'TrustServerCertificate=yes;'
         )
 
+        conn = None
         try:
             conn = pyodbc.connect(conn_str)
             cursor = conn.cursor()
@@ -58,18 +62,19 @@ class Command(BaseCommand):
             active_guids = set()
             created_count = 0
             updated_count = 0
+            skipped_count = 0
 
             for row in rows:
                 guid = str(row[0]).strip()
                 active_guids.add(guid)
 
-                full_name = row[1].strip()
+                full_name = row[1].strip() if row[1] else ''
                 name_parts = full_name.split()
                 last_name = name_parts[0] if name_parts else ''
                 first_name = name_parts[1] if len(name_parts) > 1 else ''
                 patronymic_name = ' '.join(name_parts[2:]) if len(name_parts) > 2 else ''
 
-                company_name = row[4].strip()
+                company_name = row[4].strip() if row[4] else 'Не указано'
                 company, _ = Company.objects.get_or_create(name=company_name)
 
                 defaults = {
@@ -85,27 +90,59 @@ class Command(BaseCommand):
                     'active': True,
                 }
 
-                emp, created = Employee.objects.update_or_create(
-                    guid=guid,
-                    defaults=defaults
-                )
+                try:
+                    emp, created = Employee.objects.update_or_create(
+                        guid=guid,
+                        defaults=defaults
+                    )
+                    if created:
+                        created_count += 1
+                        self.stdout.write(f'Создан: {guid} ({full_name})')
+                    else:
+                        updated_count += 1
+                        self.stdout.write(f'Обновлён: {guid} ({full_name})')
 
-                if created:
-                    created_count += 1
-                else:
-                    updated_count += 1
+                except IntegrityError as ie:
+                    # Дубликат уникального поля (скорее всего sam_account_name)
+                    self.stdout.write(self.style.WARNING(
+                        f'Дубликат sam_account_name "{defaults["sam_account_name"]}" (guid: {guid}) — обновляем существующую запись'
+                    ))
+                    try:
+                        emp = Employee.objects.get(guid=guid)
+                        for key, value in defaults.items():
+                            setattr(emp, key, value)
+                        emp.save()
+                        updated_count += 1
+                    except Employee.DoesNotExist:
+                        self.stdout.write(self.style.ERROR(
+                            f'Ошибка: запись с guid {guid} не найдена для обновления'
+                        ))
+                    except Exception as inner_e:
+                        self.stdout.write(self.style.ERROR(
+                            f'Ошибка обновления дубликата {guid}: {inner_e}'
+                        ))
+                    skipped_count += 1
 
-            # Деактивация удалённых
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(
+                        f'Ошибка записи сотрудника {guid} ({full_name}): {e}'
+                    ))
+                    skipped_count += 1
+
+            # Деактивация удалённых из MSSQL
             deactivated = Employee.objects.filter(active=True).exclude(guid__in=active_guids).update(active=False)
+            if deactivated:
+                self.stdout.write(f'Деактивировано записей: {deactivated}')
 
             # Обновляем время последней синхронизации
             settings.last_sync = now
             settings.save()
 
             self.stdout.write(self.style.SUCCESS(
-                f'Синхронизация завершена:\n'
+                f'\nСинхронизация завершена:\n'
                 f'  + создано: {created_count}\n'
                 f'  обновлено: {updated_count}\n'
+                f'  пропущено/ошибок: {skipped_count}\n'
                 f'  деактивировано: {deactivated}'
             ))
 
@@ -114,5 +151,5 @@ class Command(BaseCommand):
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Общая ошибка: {e}'))
         finally:
-            if 'conn' in locals():
+            if conn:
                 conn.close()
