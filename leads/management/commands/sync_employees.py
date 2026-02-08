@@ -41,7 +41,7 @@ class Command(BaseCommand):
             conn = pyodbc.connect(conn_str)
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT 
+                SELECT
                     i.[GUID_NSI],
                     i.[name],
                     u.[sAMAccountName],
@@ -68,22 +68,24 @@ class Command(BaseCommand):
                 guid = str(row[0]).strip()
                 active_guids.add(guid)
 
-                full_name = row[1].strip() if row[1] else ''
+                # === ИСПРАВЛЕНО: обрезаем full_name до 100 символов ===
+                full_name = (row[1].strip() if row[1] else '')[:100]
                 name_parts = full_name.split()
                 last_name = name_parts[0] if name_parts else ''
                 first_name = name_parts[1] if len(name_parts) > 1 else ''
                 patronymic_name = ' '.join(name_parts[2:]) if len(name_parts) > 2 else ''
 
-                company_name = row[4].strip() if row[4] else 'Не указано'
+                # === ИСПРАВЛЕНО: обрезаем название компании до 255 символов ===
+                company_name = (row[4].strip() if row[4] else 'Не указано')[:255]
                 company, _ = Company.objects.get_or_create(name=company_name)
 
                 defaults = {
-                    'full_name': full_name,
+                    'full_name': full_name,  # ← Теперь безопасно (≤100)
                     'last_name': last_name[:50],
                     'first_name': first_name[:50],
                     'patronymic_name': patronymic_name[:50],
                     'sam_account_name': (row[2] or '').strip()[:100],
-                    'email': (row[3] or '').strip(),
+                    'email': (row[3] or '').strip()[:254],  # ← Безопасно (≤254)
                     'department': (row[5] or '').strip()[:150],
                     'job_title': (row[6] or '').strip()[:150],
                     'company': company,
