@@ -14,25 +14,31 @@ import datetime
 
 
 class EmployeeDwh(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Активен"
+        DELETED = "deleted", "Удалён в источнике"
+        DISABLED = "disabled", "Отключён"
+        OTHER = "other", "Другое"
+
     guid_nsi = models.UUIDField(unique=True, db_index=True)
-    full_name = models.CharField(max_length=255)
 
-    samaccountname = models.CharField(max_length=150, unique=True, db_index=True)
-    mail = models.EmailField(max_length=254)
+    full_name = models.CharField(max_length=255, blank=True)
+    samaccountname = models.CharField(max_length=150, db_index=True)  # <-- НЕ unique
+    mail = models.EmailField(max_length=254, blank=True)
 
-    company = models.CharField(max_length=255)
-    department = models.CharField(max_length=255)
-    job_title = models.CharField(max_length=255)
+    company = models.CharField(max_length=255, blank=True)
+    department = models.CharField(max_length=255, blank=True)
+    job_title = models.CharField(max_length=255, blank=True)
+
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE, db_index=True)
+
+    source_last_seen_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        verbose_name = "Сотрудник (DWH)"
-        verbose_name_plural = "Сотрудники (DWH)"
-
     def __str__(self):
         return f"{self.full_name} ({self.samaccountname})"
-
 
 class User(AbstractUser):
     is_organisor = models.BooleanField(default=True)

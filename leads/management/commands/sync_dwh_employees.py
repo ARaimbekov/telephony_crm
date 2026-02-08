@@ -1,7 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.db import connections, transaction
+from django.utils import timezone
 
-from ...models import EmployeeDwh
+from leads.models import EmployeeDwh
 
 SQL = """
 SELECT
@@ -23,60 +24,107 @@ WHERE
 """
 
 class Command(BaseCommand):
-    help = "Sync employees from MS SQL DWH into Django table"
+    help = "Sync employees from MS SQL DWH into Django table (upsert + soft-delete)"
 
     def handle(self, *args, **options):
+        now = timezone.now()
+
+        # 1) fetch from MSSQL
         with connections["dwh"].cursor() as cursor:
             cursor.execute(SQL)
             rows = cursor.fetchall()
 
-        # row: (guid, name, sam, mail, company, dept, title)
+        # нормализуем в dict по GUID
+        incoming = {}
+        for guid_nsi, name, sam, mail, company, dept, title in rows:
+            if not guid_nsi:
+                continue
+            incoming[str(guid_nsi).lower()] = {
+                "guid_nsi": guid_nsi,
+                "full_name": (name or "").strip(),
+                "samaccountname": (sam or "").strip(),
+                "mail": (mail or "").strip(),
+                "company": (company or "").strip(),
+                "department": (dept or "").strip(),
+                "job_title": (title or "").strip(),
+            }
+
+        guids = list(incoming.keys())
+
+        # 2) load existing from Postgres by GUID
         existing = {
-            e.guid_nsi: e
-            for e in EmployeeDwh.objects.all().only(
-                "id", "guid_nsi", "full_name", "samaccountname", "mail", "company", "department", "job_title"
+            str(e.guid_nsi).lower(): e
+            for e in EmployeeDwh.objects.filter(guid_nsi__in=[incoming[g]["guid_nsi"] for g in guids]).only(
+                "id", "guid_nsi", "full_name", "samaccountname", "mail",
+                "company", "department", "job_title", "status", "source_last_seen_at", "deleted_at"
             )
         }
 
         to_create = []
         to_update = []
 
-        for guid_nsi, name, sam, mail, company, dept, title in rows:
-            guid_nsi = str(guid_nsi)  # иногда драйвер отдаёт UUID/str по-разному
-
-            obj = existing.get(guid_nsi)
+        for guid_key, data in incoming.items():
+            obj = existing.get(guid_key)
             if obj is None:
                 to_create.append(EmployeeDwh(
-                    guid_nsi=guid_nsi,
-                    full_name=name,
-                    samaccountname=sam,
-                    mail=mail,
-                    company=company,
-                    department=dept,
-                    job_title=title,
+                    guid_nsi=data["guid_nsi"],
+                    full_name=data["full_name"],
+                    samaccountname=data["samaccountname"],
+                    mail=data["mail"],
+                    company=data["company"],
+                    department=data["department"],
+                    job_title=data["job_title"],
+                    status=EmployeeDwh.Status.ACTIVE,
+                    source_last_seen_at=now,
+                    deleted_at=None,
                 ))
             else:
                 changed = False
-                if obj.full_name != name: obj.full_name = name; changed = True
-                if obj.samaccountname != sam: obj.samaccountname = sam; changed = True
-                if obj.mail != mail: obj.mail = mail; changed = True
-                if obj.company != company: obj.company = company; changed = True
-                if obj.department != dept: obj.department = dept; changed = True
-                if obj.job_title != title: obj.job_title = title; changed = True
+
+                # upsert fields
+                for field in ["full_name","samaccountname","mail","company","department","job_title"]:
+                    new_val = data[field]
+                    if getattr(obj, field) != new_val:
+                        setattr(obj, field, new_val)
+                        changed = True
+
+                # если раньше был deleted — вернуть в active
+                if obj.status != EmployeeDwh.Status.ACTIVE:
+                    obj.status = EmployeeDwh.Status.ACTIVE
+                    obj.deleted_at = None
+                    changed = True
+
+                if obj.source_last_seen_at != now:
+                    obj.source_last_seen_at = now
+                    changed = True
 
                 if changed:
                     to_update.append(obj)
 
+        # 3) mark missing as deleted (soft delete)
+        # NOTE: считаем "отсутствующих" среди тех, кто был активен и кого не видели сейчас
         with transaction.atomic():
             if to_create:
                 EmployeeDwh.objects.bulk_create(to_create, batch_size=1000)
+
             if to_update:
                 EmployeeDwh.objects.bulk_update(
                     to_update,
-                    ["full_name", "samaccountname", "mail", "company", "department", "job_title"],
+                    ["full_name","samaccountname","mail","company","department","job_title","status","source_last_seen_at","deleted_at"],
                     batch_size=1000
                 )
 
+            # помечаем тех, кого не видели в источнике в этом прогоне
+            seen_guids = [incoming[g]["guid_nsi"] for g in guids]
+            deleted_count = EmployeeDwh.objects.filter(
+                status=EmployeeDwh.Status.ACTIVE
+            ).exclude(
+                guid_nsi__in=seen_guids
+            ).update(
+                status=EmployeeDwh.Status.DELETED,
+                deleted_at=now
+            )
+
         self.stdout.write(self.style.SUCCESS(
-            f"Done. fetched={len(rows)} created={len(to_create)} updated={len(to_update)}"
+            f"Done. fetched={len(rows)} upsert_create={len(to_create)} upsert_update={len(to_update)} soft_deleted={deleted_count}"
         ))
