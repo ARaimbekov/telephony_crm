@@ -16,7 +16,10 @@ User = get_user_model()
 class LeadCreateModelForm(forms.ModelForm):
     class Meta:
         model = Lead
-        fields = '__all__'
+        fields = "__all__"
+        widgets = {
+            "employees": forms.SelectMultiple(),
+        }
 
     def __init__(self,*args,**kwargs):
         super(LeadCreateModelForm, self).__init__(*args,**kwargs)
