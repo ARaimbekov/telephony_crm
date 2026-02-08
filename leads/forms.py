@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UsernameField
-from .models import Lead, Company, Apparats, Number, Atc
+from .models import Lead, Company, Apparats, Number, Atc, Employee
 from itertools import chain
 from django.db.models import Count
 from django.forms import inlineformset_factory
@@ -22,8 +22,14 @@ class LeadCreateModelForm(forms.ModelForm):
         super(LeadCreateModelForm, self).__init__(*args,**kwargs)
         self.fields['atc'].empty_label = "ATC не выбрана"
         self.fields['phone_number'].empty_label = "номер телефона не выбран"
-        self.fields['company'].empty_label = "компания не выбрана"
-        self.fields['phone_model'].empty_label = "модель телефона не выбрана"
+        self.fields['company'].widget.attrs.update({"data-placeholder": "компания не выбрана"})
+        self.fields['phone_model'].widget.attrs.update({"data-placeholder": "модель телефона не выбрана"})
+        if "employees" in self.fields:
+            self.fields["employees"].queryset = Employee.objects.filter(sync_status="active").order_by("full_name")
+            self.fields["employees"].required = False
+            self.fields["employees"].widget.attrs.update({"id": "id_employees"})
+
+
         
 
     def clean_first_name(self):
@@ -34,7 +40,39 @@ class LeadCreateModelForm(forms.ModelForm):
 
 
     def clean(self):
-        pass
+        cleaned = super().clean()
+
+        employees = cleaned.get("employees")
+        companies = cleaned.get("company")
+
+        if not employees:
+            return cleaned
+
+        # companies у M2M — обычно QuerySet. Если пусто — ошибка
+        if not companies or (hasattr(companies, "exists") and not companies.exists()):
+            raise ValidationError("Выберите компанию, чтобы привязать сотрудника.")
+
+        # имена компаний в Lead
+        if hasattr(companies, "values_list"):
+            lead_company_names = set(companies.values_list("name", flat=True))
+        else:
+            lead_company_names = {getattr(companies, "name", str(companies))}
+
+        mismatches = []
+        for emp in employees:
+            emp_company = (emp.company_text or "").strip()
+            # сравнение строгое по тексту, без "магии"
+            if emp_company not in lead_company_names:
+                mismatches.append(f"{emp.full_name} (компания: {emp_company})")
+
+        if mismatches:
+            raise ValidationError(
+                "Компания сотрудника не совпадает с выбранной компанией. Несовпадения: "
+                + "; ".join(mismatches)
+            )
+
+        return cleaned
+
 
 
 class LeadModelForm(forms.ModelForm):

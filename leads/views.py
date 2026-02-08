@@ -20,7 +20,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.views import generic
 from agents.mixins import OrganisorAndLoginRequiredMixin
-from .models import Lead, Company, Apparats, Number, Atc, User
+from .models import Lead, Company, Apparats, Number, Atc, User, Employee
 from .forms import *
 from django.db.models import ProtectedError
 from django.db import IntegrityError
@@ -41,6 +41,32 @@ from .migrations_utils import migrate_numbers, migrate_mac, change_atc
 
 
 logger = logging.getLogger(__name__)
+
+
+@login_required
+def api_employee_search(request):
+    q = (request.GET.get("q") or "").strip()
+
+    qs = Employee.objects.filter(sync_status="active")
+
+    if q:
+        qs = qs.filter(
+            Q(full_name__icontains=q) |
+            Q(company_text__icontains=q) |
+            Q(department__icontains=q) |
+            Q(job_title__icontains=q) |
+            Q(email__icontains=q) |
+            Q(sam_account_name__icontains=q)
+        )
+
+    qs = qs.order_by("full_name")[:30]
+
+    data = []
+    for e in qs:
+        label = f"{e.full_name} — {e.company_text} — {e.department} — {e.job_title}"
+        data.append({"id": e.id, "text": label})
+
+    return JsonResponse({"results": data})
 
 def _save_upload_to_temp(upload: UploadedFile) -> str:
     suffix = f"_{now().strftime('%Y%m%d_%H%M%S')}.csv"

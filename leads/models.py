@@ -115,6 +115,14 @@ class Lead(models.Model):
     updated_user = models.CharField(max_length=20, blank=True, verbose_name='Обновил')
     created_user = models.CharField(max_length=20, blank=True, verbose_name='Добавил')
     record_calls = models.BooleanField(default=False, verbose_name='Запись разговоров') 
+    display_name = models.CharField(max_length=100, blank=True, verbose_name="Отображаемое имя")
+
+    employees = models.ManyToManyField(
+        Employee,
+        blank=True,
+        related_name="leads",
+        verbose_name="Сотрудники (синхронизация)"
+    )
     external_line_access = models.CharField(
         max_length=20,
         choices=[
