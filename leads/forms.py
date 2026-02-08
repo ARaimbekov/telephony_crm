@@ -10,31 +10,92 @@ from django.db.models import Count
 from django.forms import inlineformset_factory
 from crispy_forms.helper import FormHelper, Layout
 from crispy_forms.layout import Fieldset,Field
+from .models import Lead, Company, Apparats, Number, Atc, EmployeeDwh
+from django.db import transaction
+
+
 
 User = get_user_model()
 
+from django.db import transaction
+from django.db.models import Q
+
+def _parse_full_name(full_name: str):
+    parts = (full_name or "").strip().split()
+    last = parts[0] if len(parts) > 0 else ""
+    first = parts[1] if len(parts) > 1 else ""
+    patronymic = parts[2] if len(parts) > 2 else ""
+    return last, first, patronymic
+
+
 class LeadCreateModelForm(forms.ModelForm):
+    # выбираем 1+ сотрудников из EmployeeDwh
+    employees = forms.ModelMultipleChoiceField(
+        label="Сотрудники",
+        queryset=EmployeeDwh.objects.none(),  # не грузим всё сразу
+        required=True,
+        widget=forms.SelectMultiple(attrs={
+            "class": "select2-employee",
+            "data-placeholder": "Начните вводить ФИО / почту / отдел / должность..."
+        })
+    )
+
     class Meta:
         model = Lead
-        fields = '__all__'
+        fields = "__all__"
+        # скрываем ручной ввод ФИО и компанию в форме создания
+        exclude = ("first_name", "last_name", "patronymic_name", "company")
 
-    def __init__(self,*args,**kwargs):
-        super(LeadCreateModelForm, self).__init__(*args,**kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
         self.fields['atc'].empty_label = "ATC не выбрана"
         self.fields['phone_number'].empty_label = "номер телефона не выбран"
-        self.fields['company'].empty_label = "компания не выбрана"
         self.fields['phone_model'].empty_label = "модель телефона не выбрана"
-        
 
-    def clean_first_name(self):
-        data = self.cleaned_data["first_name"]
-
-        return data
-
-
+        # employees берём только активных
+        self.fields["employees"].queryset = EmployeeDwh.objects.filter(
+            status=EmployeeDwh.Status.ACTIVE
+        ).order_by("full_name")
 
     def clean(self):
-        pass
+        cleaned = super().clean()
+        employees = cleaned.get("employees")
+        if not employees:
+            raise ValidationError("Выберите сотрудника из справочника (EmployeeDwh).")
+        return cleaned
+
+    @transaction.atomic
+    def save(self, commit=True):
+        lead = super().save(commit=False)
+
+        employees = self.cleaned_data["employees"]
+        primary = employees[0]  # “главный” сотрудник — первый выбранный
+
+        # 1) автозаполняем ФИО в Lead из EmployeeDwh.full_name
+        last, first, patronymic = _parse_full_name(primary.full_name)
+        lead.last_name = last or lead.last_name
+        lead.first_name = first or ""
+        lead.patronymic_name = patronymic or ""
+
+        if commit:
+            lead.save()
+
+            # 2) сохраняем M2M сотрудников
+            lead.employees.set(employees)
+
+            # 3) автозаполняем компанию Lead.company (создаём, если нет)
+            # Lead.company у тебя M2M на Company
+            comp_name = (primary.company or "").strip()
+            if comp_name:
+                comp_obj, _ = Company.objects.get_or_create(name=comp_name)
+                lead.company.set([comp_obj])
+            else:
+                lead.company.clear()
+
+            self.save_m2m()
+
+        return lead
 
 
 class LeadModelForm(forms.ModelForm):

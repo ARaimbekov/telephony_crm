@@ -102,7 +102,13 @@ class Lead(models.Model):
     passwd = ShortUUIDField(max_length=32, editable=False, default=shortuuid.uuid, verbose_name='Пароль')
     updated_user = models.CharField(max_length=20, blank=True, verbose_name='Обновил')
     created_user = models.CharField(max_length=20, blank=True, verbose_name='Добавил')
-    record_calls = models.BooleanField(default=False, verbose_name='Запись разговоров') 
+    record_calls = models.BooleanField(default=False, verbose_name='Запись разговоров')
+    employees = models.ManyToManyField(
+        EmployeeDwh,
+        blank=True,
+        related_name="leads",
+        verbose_name="Сотрудники (DWH)"
+    ) 
     external_line_access = models.CharField(
         max_length=20,
         choices=[

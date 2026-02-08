@@ -5,79 +5,85 @@
 
 {% block content %}
 <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
+
+<!-- Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <div class="container-fluid mt-3">
     <a class="hover:text-blue-500" href="{% url 'leads:lead-list' %}">Вернуться к таблице</a>
+
     <div class="py-5 border-t border-gray-200">
         <h1 class="text-4xl text-gray-800">Создание новой позиции</h1>
     </div>
+
     <form method="post" class="">
         {% csrf_token %}
-        <!-- {{ form|crispy }} -->
+
         <div class="row">
             <div class="col-6">
-                {{ form.atc | as_crispy_field }}
+                {{ form.atc|as_crispy_field }}
             </div>
             <div class="col-6">
-                {{ form.phone_number | as_crispy_field }}
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-2">
-                {{ form.reservation | as_crispy_field }}
-            </div>
-            <div class="col-6">
-                {{ form.mac_address | as_crispy_field }}
-            </div>
-            <div class="col-4">
-                {{ form.line | as_crispy_field }}
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-4">
-                {{ form.last_name | as_crispy_field }}
-            </div>
-            <div class="col-4">
-                {{ form.first_name | as_crispy_field }}
-            </div>
-            <div class="col-4">
-                {{ form.patronymic_name | as_crispy_field }}
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-5">
-                {{ form.phone_model | as_crispy_field }}
-            </div>
-            <div class="col-5">
-                {{ form.company | as_crispy_field }}
-            </div>
-            <div class="col-2">
-                {{ form.active | as_crispy_field }}
-            </div>
-            <div class="hidden_block">
-                {{ form.created_user | as_crispy_field }}
+                {{ form.phone_number|as_crispy_field }}
             </div>
         </div>
 
-        <!-- Новый блок для новых полей -->
-        <div class="row mt-4">
-            <div class="col-4">
-                {{ form.record_calls | as_crispy_field }}
+        <div class="row">
+            <div class="col-2">
+                {{ form.reservation|as_crispy_field }}
+            </div>
+            <div class="col-6">
+                {{ form.mac_address|as_crispy_field }}
             </div>
             <div class="col-4">
-                {{ form.external_line_access | as_crispy_field }}
-            </div>
-            <div class="col-4">
-                {{ form.call_forwarding | as_crispy_field }}
+                {{ form.line|as_crispy_field }}
             </div>
         </div>
+
+        <!-- Выбор сотрудников из EmployeeDwh -->
+        <div class="row mt-3">
+            <div class="col-12">
+                {{ form.employees|as_crispy_field }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-5">
+                {{ form.phone_model|as_crispy_field }}
+            </div>
+
+            <div class="col-2">
+                {{ form.active|as_crispy_field }}
+            </div>
+
+            <div class="hidden_block">
+                {{ form.created_user|as_crispy_field }}
+            </div>
+        </div>
+
+        <!-- Доп. поля -->
+        <div class="row mt-4">
+            <div class="col-4">
+                {{ form.record_calls|as_crispy_field }}
+            </div>
+            <div class="col-4">
+                {{ form.external_line_access|as_crispy_field }}
+            </div>
+            <div class="col-4">
+                {{ form.call_forwarding|as_crispy_field }}
+            </div>
+        </div>
+
         <div class="row mt-4">
             <div class="col-6">
-                {{ form.timezone | as_crispy_field }}
+                {{ form.timezone|as_crispy_field }}
             </div>
         </div>
 
         <div class="d-flex justify-content-center">
-            <button type='submit' id="buttonStyle"
+            <button type="submit" id="buttonStyle"
                 class="col-6 text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">
                 Готово
             </button>
@@ -86,13 +92,35 @@
 </div>
 
 <script>
+    // Select2 employees (AJAX search)
+    $(document).ready(function () {
+        $('.select2-employee').select2({
+            width: '100%',
+            allowClear: true,
+            ajax: {
+                url: "{% url 'leads:employee-search' %}",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return { q: params.term || "" };
+                },
+                processResults: function (data) {
+                    return { results: data.results };
+                }
+            },
+            minimumInputLength: 2
+        });
+    });
+</script>
+
+<script>
+    // ===== твой текущий код подгрузки phone_number по ATC =====
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
             const cookies = document.cookie.split(';');
             for (let i = 0; i < cookies.length; i++) {
                 const cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -103,50 +131,40 @@
     }
     const csrftoken = getCookie('csrftoken');
 
-    let atc_field = document.getElementById("div_id_atc")
-    let number_field = document.querySelector("div.relative select[name='phone_number']")
-    atc_field.addEventListener("change", getAtcId)
+    let atc_field = document.getElementById("div_id_atc");
+    let number_field = document.querySelector("div.relative select[name='phone_number']");
 
+    if (atc_field) {
+        atc_field.addEventListener("change", getAtcId);
+    }
 
     function getAtcId(e) {
-        let atc_id = e.target.value
-
-
+        let atc_id = e.target.value;
         const data = { id: atc_id };
-
-        let url = " {% url 'leads:lead-phone-create' %} "
+        let url = "{% url 'leads:lead-phone-create' %}";
 
         fetch(url, {
-            method: 'POST', // or 'PUT'
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': csrftoken
             },
             body: JSON.stringify(data),
         })
-            .then((response) => response.json())
-
-            .then((data) => {
-                console.log('Success:', data);
-
-                if (data.length != 0) {
-                    number_field.innerHTML = `<option value="${data[0]["id"]}" id="number-id-field">${data[0]["name"]}</option>`
-
-
-                    for (let i = 1; i < data.length; i++) {
-                        number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`
-                    }
-
-                } else {
-                    number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номеров</option>'
-
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.length != 0) {
+                number_field.innerHTML = `<option value="${data[0]["id"]}" id="number-id-field">${data[0]["name"]}</option>`;
+                for (let i = 1; i < data.length; i++) {
+                    number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`;
                 }
-
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-
+            } else {
+                number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номеров</option>';
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
     }
 </script>
 
