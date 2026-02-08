@@ -449,104 +449,71 @@ def lead_detail(request, pk):
     # Рендерим шаблон с контекстом
     return render(request, "leads/lead_detail.html", context)
 
+
 @login_required
 def lead_create(request):
     form = LeadCreateModelForm()
 
     if request.method == "POST":
-        try:
-            form = LeadCreateModelForm(request.POST)
-            pattern = re.compile("^([0-9A-Fa-f]{2}[:-]{0,1}){5}([0-9A-Fa-f]{2})$")
-            if pattern.match(request.POST['mac_address']) or request.POST['mac_address'] == '':
-                if form.is_valid():
-                    if ('reservation') in request.POST:
-                        letters = string.digits
-                        new_mac = '000000' + \
-                            ''.join(random.choice(letters) for i in range(6))
-                        temp = request.POST.copy()
-                        temp['mac_address'] = new_mac
-                        temp['created_user'] = request.user.username
-                        request.POST = temp
-                        form = LeadCreateModelForm(request.POST)
-                        form.save()
-                        messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")
-                    elif "-" in request.POST["mac_address"]:
-                        temp = request.POST.copy()
-                        mac = temp['mac_address']
-                        result = ''
-                        for i in mac.split("-"):
-                            result += '' + i
-                        result = result.lower()
-                        temp['mac_address'] = result
-                        temp['created_user'] = request.user.username
-                        request.POST = temp
-                        form = LeadCreateModelForm(request.POST)
-                        form.save()
-                        messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")
-                    elif ":" in request.POST["mac_address"]:
-                        temp = request.POST.copy()
-                        mac = temp['mac_address']
-                        result = ''
-                        for i in mac.split(":"):
-                            result += '' + i
-                        result = result.lower()
-                        temp['mac_address'] = result
-                        temp['created_user'] = request.user.username
-                        request.POST = temp
-                        form = LeadCreateModelForm(request.POST)
-                        form.save()
-                        messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")
-                    elif "." in request.POST["mac_address"]:
-                        temp = request.POST.copy()
-                        mac = temp['mac_address']
-                        result = ''
-                        for i in mac.split("."):
-                            result += '' + i
-                        result = result.lower()
-                        temp['mac_address'] = result
-                        temp['created_user'] = request.user.username
-                        request.POST = temp
-                        form = LeadCreateModelForm(request.POST)
-                        form.save()
-                        messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")             
-                    elif not request.POST["mac_address"]:
-                        return render(request, "error_mac.html")
-                    else:
-                        temp = request.POST.copy()
-                        mac = temp['mac_address']
-                        mac = mac.lower()
-                        temp['mac_address'] = mac
-                        temp['created_user'] = request.user.username
-                        request.POST = temp
-                        form = LeadCreateModelForm(request.POST)
-                        form.save()
-                        messages.success(request, "Вы успешно создали позицию, настройки будут применены в течении 10 минут !")
-                        return redirect("/leads")
-                else:
-                    return render(request, "error_mac_failed.html")
-            else:
-                return render(request, "error_mac_type_failed.html")
-        except Exception as e:
-            number_on_mac = request.POST["mac_address"]
-            print(number_on_mac)
-            # number_on_mac = Lead.objects.filter(mac_address__icontains='number_on_mac')
-            # leads = Lead.objects.filter(phone_number__in=Number.objects.filter(name__icontains=search_number_query))
-            mac = Lead.objects.filter(mac_address__icontains=number_on_mac)
-            print(mac)
-            context = {
-                'error': 'Такой MAC адрес уже существует',
-                'mac' : mac,
+        form = LeadCreateModelForm(request.POST)
 
-            }
-            return render(request, "error.html", context)
+        if form.is_valid():
+            # Теперь форма прошла все проверки (включая clean() с employees и company)
+            # Берём данные из очищенной формы
+            mac = form.cleaned_data['mac_address'].strip().lower() if form.cleaned_data['mac_address'] else ''
 
-    context = {
-        "form": form,
-    }
+            # Твоя логика нормализации MAC
+            if 'reservation' in request.POST:
+                letters = string.digits
+                new_mac = '000000' + ''.join(random.choice(letters) for _ in range(6))
+                obj = form.save(commit=False)
+                obj.mac_address = new_mac
+                obj.created_user = request.user.username
+                obj.save()
+                form.save_m2m()
+                messages.success(request, "Вы успешно создали зарезервированную позицию !")
+                return redirect("/leads")
+
+            # Проверка и нормализация MAC (твоя старая логика)
+            if mac:
+                # Удаляем разделители (: - .)
+                cleaned_mac = re.sub(r'[:-.]', '', mac)
+
+                # Проверка формата (12 hex-символов)
+                if len(cleaned_mac) != 12 or not re.match(r'^[0-9a-f]{12}$', cleaned_mac):
+                    context = {'error': 'Поле MAC-адреса было введено неверно'}
+                    return render(request, "error_mac_type_failed.html", context)
+
+                # Нормализуем в нижний регистр без разделителей
+                mac = cleaned_mac
+
+            # Проверка на дубликат MAC (твоя логика)
+            if mac and Lead.objects.filter(mac_address=mac).exists():
+                mac_qs = Lead.objects.filter(mac_address=mac)
+                context = {
+                    'error': 'Такой MAC адрес уже существует',
+                    'mac': mac_qs,
+                }
+                return render(request, "error.html", context)
+
+            # Всё ок — сохраняем
+            obj = form.save(commit=False)
+            obj.mac_address = mac
+            obj.created_user = request.user.username
+            obj.save()
+            form.save_m2m()
+            messages.success(request, "Вы успешно создали позицию, настройки будут применены в течении 10 минут !")
+            return redirect("/leads")
+
+        else:
+            # Форма невалидна (ошибки в employees, company и т.д.)
+            # Для отладки можно вывести ошибки
+            print("Form errors:", form.errors)
+            # Показываем форму с ошибками
+            context = {"form": form}
+            return render(request, "leads/lead_create.html", context)
+
+    context = {"form": form}
     return render(request, "leads/lead_create.html", context)
 
 
