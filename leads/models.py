@@ -13,6 +13,26 @@ import shortuuid
 import datetime
 
 
+class EmployeeDwh(models.Model):
+    guid_nsi = models.UUIDField(unique=True, db_index=True)
+    full_name = models.CharField(max_length=255)
+
+    samaccountname = models.CharField(max_length=150, unique=True, db_index=True)
+    mail = models.EmailField(max_length=254)
+
+    company = models.CharField(max_length=255)
+    department = models.CharField(max_length=255)
+    job_title = models.CharField(max_length=255)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Сотрудник (DWH)"
+        verbose_name_plural = "Сотрудники (DWH)"
+
+    def __str__(self):
+        return f"{self.full_name} ({self.samaccountname})"
+
 
 class User(AbstractUser):
     is_organisor = models.BooleanField(default=True)

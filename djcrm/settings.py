@@ -70,6 +70,7 @@ WSGI_APPLICATION = 'djcrm.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -78,7 +79,19 @@ DATABASES = {
         'PASSWORD': 'postgres',
         'HOST': 'db',
         'PORT': '5432',
-    }
+    },
+    "dwh": {
+        "ENGINE": "mssql",
+        "NAME": "DWH",
+        "USER": "info_conferences",
+        "PASSWORD": "lzxV9TF);*jpucr9BkXb",  
+        "HOST": "ink-sqlsrv-dwh",
+        "PORT": "",             
+        "OPTIONS": {
+            "driver": "ODBC Driver 18 for SQL Server",
+            "extra_params": "TrustServerCertificate=yes;Encrypt=yes;",
+        },
+    },
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
