@@ -17,55 +17,81 @@ class LeadCreateModelForm(forms.ModelForm):
     class Meta:
         model = Lead
         fields = "__all__"
-        widgets = {
-            'employees': forms.SelectMultiple(attrs={
-                'class': 'form-control select2-ajax',
-                'multiple': 'multiple',
-            }),
-        }
+        exclude = ['company', 'first_name', 'last_name', 'patronymic_name']  # Убрали company и ФИО
+
+    widgets = {
+        'employees': forms.SelectMultiple(attrs={
+            'class': 'form-control select2-ajax',
+            'multiple': 'multiple',
+            'data-placeholder': 'Начните вводить ФИО / компанию / должность...',
+        }),
+        'display_name': forms.TextInput(attrs={'placeholder': 'Автогенерация или вручную'}),
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # ... твои настройки empty_label ...
 
-        # employees — теперь AJAX, queryset не нужен
+        # Плейсхолдеры для других полей
+        self.fields['atc'].empty_label = "ATC не выбрана"
+        self.fields['phone_number'].empty_label = "Номер телефона не выбран"
+        self.fields['phone_model'].empty_label = "Модель телефона не выбрана"
+
         self.fields['employees'].required = False
-        # Убираем старые ФИО из формы (скрываем)
-        self.fields['first_name'].widget = forms.HiddenInput()
-        self.fields['last_name'].widget = forms.HiddenInput()
-        self.fields['patronymic_name'].widget = forms.HiddenInput()
+
+        # Скрываем ФИО и company
+        for field in ['first_name', 'last_name', 'patronymic_name', 'company']:
+            self.fields[field].widget = forms.HiddenInput()
+            self.fields[field].required = False
 
     def clean(self):
         cleaned_data = super().clean()
         employees = cleaned_data.get('employees', [])
-        companies = cleaned_data.get('company', [])
 
-        if employees:
-            if not companies.exists():
-                raise ValidationError("Выберите хотя бы одну компанию, чтобы привязать сотрудника.")
+        if not employees:
+            return cleaned_data
 
-            lead_companies = set(companies.values_list('name', flat=True))
+        # Собираем уникальные названия компаний из company_text
+        company_names = {emp.company_text.strip() for emp in employees if emp.company_text}
 
-            mismatches = []
-            for emp in employees:
-                emp_company = (emp.company_text or '').strip()
-                if emp_company and emp_company not in lead_companies:
-                    mismatches.append(f"{emp.full_name} ({emp_company})")
+        if not company_names:
+            raise ValidationError("У выбранных сотрудников нет компании — обратитесь в тех. поддержку.")
 
-            if mismatches:
-                raise ValidationError(
-                    "Компания сотрудника не совпадает с выбранными компаниями лида:\n" +
-                    "\n".join(mismatches)
-                )
+        # Проверяем наличие в базе
+        mismatches = []
+        valid_companies = []
+        for name in company_names:
+            try:
+                comp = Company.objects.get(name__iexact=name)
+                valid_companies.append(comp)
+            except Company.DoesNotExist:
+                mismatches.append(name)
+
+        if mismatches:
+            raise ValidationError(
+                f"Нет такой компании в системе: {', '.join(mismatches)}. "
+                f"Обратитесь в тех. поддержку."
+            )
+
+        # Записываем компании в cleaned_data
+        cleaned_data['company'] = valid_companies
 
         return cleaned_data
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Автогенерация display_name
+        if not instance.display_name and instance.employees.exists():
+            names = [emp.full_name.split()[0] for emp in instance.employees.all()[:3]]
+            phone = instance.phone_number.name if instance.phone_number else 'номер'
+            instance.display_name = " / ".join(names) + f" — {phone}"
+
+        if commit:
+            instance.save()
+            self.save_m2m()  # сохраняет employees и company
+
+        return instance
         
-    def clean_first_name(self):
-        data = self.cleaned_data["first_name"]
-
-        return data
-
 
 class LeadModelForm(forms.ModelForm):
     class Meta:
