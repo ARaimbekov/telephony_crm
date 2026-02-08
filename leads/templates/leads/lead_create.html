@@ -65,19 +65,15 @@
       {{ form.patronymic_name }}
     </div>
 
-    <!-- Модель телефона + Компания + Active -->
-    <div class="row g-3 mb-4">
-      <div class="col-md-5">
+    <div class="row mt-3">
+      <div class="col-6">
         {{ form.phone_model | as_crispy_field }}
       </div>
-      <div class="col-md-2 d-flex align-items-end">
+      <div class="col-6">
         {{ form.active | as_crispy_field }}
       </div>
-      <div class="hidden_block">
-        {{ form.created_user }}
-      </div>
     </div>
-
+    
     <!-- Отображаемое имя -->
     <div class="mb-4">
       {{ form.display_name | as_crispy_field }}

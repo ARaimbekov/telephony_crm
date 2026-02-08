@@ -16,8 +16,7 @@ User = get_user_model()
 class LeadCreateModelForm(forms.ModelForm):
     class Meta:
         model = Lead
-        fields = "__all__"
-        exclude = ['company', 'first_name', 'last_name', 'patronymic_name']  # Убрали company и ФИО
+        fields = "__all__"  # Оставляем все поля, в том числе ФИО и company
 
     widgets = {
         'employees': forms.SelectMultiple(attrs={
@@ -31,17 +30,18 @@ class LeadCreateModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Плейсхолдеры для других полей
+        # Плейсхолдеры
         self.fields['atc'].empty_label = "ATC не выбрана"
         self.fields['phone_number'].empty_label = "Номер телефона не выбран"
         self.fields['phone_model'].empty_label = "Модель телефона не выбрана"
 
         self.fields['employees'].required = False
 
-        # Скрываем ФИО и company
+        # Скрываем ненужные поля (они заполняются автоматически)
         for field in ['first_name', 'last_name', 'patronymic_name', 'company']:
-            self.fields[field].widget = forms.HiddenInput()
-            self.fields[field].required = False
+            if field in self.fields:  # ← добавлена проверка, чтобы не было KeyError
+                self.fields[field].widget = forms.HiddenInput()
+                self.fields[field].required = False
 
     def clean(self):
         cleaned_data = super().clean()
@@ -50,13 +50,12 @@ class LeadCreateModelForm(forms.ModelForm):
         if not employees:
             return cleaned_data
 
-        # Собираем уникальные названия компаний из company_text
+        # Собираем компании из company_text сотрудников
         company_names = {emp.company_text.strip() for emp in employees if emp.company_text}
 
         if not company_names:
             raise ValidationError("У выбранных сотрудников нет компании — обратитесь в тех. поддержку.")
 
-        # Проверяем наличие в базе
         mismatches = []
         valid_companies = []
         for name in company_names:
@@ -72,8 +71,7 @@ class LeadCreateModelForm(forms.ModelForm):
                 f"Обратитесь в тех. поддержку."
             )
 
-        # Записываем компании в cleaned_data
-        cleaned_data['company'] = valid_companies
+        cleaned_data['company'] = valid_companies  # ← сохраняем найденные компании
 
         return cleaned_data
 
@@ -88,32 +86,12 @@ class LeadCreateModelForm(forms.ModelForm):
 
         if commit:
             instance.save()
-            self.save_m2m()  # сохраняет employees и company
+            self.save_m2m()  # employees и company
 
-        return instance
-        
+        return instance        
 
-class LeadModelForm(forms.ModelForm):
-    class Meta:
-        model = Lead
-        fields = "__all__"
-        widgets = {
-            "employees": forms.SelectMultiple(attrs={"multiple": "multiple"}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["employees"].required = False
-        self.fields["employees"].queryset = Employee.objects.none()
-
-        
-
-    def clean_first_name(self):
-        data = self.cleaned_data["first_name"]
-
-        return data
-
-    def clean(self):
+class LeadModelForm(LeadCreateModelForm):
+    class Meta(LeadCreateModelForm.Meta):
         pass
 
 
