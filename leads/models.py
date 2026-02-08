@@ -48,9 +48,9 @@ class SyncSettings(models.Model):
 class Employee(models.Model):
     guid = models.CharField(max_length=36, unique=True, verbose_name='GUID_NSI')
     full_name = models.CharField(max_length=150, verbose_name='ФИО полностью')
-    last_name = models.CharField(max_length=50, blank=True, verbose_name='Фамилия')
-    first_name = models.CharField(max_length=50, blank=True, verbose_name='Имя')
-    patronymic_name = models.CharField(max_length=50, blank=True, verbose_name='Отчество')
+    last_name = models.CharField(max_length=100, blank=True, verbose_name='Фамилия')
+    first_name = models.CharField(max_length=100, blank=True, verbose_name='Имя')
+    patronymic_name = models.CharField(max_length=100, blank=True, verbose_name='Отчество')
     sam_account_name = models.CharField(max_length=100, blank=True, unique=True, verbose_name='Логин AD')
     email = models.EmailField(max_length=254, blank=True, verbose_name='Email')
     company = models.ForeignKey('Company', on_delete=models.PROTECT, verbose_name='Компания')
