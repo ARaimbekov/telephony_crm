@@ -100,9 +100,9 @@ class Lead(models.Model):
     #         flags = re.IGNORECASE
     #     )
     # ])
-    first_name = models.CharField(max_length=20, blank=True, verbose_name='Имя')
-    last_name = models.CharField(max_length=20, verbose_name='Фамилия')
-    patronymic_name = models.CharField(max_length=20, blank=True, verbose_name='Отчество')
+    first_name = models.CharField(max_length=100, blank=True, verbose_name='Имя')
+    last_name = models.CharField(max_length=100, verbose_name='Фамилия')
+    patronymic_name = models.CharField(max_length=100, blank=True, verbose_name='Отчество')
     phone_model = models.ManyToManyField("Apparats", verbose_name='Модель телефона')
     company = models.ManyToManyField("company", verbose_name='Компания')
     date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
