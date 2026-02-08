@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.db import connections, transaction
 
-from .models import Lead, Company, Apparats, Number, Atc, User, EmployeeDwh
+from ...models import EmployeeDwh
 
 SQL = """
 SELECT
