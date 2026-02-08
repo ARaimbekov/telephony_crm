@@ -154,7 +154,7 @@ class Lead(models.Model):
 
 
 class Company(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name='Компании')
+    name = models.CharField(max_length=255, unique=True, verbose_name='Компании')
 
     def __str__(self):
         return self.name

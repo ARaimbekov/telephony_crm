@@ -91,10 +91,6 @@ class Command(BaseCommand):
                     'company': company,
                     'active': True,
                 }
-                for field_name, value in defaults.items():
-                    if isinstance(value, str) and len(value) > 50:
-                        print(f"⚠️ GUID {guid[:8]}... | {field_name}: {len(value)} симв. | Значение: {value[:60]}")
-                # ==========================================
 
                 try:
                     emp, created = Employee.objects.update_or_create(
