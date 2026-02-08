@@ -45,29 +45,32 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def api_employee_search(request):
-    q = (request.GET.get("q") or "").strip()
+    q = request.GET.get('q', '').strip()
 
-    qs = Employee.objects.filter(sync_status="active")
+    if len(q) < 2:
+        return JsonResponse({'results': []})
 
-    if q:
-        qs = qs.filter(
-            Q(full_name__icontains=q) |
-            Q(company_text__icontains=q) |
-            Q(department__icontains=q) |
-            Q(job_title__icontains=q) |
-            Q(email__icontains=q) |
-            Q(sam_account_name__icontains=q)
-        )
+    # Поиск по ФИО, компании (company_text), должности, отделу
+    qs = Employee.objects.filter(
+        Q(full_name__icontains=q) |
+        Q(company_text__icontains=q) |
+        Q(department__icontains=q) |
+        Q(job_title__icontains=q)
+    ).order_by('full_name')[:50]  # лимит, чтобы не грузить всё
 
-    qs = qs.order_by("full_name")[:30]
+    results = [
+        {
+            'id': emp.id,
+            'text': f"{emp.full_name} ({emp.company_text or '—'}) — {emp.job_title or '—'}",
+            'full_name': emp.full_name,  # для автозаполнения ФИО
+        }
+        for emp in qs
+    ]
 
-    data = []
-    for e in qs:
-        label = f"{e.full_name} — {e.company_text} — {e.job_title}"
-        data.append({"id": e.id, "text": label})
-
-    return JsonResponse({"results": data})
-
+    return JsonResponse({
+        'results': results,
+        'pagination': {'more': len(results) == 50}
+    })
     
 def _save_upload_to_temp(upload: UploadedFile) -> str:
     suffix = f"_{now().strftime('%Y%m%d_%H%M%S')}.csv"

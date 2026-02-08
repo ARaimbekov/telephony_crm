@@ -18,68 +18,53 @@ class LeadCreateModelForm(forms.ModelForm):
         model = Lead
         fields = "__all__"
         widgets = {
-            "employees": forms.SelectMultiple(attrs={"multiple": "multiple"}),
+            'employees': forms.SelectMultiple(attrs={
+                'class': 'form-control select2-ajax',
+                'multiple': 'multiple',
+            }),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # ... твои настройки empty_label ...
 
-        self.fields['atc'].empty_label = "ATC не выбрана"
-        self.fields['phone_number'].empty_label = "номер телефона не выбран"
-        self.fields['company'].empty_label = "компания не выбрана"
-        self.fields['phone_model'].empty_label = "модель телефона не выбрана"
+        # employees — теперь AJAX, queryset не нужен
+        self.fields['employees'].required = False
+        # Убираем старые ФИО из формы (скрываем)
+        self.fields['first_name'].widget = forms.HiddenInput()
+        self.fields['last_name'].widget = forms.HiddenInput()
+        self.fields['patronymic_name'].widget = forms.HiddenInput()
 
-        # важно: поле не обязательно
-        self.fields["employees"].required = False
+    def clean(self):
+        cleaned_data = super().clean()
+        employees = cleaned_data.get('employees', [])
+        companies = cleaned_data.get('company', [])
 
-        # важно: не грузим 12к option'ов в HTML
-        self.fields["employees"].queryset = Employee.objects.none()
+        if employees:
+            if not companies.exists():
+                raise ValidationError("Выберите хотя бы одну компанию, чтобы привязать сотрудника.")
 
+            lead_companies = set(companies.values_list('name', flat=True))
 
+            mismatches = []
+            for emp in employees:
+                emp_company = (emp.company_text or '').strip()
+                if emp_company and emp_company not in lead_companies:
+                    mismatches.append(f"{emp.full_name} ({emp_company})")
+
+            if mismatches:
+                raise ValidationError(
+                    "Компания сотрудника не совпадает с выбранными компаниями лида:\n" +
+                    "\n".join(mismatches)
+                )
+
+        return cleaned_data
 
         
-
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]
 
         return data
-
-
-
-    def clean(self):
-        cleaned = super().clean()
-
-        employees = cleaned.get("employees")
-        companies = cleaned.get("company")
-
-        if not employees:
-            return cleaned
-
-        # companies у M2M — обычно QuerySet. Если пусто — ошибка
-        if not companies or (hasattr(companies, "exists") and not companies.exists()):
-            raise ValidationError("Выберите компанию, чтобы привязать сотрудника.")
-
-        # имена компаний в Lead
-        if hasattr(companies, "values_list"):
-            lead_company_names = set(companies.values_list("name", flat=True))
-        else:
-            lead_company_names = {getattr(companies, "name", str(companies))}
-
-        mismatches = []
-        for emp in employees:
-            emp_company = (emp.company_text or "").strip()
-            # сравнение строгое по тексту, без "магии"
-            if emp_company not in lead_company_names:
-                mismatches.append(f"{emp.full_name} (компания: {emp_company})")
-
-        if mismatches:
-            raise ValidationError(
-                "Компания сотрудника не совпадает с выбранной компанией. Несовпадения: "
-                + "; ".join(mismatches)
-            )
-
-        return cleaned
-
 
 
 class LeadModelForm(forms.ModelForm):
