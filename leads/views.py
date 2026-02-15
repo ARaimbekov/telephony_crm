@@ -34,6 +34,7 @@ from django.utils.timezone import now
 import tempfile
 import os
 from django.db import transaction
+from django.db.models import Prefetch
 
 
 from .migrations_utils import migrate_numbers, migrate_mac, change_atc
@@ -392,28 +393,39 @@ def lead_list(request):
 
 @login_required
 def lead_detail(request, pk):
-    # Получаем объект Lead или возвращаем 404 ошибку, если объект не найден
-    lead = get_object_or_404(Lead, id=pk)
-    
-    # Преобразуем номер телефона в строку для API-запроса
+    lead = get_object_or_404(
+        Lead.objects.prefetch_related(
+            "atc",
+            "phone_model",
+            "company",
+            Prefetch(
+                "employees",
+                queryset=EmployeeDwh.objects.filter(status=EmployeeDwh.Status.ACTIVE).prefetch_related(
+                    Prefetch(
+                        "leads",
+                        queryset=Lead.objects.select_related("phone_number").only("id", "phone_number", "line", "active")
+                    )
+                ),
+            ),
+        ),
+        id=pk
+    )
+
     phone = str(lead.phone_number)
 
     try:
-        # Выполняем запрос к внешнему API
         res = requests.get(f'http://10.90.42.250:8084/phoneinfo?phone={phone}', timeout=5)
-        res.raise_for_status()  # Проверяем HTTP-статус ответа
+        res.raise_for_status()
         res_json = res.json()
     except requests.RequestException as e:
-        # Если API недоступен, возвращаем страницу с ошибкой
-        return render(request, "leads/lead_detail.html", {
-            "lead": lead,
-            "error": f"Ошибка при получении данных из API: {e}"
-        })
+        res_json = {}
+        api_error = f"Ошибка при получении данных из API: {e}"
+    else:
+        api_error = None
 
-    # Обработка данных из API
     atc_ip_api = res_json.get('ipaddr', 'Неизвестно')
     user_agent = res_json.get('useragent', 'Неизвестно')
-    soket_info = res_json.get('socketinfo', {})
+    soket_info = res_json.get('socketinfo', {}) or {}
     status = res_json.get('status', 'Неизвестно')
     mac = soket_info.get('mac', 'Неизвестно')
     switch_ip = soket_info.get('ipaddr', 'Неизвестно')
@@ -422,9 +434,18 @@ def lead_detail(request, pk):
     socket = soket_info.get('socket', 'Неизвестно')
     description = soket_info.get('description', 'Неизвестно')
 
-    # Формируем контекст для шаблона
+    # список сотрудников + все их номера
+    employee_cards = []
+    for emp in lead.employees.all():
+        employee_cards.append({
+            "emp": emp,
+            "leads": emp.leads.select_related("phone_number").all()
+        })
+
     context = {
         "lead": lead,
+        "error": api_error,
+
         "atc_ip_api": atc_ip_api,
         "useragent": user_agent,
         "switch_ip": switch_ip,
@@ -434,14 +455,16 @@ def lead_detail(request, pk):
         "socket": socket,
         "description": description,
         "mac": mac,
-        # Новые поля из модели Lead
+
         "record_calls": lead.record_calls,
-        "external_line_access": lead.get_external_line_access_display(),  # Для отображения текстового значения выбора
-        "call_forwarding": lead.call_forwarding or "Не указано",  # Если поле пустое, показываем "Не указано"
+        "external_line_access": lead.get_external_line_access_display(),
+        "call_forwarding": lead.call_forwarding or "Не указано",
+
+        "employee_cards": employee_cards,
     }
 
-    # Рендерим шаблон с контекстом
     return render(request, "leads/lead_detail.html", context)
+
 
 @login_required
 def lead_create(request):
@@ -521,7 +544,10 @@ def lead_create(request):
                         messages.success(request, "Вы успешно создали позицию, настройки будут применены в течении 10 минут !")
                         return redirect("/leads")
                 else:
+                    print("FORM ERRORS:", form.errors)
+                    print("NON FIELD ERRORS:", form.non_field_errors())
                     return render(request, "error_mac_failed.html")
+                    # return render(request, "error_mac_failed.html")
             else:
                 return render(request, "error_mac_type_failed.html")
         except Exception as e:

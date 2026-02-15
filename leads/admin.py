@@ -6,6 +6,7 @@ admin.site.register(User)
 @admin.register(EmployeeDwh)
 class EmployeeDwhAdmin(admin.ModelAdmin):
     list_display = (
+        "guid_nsi",
         "full_name",
         "samaccountname",
         "mail",
