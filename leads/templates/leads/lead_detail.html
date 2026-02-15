@@ -8,6 +8,7 @@
         background-color: #deeaf6;
     }
 </style>
+
 <section class="text-gray-700 body-font overflow-hidden">
     <div class="container px-5 py-24 mx-auto" style="margin-left: -300px; margin-top: -50px;">
         <div class="lg:w-4/5 mx-auto-info flex flex-wrap">
@@ -20,23 +21,28 @@
                         <p class="mt-1 text-xl text-gray-500 truncate">{{ lead.description }}</p>
                     </div>
                 </div>
+
                 <div class="flex mb-4">
                     <a class="text-indigo-600 hover:text-indigo-900" href="{% url 'leads:lead-update' lead.pk %}">Внести изменения</a>
                 </div>
+
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">ATC</span>
                     {% for atc in lead.atc.all %}
                     <span class="ml-auto text-gray-900">{{ atc.name }}</span>
                     {% endfor %}
                 </div>
+
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Номер телефона</span>
                     <span class="ml-auto text-gray-900">{{ lead.phone_number }}</span>
                 </div>
+
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Линия</span>
                     <span class="ml-auto text-gray-900">{{ lead.line }}</span>
                 </div>
+
                 <!-- Transferred IP Address Section with Link -->
                 {% if atc_ip_api == switch_ip %}
                 <div class="flex border-t border-gray-300 py-2">
@@ -63,38 +69,45 @@
                 <div class="flex border-t border-gray-300 py-2 div-3">
                     <span class="text-gray-500">IP адрес</span>
                     <span class="ml-auto text-gray-900">
-                        <a href="http://{{ atc_ip_api }}" target="_blank">{{ atc_ip_api }}</a> / 
+                        <a href="http://{{ atc_ip_api }}" target="_blank">{{ atc_ip_api }}</a> /
                         <a href="http://{{ switch_ip }}" target="_blank">{{ switch_ip }}</a>
                     </span>
                 </div>
                 {% endif %}
                 <!-- End of IP Address Section -->
+
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Модель телефона</span>
                     {% for phone in lead.phone_model.all %}
                     <span class="ml-auto text-gray-900">{{ phone.name }}</span>
                     {% endfor %}
                 </div>
+
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">useragent</span>
                     <span class="ml-auto text-gray-900">{{ useragent }}</span>
                 </div>
+
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Статус</span>
                     <span class="ml-auto text-gray-900">{{ status }}</span>
                 </div>
+
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Зарезервирован</span>
                     <span class="ml-auto text-gray-900">{{ lead.reservation }}</span>
                 </div>
+
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Активен</span>
                     <span class="ml-auto text-gray-900">{{ lead.active }}</span>
                 </div>
+
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Часовой пояс</span>
                     <span class="ml-auto text-gray-900">{{ lead.get_timezone_display }}</span>
                 </div>
+
                 {% if user.is_superuser %}
                 <div class="flex border-t border-gray-300 py-2">
                     <span class="text-gray-500">Пароль &nbsp </span>
@@ -109,6 +122,7 @@
             </div>
         </div>
     </div>
+
     <script>
         document.onclick = function(event) {
             var target = event.target;
@@ -130,12 +144,14 @@
                     </div>
                 </div>
             </div>
+
             <div class="flex border-t border-gray-300 py-2">
                 <span class="text-gray-500">Компания</span>
                 {% for company in lead.company.all %}
                 <span class="ml-auto text-gray-900">{{ company.name }}</span>
                 {% endfor %}
             </div>
+
             <div class="flex border-t border-gray-300 py-2">
                 <span class="text-gray-500">Фамилия</span>
                 <span class="ml-auto text-gray-900">{{ lead.last_name }}</span>
@@ -152,6 +168,36 @@
     </div>
 </div>
 
+{# ============================= #}
+{# НОВЫЙ БЛОК: Сотрудники + номера #}
+{# Требует context: employee_cards #}
+{# ============================= #}
+<div class="container px-5 py-24 mx-auto" style="margin-left: -300px; margin-top: -150px;">
+    <div class="lg:w-4/5 mx-auto-info flex flex-wrap">
+        <div class="w-half lg:pr-0 lg:py-0 mb-10 lg:mb-1">
+            <h3 class="text-3xl text-gray-900 font-medium mb-4">Сотрудники привязаные к данному номеру</h3>
+
+            {% if employee_cards %}
+                {% for item in employee_cards %}
+                    <div class="border border-gray-200 rounded p-3 mb-3">
+                        <div class="font-semibold text-gray-900">
+                            {{ item.emp.full_name }}
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            {% if item.emp.mail %}{{ item.emp.mail }}{% endif %}
+                            {% if item.emp.company %} • {{ item.emp.company }}{% endif %}
+                            {% if item.emp.department %} • {{ item.emp.department }}{% endif %}
+                            {% if item.emp.job_title %} • {{ item.emp.job_title }}{% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-gray-500">Сотрудники не привязаны</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
 <div class="container px-5 py-24 mx-auto" style="margin-left: 700px; margin-top: -900px;">
     <div class="lg:w-4/5 mx-auto-info flex flex-wrap">
         <div class="w-half lg:pr-0 lg:py-0 mb-10 lg:mb-1">
@@ -162,6 +208,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="flex border-t border-gray-300 py-2">
                 <span class="text-gray-500">Порт</span>
                 <span class="ml-auto text-gray-900">{{ port }}</span>
@@ -192,6 +239,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="flex border-t border-gray-300 py-2">
                 <span class="text-gray-500">Добавил</span>
                 <span class="ml-auto text-gray-900">{{ lead.created_user }}</span>
@@ -215,4 +263,5 @@
 <button type='submit' onclick="history.back();" class="text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md" style="margin-left: 900px">
     Вернуться назад
 </button>
+
 {% endblock content %}

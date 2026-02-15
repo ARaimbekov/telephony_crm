@@ -31,14 +31,15 @@ def _parse_full_name(full_name: str):
 class LeadCreateModelForm(forms.ModelForm):
     # выбираем 1+ сотрудников из EmployeeDwh
     employees = forms.ModelMultipleChoiceField(
-        label="Сотрудники",
-        queryset=EmployeeDwh.objects.none(),  # не грузим всё сразу
         required=True,
+        queryset=EmployeeDwh.objects.none(),
         widget=forms.SelectMultiple(attrs={
+            "id": "id_employees",
             "class": "select2-employee",
-            "data-placeholder": "Начните вводить ФИО / почту / отдел / должность..."
+            "multiple": "multiple",
         })
     )
+
 
     class Meta:
         model = Lead
@@ -53,10 +54,21 @@ class LeadCreateModelForm(forms.ModelForm):
         self.fields['phone_number'].empty_label = "номер телефона не выбран"
         self.fields['phone_model'].empty_label = "модель телефона не выбрана"
 
-        # employees берём только активных
-        self.fields["employees"].queryset = EmployeeDwh.objects.filter(
-            status=EmployeeDwh.Status.ACTIVE
-        ).order_by("full_name")
+        selected_ids = []
+        if self.data:
+            selected_ids = [x for x in self.data.getlist("employees") if str(x).isdigit()]
+        elif self.instance and self.instance.pk:
+            selected_ids = list(self.instance.employees.values_list("id", flat=True))
+
+        if selected_ids:
+            self.fields["employees"].queryset = EmployeeDwh.objects.filter(
+                status=EmployeeDwh.Status.ACTIVE,
+                id__in=selected_ids
+            )
+        else:
+            self.fields["employees"].queryset = EmployeeDwh.objects.none()
+
+
 
     def clean(self):
         cleaned = super().clean()
@@ -65,44 +77,75 @@ class LeadCreateModelForm(forms.ModelForm):
             raise ValidationError("Выберите сотрудника из справочника (EmployeeDwh).")
         return cleaned
 
+
     @transaction.atomic
     def save(self, commit=True):
         lead = super().save(commit=False)
 
         employees = self.cleaned_data["employees"]
-        primary = employees[0]  # “главный” сотрудник — первый выбранный
+        primary = employees.first()  # ✅
 
-        # 1) автозаполняем ФИО в Lead из EmployeeDwh.full_name
-        last, first, patronymic = _parse_full_name(primary.full_name)
-        lead.last_name = last or lead.last_name
-        lead.first_name = first or ""
-        lead.patronymic_name = patronymic or ""
+        if primary:
+            last, first, patronymic = _parse_full_name(primary.full_name)
+            lead.last_name = last or lead.last_name
+            lead.first_name = first or ""
+            lead.patronymic_name = patronymic or ""
 
         if commit:
             lead.save()
-
-            # 2) сохраняем M2M сотрудников
-            lead.employees.set(employees)
-
-            # 3) автозаполняем компанию Lead.company (создаём, если нет)
-            # Lead.company у тебя M2M на Company
-            comp_name = (primary.company or "").strip()
-            if comp_name:
-                comp_obj, _ = Company.objects.get_or_create(name=comp_name)
-                lead.company.set([comp_obj])
-            else:
-                lead.company.clear()
-
+            lead.employees.set(employees)  # ✅ сохранит сколько выбрал
             self.save_m2m()
 
         return lead
 
 
 class LeadModelForm(forms.ModelForm):
+    employees = forms.ModelMultipleChoiceField(
+        required=False,  # в модели blank=True
+        queryset=EmployeeDwh.objects.none(),
+        widget=forms.SelectMultiple(attrs={
+            "id": "id_employees",
+            "class": "select2-employee",
+            "multiple": "multiple",
+        })
+    )
+
     class Meta:
         model = Lead
-        fields = '__all__'
-        
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        selected_ids = []
+        if self.data:
+            selected_ids = [x for x in self.data.getlist("employees") if str(x).isdigit()]            
+        elif self.instance and self.instance.pk:
+            selected_ids = list(self.instance.employees.values_list("id", flat=True))
+
+        # чтобы на странице редактирования показывались уже выбранные
+        if (not self.data) and self.instance and self.instance.pk:
+            self.initial["employees"] = selected_ids
+
+        if selected_ids:
+            self.fields["employees"].queryset = EmployeeDwh.objects.filter(
+                status=EmployeeDwh.Status.ACTIVE,
+                id__in=selected_ids
+            )
+        else:
+            self.fields["employees"].queryset = EmployeeDwh.objects.none()
+
+
+    @transaction.atomic
+    def save(self, commit=True):
+        lead = super().save(commit=commit)
+
+        # сохраняем M2M сотрудников (сколько выбрали)
+        employees = self.cleaned_data.get("employees")
+        if employees is not None:
+            lead.employees.set(employees)
+
+        return lead
 
     def clean_first_name(self):
         data = self.cleaned_data["first_name"]

@@ -4,21 +4,28 @@
 {% load static %}
 
 {% block content %}
+
 <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
+
+<!-- jQuery -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 
 <!-- Select2 -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <div class="container-fluid mt-3">
-    <a class="hover:text-blue-500" href="{% url 'leads:lead-list' %}">Вернуться к таблице</a>
+    <a class="hover:text-blue-500" href="{% url 'leads:lead-list' %}">
+        Вернуться к таблице
+    </a>
 
     <div class="py-5 border-t border-gray-200">
-        <h1 class="text-4xl text-gray-800">Создание новой позиции</h1>
+        <h1 class="text-4xl text-gray-800">
+            Создание новой позиции
+        </h1>
     </div>
 
-    <form method="post" class="">
+    <form method="post">
         {% csrf_token %}
 
         <div class="row">
@@ -42,7 +49,7 @@
             </div>
         </div>
 
-        <!-- Выбор сотрудников из EmployeeDwh -->
+        <!-- Employees -->
         <div class="row mt-3">
             <div class="col-12">
                 {{ form.employees|as_crispy_field }}
@@ -63,7 +70,6 @@
             </div>
         </div>
 
-        <!-- Доп. поля -->
         <div class="row mt-4">
             <div class="col-4">
                 {{ form.record_calls|as_crispy_field }}
@@ -82,8 +88,16 @@
             </div>
         </div>
 
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Ошибки формы:</strong>
+            <pre style="white-space: pre-wrap;">{{ form.errors }}</pre>
+        </div>
+        {% endif %}
+
+
         <div class="d-flex justify-content-center">
-            <button type="submit" id="buttonStyle"
+            <button type="submit"
                 class="col-6 text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">
                 Готово
             </button>
@@ -91,81 +105,40 @@
     </form>
 </div>
 
+<!-- ============================= -->
+<!-- SELECT2 INIT (главное место) -->
+<!-- ============================= -->
 <script>
-    // Select2 employees (AJAX search)
-    $(document).ready(function () {
-        $('.select2-employee').select2({
-            width: '100%',
-            allowClear: true,
-            ajax: {
-                url: "{% url 'leads:employee-search' %}",
-                dataType: 'json',
-                delay: 250,
-                data: function (params) {
-                    return { q: params.term || "" };
-                },
-                processResults: function (data) {
-                    return { results: data.results };
-                }
-            },
-            minimumInputLength: 2
-        });
-    });
-</script>
+$(document).ready(function () {
+    const $emp = $('#id_employees');
 
-<script>
-    // ===== твой текущий код подгрузки phone_number по ATC =====
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+    
+    if (!$emp.length) {
+        console.error("Не найден #id_employees");
+        return;
+    }
+
+    $emp.select2({
+        width: '100%',
+        multiple: true,  
+        placeholder: "Начните вводить ФИО / почту / отдел / должность...",
+        allowClear: true,
+        closeOnSelect: false,      
+        minimumInputLength: 2,
+        ajax: {
+            url: "{% url 'leads:employee-search' %}",
+            dataType: 'json',
+            delay: 300,
+            data: function (params) {
+                return { q: params.term || "" };
+            },
+            processResults: function (data) {
+                return { results: data.results };
+            },
+            cache: true
         }
-        return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken');
-
-    let atc_field = document.getElementById("div_id_atc");
-    let number_field = document.querySelector("div.relative select[name='phone_number']");
-
-    if (atc_field) {
-        atc_field.addEventListener("change", getAtcId);
-    }
-
-    function getAtcId(e) {
-        let atc_id = e.target.value;
-        const data = { id: atc_id };
-        let url = "{% url 'leads:lead-phone-create' %}";
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify(data),
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.length != 0) {
-                number_field.innerHTML = `<option value="${data[0]["id"]}" id="number-id-field">${data[0]["name"]}</option>`;
-                for (let i = 1; i < data.length; i++) {
-                    number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`;
-                }
-            } else {
-                number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номеров</option>';
-            }
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
-    }
+    });
+});
 </script>
 
 {% endblock content %}
