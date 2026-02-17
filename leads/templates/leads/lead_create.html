@@ -95,7 +95,6 @@
         </div>
         {% endif %}
 
-
         <div class="d-flex justify-content-center">
             <button type="submit"
                 class="col-6 text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">
@@ -106,13 +105,12 @@
 </div>
 
 <!-- ============================= -->
-<!-- SELECT2 INIT (главное место) -->
+<!-- SELECT2 INIT: Employees -->
 <!-- ============================= -->
 <script>
 $(document).ready(function () {
     const $emp = $('#id_employees');
 
-    
     if (!$emp.length) {
         console.error("Не найден #id_employees");
         return;
@@ -120,10 +118,10 @@ $(document).ready(function () {
 
     $emp.select2({
         width: '100%',
-        multiple: true,  
+        multiple: true,
         placeholder: "Начните вводить ФИО / почту / отдел / должность...",
         allowClear: true,
-        closeOnSelect: false,      
+        closeOnSelect: false,
         minimumInputLength: 2,
         ajax: {
             url: "{% url 'leads:employee-search' %}",
@@ -139,6 +137,76 @@ $(document).ready(function () {
         }
     });
 });
+</script>
+
+<!-- ============================= -->
+<!-- ATC -> phone_number (как раньше) -->
+<!-- ============================= -->
+<script>
+(function () {
+
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+
+  const csrftoken = getCookie('csrftoken');
+
+  // у crispy select лежит внутри div_id_atc / div_id_phone_number
+  const atcWrap = document.getElementById("div_id_atc");
+  if (!atcWrap) return;
+
+  const atcSelect = atcWrap.querySelector("select");
+  const numberSelect = document.querySelector("div.relative select[name='phone_number']");
+  if (!atcSelect || !numberSelect) return;
+
+  atcSelect.addEventListener("change", function (e) {
+      const atc_id = e.target.value;
+
+      const url = "{% url 'leads:lead-phone-create' %}";
+
+      fetch(url, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrftoken
+          },
+          body: JSON.stringify({ id: atc_id }),
+      })
+      .then((response) => response.json())
+      .then((data) => {
+          // очистим список
+          numberSelect.innerHTML = "";
+
+          if (data && data.length) {
+              // добавим варианты
+              for (let i = 0; i < data.length; i++) {
+                  const opt = document.createElement("option");
+                  opt.value = data[i]["id"];
+                  opt.textContent = data[i]["name"];
+                  numberSelect.appendChild(opt);
+              }
+          } else {
+              const opt = document.createElement("option");
+              opt.value = "";
+              opt.textContent = "Нет свободных номеров";
+              numberSelect.appendChild(opt);
+          }
+      })
+      .catch((error) => console.error('Error:', error));
+  });
+
+})();
 </script>
 
 {% endblock content %}
