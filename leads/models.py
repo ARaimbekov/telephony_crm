@@ -90,6 +90,7 @@ class Lead(models.Model):
     # ])
     first_name = models.CharField(max_length=20, blank=True, verbose_name='Имя')
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')
+    display_name = models.CharField(max_length=100, blank=True, verbose_name="Отображаемое имя")
     patronymic_name = models.CharField(max_length=20, blank=True, verbose_name='Отчество')
     phone_model = models.ManyToManyField("Apparats", verbose_name='Модель телефона')
     company = models.ManyToManyField("company", verbose_name='Компания')
