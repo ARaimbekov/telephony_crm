@@ -1,189 +1,369 @@
 {% extends "base.html" %}
 
-{% block content %}    
+{% block container_class %}w-full mx-auto px-6{% endblock %}
 
-<h20 class="grays">Всего позиций : {{ total_number }}</h20>
-<h20 class="grays">Зарезервированых номеров : {{reserved_number}}</h20>
-<h20 class="grays">Количество номеров : {{all_number}}</h20>
-<h20 class="grays">Свободных номеров : {{free_number}}</h20>
-<h20 class="grays">Количество ATC :  {{all_atc}}</h20>
+{% block content %}
 
-<section class="text-gray-700 body-font">
-    
-    <div class="container px-5 py-24 mx-auto flex flex-wrap">
-        <div class="w-full mb-6 py-6 flex justify-between items-center border-b border-gray-200">
-            <div>
-                <h1 class="text-4xl text-gray-800">Телефоны</h1>
-            </div>
-            <div>
-                <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:export_table' %}">
-                    Скачать (csv)
-                </a>
-                <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:export_table_exel' %}">
-                    &nbsp &nbsp Скачать (xls)
-                </a>
-                <a class="text-gray-500 hover:text-blue-500" href="{% url 'leads:lead-create' %}">
-                    &nbsp &nbsp Добавить
-                </a>
-            </div>
-        </div>
-        
-        <!-- Форма поиска -->
-        <form style="padding-left: 300px;" action="{% url 'leads:lead-list' %}">
-            <div class="form-group">
-                <div class="row">
-                    <!-- Существующие поля поиска -->
-                    <input class="mr-sm-2" type="search" placeholder="Номер" style="border: 2px solid rgb(139, 139, 155);"
-                        name="number">
-                    <input class="mr-sm-2" type="search" placeholder="Mac-address" style="border: 2px solid rgb(139, 139, 155);"
-                        name="mac">
-                    <input class="mr-sm-2" type="search" placeholder="Фамилия" style="border: 2px solid rgb(139, 139, 155);" 
-                        name="name">
+<style>
+  /* ======= Page container ======= */
+  .page-wrap{
+    max-width: none;
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px 24px 40px;
+  }
 
-                    <!-- Новые поля поиска -->
-                    <select class="mr-sm-2" style="border: 2px solid rgb(139, 139, 155);" name="record_calls">
-                        <option value="">Запись разговоров</option>
-                        <option value="true">Да</option>
-                        <option value="false">Нет</option>
-                    </select>
+  /* ======= Top stats ======= */
+  .stats-grid{
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 1100px){
+    .stats-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 520px){
+    .stats-grid{ grid-template-columns: 1fr; }
+  }
+  .stat-card{
+    background: #fff;
+    border: 1px solid rgb(229, 231, 235);
+    border-radius: 16px;
+    padding: 12px 14px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+  }
+  .stat-title{
+    font-size: 12px;
+    color: rgb(107,114,128);
+    margin-bottom: 4px;
+  }
+  .stat-value{
+    font-size: 18px;
+    font-weight: 700;
+    color: rgb(17,24,39);
+    line-height: 1.2;
+  }
 
-                    <select class="mr-sm-2" style="border: 2px solid rgb(139, 139, 155);" name="external_line_access">
-                        <option value="">Доступ к внешним линиям</option>
-                        <option value="локальные_МГ">Локальные МГ</option>
-                        <option value="локальные_МГ_МН">Локальные МГ и МН</option>
-                        <option value="локальные">Локальные</option>
-                    </select>
+  /* ======= Header ======= */
+  .header-row{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    padding: 14px 0 18px;
+    border-bottom: 1px solid rgb(229,231,235);
+    margin-bottom: 16px;
+  }
+  .header-title{
+    font-size: 44px;
+    font-weight: 800;
+    color: rgb(17,24,39);
+    letter-spacing: -0.02em;
+  }
+  @media (max-width: 700px){
+    .header-title{ font-size: 34px; }
+    .header-row{ flex-direction: column; align-items: flex-start; }
+  }
+  .header-actions{
+    display:flex;
+    gap:14px;
+    flex-wrap: wrap;
+    align-items:center;
+  }
+  .link-action{
+    color: rgb(107,114,128);
+    font-weight: 600;
+  }
+  .link-action:hover{ color: rgb(37,99,235); }
 
-                    <input class="mr-sm-2" type="search" placeholder="Переадресация" style="border: 2px solid rgb(139, 139, 155);"
-                        name="call_forwarding">
+  /* ======= Filters ======= */
+  .filters-card{
+    background:#fff;
+    border: 1px solid rgb(229,231,235);
+    border-radius: 18px;
+    padding: 14px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    margin-bottom: 14px;
+  }
+  .filters-row{
+    display:flex;
+    flex-wrap: wrap;      /* перенос вместо скролла */
+    gap: 12px;
+    align-items:center;
+  }
+  .filter-input{
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid rgb(209,213,219);
+    border-radius: 12px;
+    outline: none;
+    background:#fff;
+    box-sizing: border-box;
+    min-width: 160px;
+    flex: 1 1 180px;
+  }
+  select.filter-input{ padding-right: 38px; }
+  .filter-input:focus{
+    border-color: rgb(59,130,246);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+  }
+  .btns-group{
+    display:inline-flex;
+    gap:10px;
+    align-items:center;
+    flex: 0 0 auto;
+  }
+  .btn{
+    height: 44px;
+    padding: 0 18px;
+    border-radius: 12px;
+    font-weight: 700;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    white-space: nowrap;
+    user-select:none;
+    text-decoration:none;
+    border: 1px solid transparent;
+  }
+  .btn-blue{
+    background: rgb(59,130,246);
+    color:#fff;
+  }
+  .btn-blue:hover{ background: rgb(37,99,235); }
+  .btn-yellow{
+    background: rgb(234,179,8);
+    color:#fff;
+  }
+  .btn-yellow:hover{ background: rgb(202,138,4); }
 
-                    <button class="text-gray-500 hover:text-blue-500" type="submit">Поиск/Сбросить</button>
-                </div>
-            </div>
-        </form> 
+  /* ======= Table ======= */
+  .table-card{
+    background:#fff;
+    border: 1px solid rgb(229,231,235);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+  }
+  table{
+    width:100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  thead th{
+    background: rgb(249,250,251);
+    color: rgb(107,114,128);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgb(229,231,235);
+    text-align:left;
+  }
+  tbody td{
+    padding: 14px 16px;
+    border-bottom: 1px solid rgb(243,244,246);
+    color: rgb(55,65,81);
+    font-size: 14px;
+    vertical-align: top;
+  }
+  tbody tr:nth-child(even){ background: rgb(252,252,253); }
+  tbody tr:hover{ background: rgb(247,250,255); }
+  .muted{ color: rgb(107,114,128); }
+  .nowrap{ white-space: nowrap; }
+  .wrap{ white-space: normal; overflow-wrap: anywhere; }
+  .row-actions a{
+    font-weight: 700;
+  }
 
-        <!-- Остальная часть таблицы -->
-        <div class="flex flex-col w-full" style="width: 100cm; margin-left: -120px;">
-            <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                    <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                        <table class="min-w-full divide-y divide-gray-200"> 
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        АТС
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Номер телефона
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Мак-Адрес
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Линия
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        ФИО
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Модель телефона
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Компания
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Активен
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Зарезервирован
-                                    </th>
-                                    <th scope="col" class="relative px-6 py-3">
-                                        <span class="sr-only">Обзор</span>
-                                    </th>
-                                    <th scope="col" class="relative px-6 py-3">
-                                        <span class="sr-only">Изменить</span>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for lead in page.object_list %}
-                                    <tr class="bg-white">
-                                        {% for atc in lead.atc.all %}
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ atc.name }}
-                                            </td>
-                                        {% endfor %} 
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ lead.phone_number }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ lead.mac_address }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ lead.line }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ lead.last_name }} 
-                                            {{ lead.first_name }}
-                                            {{ lead.patronymic_name }}
-                                        </td>
-                                        {% for phone in lead.phone_model.all %}
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ phone.name }}
-                                            </td>
-                                        {% endfor %}
-                                        {% for company in lead.company.all %}
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ company.name }}
-                                            </td>
-                                        {% endfor %}
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ lead.active }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ lead.reservation }}
-                                        </td>   
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <a href="{% url 'leads:lead-detail' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
-                                                Обзор
-                                            </a>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <a href="{% url 'leads:lead-update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">
-                                                Изменить
-                                            </a>
-                                        </td>
-                                    </tr>
-                                {% empty %}
-                                    <p>На данный момент нет никаких позиций</p>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="page_id" class="container">
-                        <div class="" id="pageStyle">
-                            {% if page.has_previous %}
-                                <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page=1">Начало</a>
-                                <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.previous_page_number }}">Предыдуший</a>
-                            {% endif %}
-                            
-                            {% for num in page.paginator.page_range %}
-                                {% if page.number == num %}
-                                    <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ num }}">{{ num }}</a>
-                                {% elif num > page.number|add:'-2' and num < page.number|add:'2' %}
-                                    <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ num }}">{{ num }}</a>
-                                {% endif %}
-                            {% endfor %}
+  /* ======= Pagination ======= */
+  .pager{
+    display:flex;
+    justify-content:center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 14px;
+    background: #fff;
+    border-top: 1px solid rgb(229,231,235);
+  }
+  .page-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid rgb(229,231,235);
+    background: rgb(249,250,251);
+    color: rgb(55,65,81);
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration:none;
+  }
+  .page-pill:hover{ background: rgb(243,244,246); }
+  .page-pill.active{
+    background: rgb(59,130,246);
+    border-color: rgb(59,130,246);
+    color: #fff;
+  }
+</style>
 
-                            {% if page.has_next %}
-                                <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.next_page_number }}">Следуюшая</a>
-                                <a class="ml-3 inline-flex items-center bg-gray-200 border-0 py-1 px-3 focus:outline-none hover:bg-gray-300 rounded text-base mt-4 md:mt-0" href="?page={{ page.paginator.num_pages }}">Конец</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="page-wrap">
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-title">Всего позиций</div>
+      <div class="stat-value">{{ total_number }}</div>
     </div>
-</section>
+    <div class="stat-card">
+      <div class="stat-title">Зарезервированных</div>
+      <div class="stat-value">{{ reserved_number }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">Количество номеров</div>
+      <div class="stat-value">{{ all_number }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">Свободных номеров</div>
+      <div class="stat-value">{{ free_number }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">Количество ATC</div>
+      <div class="stat-value">{{ all_atc }}</div>
+    </div>
+  </div>
+
+  <div class="header-row">
+    <div class="header-title">Телефоны</div>
+    <div class="header-actions">
+      <a class="link-action" href="{% url 'leads:export_table' %}">Скачать (csv)</a>
+      <a class="link-action" href="{% url 'leads:export_table_exel' %}">Скачать (xls)</a>
+      <a class="link-action" href="{% url 'leads:lead-create' %}">Добавить</a>
+    </div>
+  </div>
+
+  <div class="filters-card">
+    <form action="{% url 'leads:lead-list' %}">
+      <div class="filters-row">
+
+        <input class="filter-input" type="search" placeholder="Номер" name="number"
+               value="{{ request.GET.number|default_if_none:'' }}">
+
+        <input class="filter-input" type="search" placeholder="Mac-address" name="mac"
+               value="{{ request.GET.mac|default_if_none:'' }}">
+
+        <input class="filter-input" type="search" placeholder="Фамилия" name="name"
+               value="{{ request.GET.name|default_if_none:'' }}">
+
+        <select class="filter-input" name="record_calls">
+          <option value="">Запись разговоров</option>
+          <option value="true" {% if request.GET.record_calls == "true" %}selected{% endif %}>Да</option>
+          <option value="false" {% if request.GET.record_calls == "false" %}selected{% endif %}>Нет</option>
+        </select>
+
+        <select class="filter-input" name="external_line_access">
+          <option value="">Доступ к внешним линиям</option>
+          <option value="локальные_МГ" {% if request.GET.external_line_access == "локальные_МГ" %}selected{% endif %}>Локальные МГ</option>
+          <option value="локальные_МГ_МН" {% if request.GET.external_line_access == "локальные_МГ_МН" %}selected{% endif %}>Локальные МГ и МН</option>
+          <option value="локальные" {% if request.GET.external_line_access == "локальные" %}selected{% endif %}>Локальные</option>
+        </select>
+
+        <input class="filter-input" type="search" placeholder="Переадресация" name="call_forwarding"
+               value="{{ request.GET.call_forwarding|default_if_none:'' }}">
+
+        <div class="btns-group">
+          <button class="btn btn-blue" type="submit">Поиск</button>
+          <a class="btn btn-yellow" href="{% url 'leads:lead-list' %}">Сброс</a>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>АТС</th>
+          <th>Номер телефона</th>
+          <th>Мак-Адрес</th>
+          <th>Линия</th>
+          <th>ФИО</th>
+          <th>Модель телефона</th>
+          <th>Компания</th>
+          <th>Активен</th>
+          <th>Зарезервирован</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lead in page.object_list %}
+          <tr>
+            {% for atc in lead.atc.all %}
+              <td class="nowrap muted">{{ atc.name }}</td>
+            {% endfor %}
+
+            <td class="nowrap">{{ lead.phone_number }}</td>
+            <td class="nowrap">{{ lead.mac_address }}</td>
+            <td class="nowrap">{{ lead.line }}</td>
+
+            <td class="wrap">
+              {{ lead.last_name }} {{ lead.first_name }} {{ lead.patronymic_name }}
+            </td>
+
+            {% for phone in lead.phone_model.all %}
+              <td class="nowrap muted">{{ phone.name }}</td>
+            {% endfor %}
+
+            {% for company in lead.company.all %}
+              <td class="wrap muted">{{ company.name }}</td>
+            {% endfor %}
+
+            <td class="nowrap">{{ lead.active }}</td>
+            <td class="nowrap">{{ lead.reservation }}</td>
+
+            <td class="row-actions nowrap" style="text-align:right;">
+              <a href="{% url 'leads:lead-detail' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">Обзор</a>
+            </td>
+            <td class="row-actions nowrap" style="text-align:right;">
+              <a href="{% url 'leads:lead-update' lead.pk %}" class="text-indigo-600 hover:text-indigo-900">Изменить</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="11" class="muted" style="padding: 18px 16px;">
+              На данный момент нет никаких позиций
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="pager">
+      {% if page.has_previous %}
+        <a class="page-pill" href="?page=1">Начало</a>
+        <a class="page-pill" href="?page={{ page.previous_page_number }}">Предыдущий</a>
+      {% endif %}
+
+      {% for num in page.paginator.page_range %}
+        {% if page.number == num %}
+          <a class="page-pill active" href="?page={{ num }}">{{ num }}</a>
+        {% elif num > page.number|add:'-2' and num < page.number|add:'2' %}
+          <a class="page-pill" href="?page={{ num }}">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page.has_next %}
+        <a class="page-pill" href="?page={{ page.next_page_number }}">Следующая</a>
+        <a class="page-pill" href="?page={{ page.paginator.num_pages }}">Конец</a>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+
 {% endblock content %}

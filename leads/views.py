@@ -1237,14 +1237,6 @@ def api_change_atc(request):
     }, status=200)
 
 
-# @login_required
-# def api_atc_list(request):
-#     """
-#     Возвращает список всех ATC в формате JSON: [{"id": 1, "name": "ATC Москва"}, ...]
-#     """
-#     atcs = Atc.objects.all().values('id', 'name')
-#     return JsonResponse(list(atcs), safe=False)
-
 def _staff_check(user):
     return user.is_authenticated and user.is_staff
 
@@ -1252,3 +1244,102 @@ def _staff_check(user):
 def api_atc_list(request):
     atcs = Atc.objects.all().values('id', 'name')
     return JsonResponse(list(atcs), safe=False)
+
+@user_passes_test(_staff_check)
+def api_export_full(request):
+    """
+    ВЫГРУЗКА: полный набор данных
+    """
+    qs = (
+        Lead.objects
+        .select_related("phone_number")
+        .prefetch_related(
+            "atc",
+            "company",
+            "phone_model",
+            Prefetch(
+                "employees",
+                queryset=EmployeeDwh.objects.all().only(
+                    "id", "guid_nsi", "full_name", "samaccountname",
+                    "mail", "company", "department", "job_title", "status"
+                )
+            ),
+        )
+        .order_by("id")
+    )
+
+    data = []
+    for lead in qs:
+        data.append({
+            "id": lead.id,
+            "phone_number": str(lead.phone_number),  # Number.__str__ -> name
+            "line": lead.line,
+            "mac_address": lead.mac_address,
+            "reservation": lead.reservation,
+            "active": lead.active,
+
+            "first_name": lead.first_name,
+            "last_name": lead.last_name,
+            "patronymic_name": lead.patronymic_name,
+            "display_name": lead.display_name,  # <-- твое новое поле
+
+            "record_calls": lead.record_calls,
+            "external_line_access": lead.external_line_access,
+            "call_forwarding": lead.call_forwarding,
+            "timezone": lead.timezone,
+
+            "created_user": lead.created_user,
+            "updated_user": lead.updated_user,
+            "date_added": lead.date_added.isoformat() if lead.date_added else None,
+            "update_added": lead.update_added.isoformat() if lead.update_added else None,
+
+            "atc": [{"id": a.id, "name": a.name, "ip_address": a.ip_address} for a in lead.atc.all()],
+            "company": [{"id": c.id, "name": c.name} for c in lead.company.all()],
+            "phone_model": [{"id": p.id, "name": p.name} for p in lead.phone_model.all()],
+
+            "employees": [{
+                "id": e.id,
+                "guid_nsi": str(e.guid_nsi),
+                "full_name": e.full_name,
+                "samaccountname": e.samaccountname,
+                "mail": e.mail,
+                "company": e.company,
+                "department": e.department,
+                "job_title": e.job_title,
+                "status": e.status,
+            } for e in lead.employees.all()],
+        })
+
+    return JsonResponse({"ok": True, "count": len(data), "results": data}, json_dumps_params={"ensure_ascii": False})
+
+
+@user_passes_test(_staff_check)
+def api_export_guid_number_display_name(request):
+    """
+    ВЫГРУЗКА: связка GUID - номер - отображаемое имя
+    (учитывает, что под одним номером может быть несколько сотрудников)
+    """
+    through = Lead.employees.through  # таблица связи Lead <-> EmployeeDwh
+
+    qs = (
+        through.objects
+        .select_related("lead", "employeedwh", "lead__phone_number")
+        .only(
+            "lead__id",
+            "lead__display_name",
+            "lead__phone_number__name",
+            "employeedwh__guid_nsi",
+        )
+        .order_by("lead__id")
+    )
+
+    results = []
+    for row in qs:
+        results.append({
+            "guid": str(row.employeedwh.guid_nsi),
+            "number": row.lead.phone_number.name,
+            "display_name": row.lead.display_name,
+            "lead_id": row.lead.id,
+        })
+
+    return JsonResponse({"ok": True, "count": len(results), "results": results}, json_dumps_params={"ensure_ascii": False})
