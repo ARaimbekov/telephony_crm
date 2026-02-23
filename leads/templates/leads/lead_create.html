@@ -127,6 +127,14 @@ $(document).ready(function () {
         allowClear: true,
         closeOnSelect: false,
         minimumInputLength: 2,
+
+
+        language: {
+            inputTooShort: function () {
+                return "Введите минимум 2 символа";
+            }
+        },
+
         ajax: {
             url: "{% url 'leads:employee-search' %}",
             dataType: 'json',

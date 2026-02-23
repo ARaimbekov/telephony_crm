@@ -23,7 +23,7 @@ class EmployeeDwh(models.Model):
     guid_nsi = models.UUIDField(unique=True, db_index=True)
 
     full_name = models.CharField(max_length=255, blank=True)
-    samaccountname = models.CharField(max_length=150, db_index=True)  # <-- НЕ unique
+    samaccountname = models.CharField(max_length=150, db_index=True)
     mail = models.EmailField(max_length=254, blank=True)
 
     company = models.CharField(max_length=255, blank=True)
@@ -173,4 +173,3 @@ class Atc(models.Model):
 
     def __str__(self):
         return self.name
-

@@ -29,8 +29,8 @@ def _parse_full_name(full_name: str):
 
 
 class LeadCreateModelForm(forms.ModelForm):
-    # выбираем 1+ сотрудников из EmployeeDwh
     employees = forms.ModelMultipleChoiceField(
+        label="Сотрудники",   
         required=True,
         queryset=EmployeeDwh.objects.none(),
         widget=forms.SelectMultiple(attrs={
@@ -83,7 +83,7 @@ class LeadCreateModelForm(forms.ModelForm):
         lead = super().save(commit=False)
 
         employees = self.cleaned_data["employees"]
-        primary = employees.first()  # ✅
+        primary = employees.first()  
 
         if primary:
             last, first, patronymic = _parse_full_name(primary.full_name)
@@ -93,7 +93,7 @@ class LeadCreateModelForm(forms.ModelForm):
 
         if commit:
             lead.save()
-            lead.employees.set(employees)  # ✅ сохранит сколько выбрал
+            lead.employees.set(employees) 
             self.save_m2m()
 
         return lead
@@ -101,7 +101,8 @@ class LeadCreateModelForm(forms.ModelForm):
 
 class LeadModelForm(forms.ModelForm):
     employees = forms.ModelMultipleChoiceField(
-        required=False,  # в модели blank=True
+        label="Сотрудники",   
+        required=False,  
         queryset=EmployeeDwh.objects.none(),
         widget=forms.SelectMultiple(attrs={
             "id": "id_employees",
