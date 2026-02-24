@@ -83,26 +83,32 @@ class LeadCreateModelForm(forms.ModelForm):
         lead = super().save(commit=False)
 
         employees = self.cleaned_data["employees"]
-        primary = employees.first()  
+        primary = employees.first()
 
         if primary:
             last, first, patronymic = _parse_full_name(primary.full_name)
-            lead.last_name = last or lead.last_name
+            lead.last_name = last or ""
             lead.first_name = first or ""
             lead.patronymic_name = patronymic or ""
 
         if commit:
             lead.save()
-            lead.employees.set(employees) 
+            lead.employees.set(employees)
+
+            if primary and (primary.company or "").strip():
+                comp_obj, _ = Company.objects.get_or_create(name=primary.company.strip())
+                lead.company.set([comp_obj])
+            else:
+                lead.company.clear()
+
             self.save_m2m()
 
         return lead
 
-
 class LeadModelForm(forms.ModelForm):
     employees = forms.ModelMultipleChoiceField(
-        label="Сотрудники",   
-        required=False,  
+        label="Сотрудники",
+        required=False,
         queryset=EmployeeDwh.objects.none(),
         widget=forms.SelectMultiple(attrs={
             "id": "id_employees",
@@ -114,7 +120,9 @@ class LeadModelForm(forms.ModelForm):
     class Meta:
         model = Lead
         fields = "__all__"
+        exclude = ("first_name", "last_name", "patronymic_name", "company")
 
+        
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -129,23 +137,42 @@ class LeadModelForm(forms.ModelForm):
             self.initial["employees"] = selected_ids
 
         if selected_ids:
-            self.fields["employees"].queryset = EmployeeDwh.objects.filter(
-                status=EmployeeDwh.Status.ACTIVE,
-                id__in=selected_ids
-            )
+            self.fields["employees"].queryset = EmployeeDwh.objects.filter(id__in=selected_ids)
         else:
             self.fields["employees"].queryset = EmployeeDwh.objects.none()
 
 
     @transaction.atomic
     def save(self, commit=True):
-        lead = super().save(commit=commit)
+        lead = super().save(commit=False)
 
-        # сохраняем M2M сотрудников (сколько выбрали)
         employees = self.cleaned_data.get("employees")
         if employees is not None:
-            lead.employees.set(employees)
+            primary = employees.first()
 
+            if primary:
+                last, first, patronymic = _parse_full_name(primary.full_name)
+                lead.last_name = last or ""
+                lead.first_name = first or ""
+                lead.patronymic_name = patronymic or ""
+
+            if commit:
+                lead.save()
+                lead.employees.set(employees)
+
+                if primary and (primary.company or "").strip():
+                    comp_obj, _ = Company.objects.get_or_create(name=primary.company.strip())
+                    lead.company.set([comp_obj])
+                else:
+                    lead.company.clear()
+
+                self.save_m2m()
+                return lead
+
+        # если employees не прислали (редкий кейс)
+        if commit:
+            lead.save()
+            self.save_m2m()
         return lead
 
     def clean_first_name(self):

@@ -53,23 +53,10 @@
               {{ form.line|as_crispy_field }}
             </div>
           </div>
-
-          <div class="row">
-            <div class="col-4">
-              {{ form.last_name|as_crispy_field }}
-            </div>
-            <div class="col-4">
-              {{ form.first_name|as_crispy_field }}
-            </div>
-            <div class="col-4">
-              {{ form.patronymic_name|as_crispy_field }}
-            </div>
-          </div>
-
           <!-- Employees (AJAX Select2) -->
           <div class="row mt-3">
             <div class="col-12">
-              <label for="id_employees">Employees</label>
+              <label for="{{ form.employees.id_for_label }}">{{ form.employees.label }}</label>
                 {{ form.employees }}
                 {{ form.employees.errors }}
 
@@ -83,9 +70,6 @@
           <div class="row">
             <div class="col-5">
               {{ form.phone_model|as_crispy_field }}
-            </div>
-            <div class="col-5">
-              {{ form.company|as_crispy_field }}
             </div>
             <div class="col-2">
               {{ form.active|as_crispy_field }}
@@ -137,40 +121,48 @@
   </div>
 </section>
 
-<!-- Select2 init for employees -->
+<!-- ============================= -->
+<!-- SELECT2 INIT: Employees -->
+<!-- ============================= -->
 <script>
-$(function () {
-  const $emp = $('#id_employees');
-  if (!$emp.length) return;
-  $emp.attr('multiple', 'multiple');
+$(document).ready(function () {
+    const $emp = $('#id_employees');
 
-  if (typeof $emp.select2 !== "function") {
-    console.error("Select2 не загрузился");
-    return;
-  }
-
-  $emp.select2({
-    width: '100%',
-    placeholder: "Начните вводить ФИО",
-    allowClear: true,
-    closeOnSelect: false,
-    minimumInputLength: 2,
-    ajax: {
-      url: "{% url 'leads:employee-search' %}",
-      dataType: 'json',
-      delay: 300,
-      data: function (params) {
-        return { q: params.term || "" };
-      },
-      processResults: function (data) {
-        return { results: data.results };
-      },
-      cache: true
+    if (!$emp.length) {
+        console.error("Не найден #id_employees");
+        return;
     }
-  });
+
+    $emp.select2({
+        width: '100%',
+        multiple: true,
+        placeholder: "Начните вводить ФИО",
+        allowClear: true,
+        closeOnSelect: false,
+        minimumInputLength: 2,
+
+
+        language: {
+            inputTooShort: function () {
+                return "Введите минимум 2 символа";
+            }
+        },
+
+        ajax: {
+            url: "{% url 'leads:employee-search' %}",
+            dataType: 'json',
+            delay: 300,
+            data: function (params) {
+                return { q: params.term || "" };
+            },
+            processResults: function (data) {
+                return { results: data.results };
+            },
+            cache: true
+        }
+    });
 });
 </script>
-
 
 <script>
   function getCookie(name) {
