@@ -4,6 +4,31 @@
 {% load static %}
 
 {% block content %}
+<style>
+
+.select2-container {
+    width: 100% !important;
+}
+
+.select2-dropdown {
+    min-width: 900px !important;
+}
+
+.select2-results__options {
+    max-height: 500px !important;
+}
+
+.select2-results__option {
+    padding: 10px 14px;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.select2-results__option {
+    white-space: normal !important;
+}
+
+</style>
 
 <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
 
@@ -144,6 +169,7 @@ $(document).ready(function () {
             },
             processResults: function (data) {
                 return { results: data.results };
+
             },
             cache: true
         }

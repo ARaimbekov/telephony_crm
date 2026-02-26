@@ -351,8 +351,11 @@ def lead_list(request):
         leads = leads.filter(
             Q(last_name__icontains=search_name_query) |
             Q(first_name__icontains=search_name_query) |
-            Q(patronymic_name__icontains=search_name_query)
-        )
+            Q(patronymic_name__icontains=search_name_query) |
+            Q(display_name__icontains=search_name_query) |
+            Q(employees__full_name__icontains=search_name_query)
+        ).distinct()
+
 
     # Фильтрация по новым полям
     if search_record_calls:

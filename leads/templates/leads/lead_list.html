@@ -291,6 +291,7 @@
           <th>Мак-Адрес</th>
           <th>Линия</th>
           <th>ФИО</th>
+          <th>Отображаемое имя</th>
           <th>Модель телефона</th>
           <th>Компания</th>
           <th>Активен</th>
@@ -314,6 +315,10 @@
               {{ lead.last_name }} {{ lead.first_name }} {{ lead.patronymic_name }}
             </td>
 
+            <td class="wrap">
+              {{ lead.display_name|default:"—" }}
+            </td>
+
             {% for phone in lead.phone_model.all %}
               <td class="nowrap muted">{{ phone.name }}</td>
             {% endfor %}
@@ -334,7 +339,7 @@
           </tr>
         {% empty %}
           <tr>
-            <td colspan="11" class="muted" style="padding: 18px 16px;">
+            <td colspan="12" class="muted" style="padding: 18px 16px;">
               На данный момент нет никаких позиций
             </td>
           </tr>
