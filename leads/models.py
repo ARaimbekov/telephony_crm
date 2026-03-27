@@ -11,6 +11,8 @@ from django_extensions.db.fields import ShortUUIDField
 from django.core.validators import MinLengthValidator
 import shortuuid
 import datetime
+import secrets
+from django.conf import settings
 
 
 class EmployeeDwh(models.Model):
@@ -54,6 +56,28 @@ class UserProfile(models.Model):
 class LeadManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset()
+
+
+class ApiToken(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="Название токена")
+    token = models.CharField(max_length=128, unique=True, db_index=True, verbose_name="Токен", blank=True)
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name="Кем создан"
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = secrets.token_urlsafe(48)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
 
 
 class Lead(models.Model):

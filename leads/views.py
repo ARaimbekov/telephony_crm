@@ -20,7 +20,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.views import generic
 from agents.mixins import OrganisorAndLoginRequiredMixin
-from .models import Lead, Company, Apparats, Number, Atc, User, EmployeeDwh
+from .models import Lead, Company, Apparats, Number, Atc, User, EmployeeDwh, ApiToken
 from .forms import *
 from django.db.models import ProtectedError
 from django.db import IntegrityError
@@ -35,6 +35,7 @@ import tempfile
 import os
 from django.db import transaction
 from django.db.models import Prefetch
+from functools import wraps
 
 
 from .migrations_utils import migrate_numbers, migrate_mac, change_atc
@@ -1077,9 +1078,41 @@ class LeadJsonView(generic.View):
         })
 
 
+def api_token_required(view_func):
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        x_token = request.headers.get("X-API-Token", "")
+
+        token = None
+
+        if auth_header.startswith("Bearer "):
+            token = auth_header.replace("Bearer ", "", 1).strip()
+        elif x_token:
+            token = x_token.strip()
+
+        if not token:
+            return JsonResponse(
+                {"ok": False, "error": "missing api token"},
+                status=401
+            )
+
+        token_obj = ApiToken.objects.filter(token=token, is_active=True).first()
+        if not token_obj:
+            return JsonResponse(
+                {"ok": False, "error": "invalid api token"},
+                status=403
+            )
+
+        request.api_token = token_obj
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
+
+
 @csrf_exempt
 @require_POST
-@user_passes_test(_staff_check)
+@api_token_required
 def api_migrate_numbers(request):
     upload = request.FILES.get('file')
     if not upload:
@@ -1108,7 +1141,7 @@ def api_migrate_numbers(request):
 
 @csrf_exempt
 @require_POST
-@user_passes_test(_staff_check)
+@api_token_required
 def api_migrate_mac(request):
     upload = request.FILES.get('file')
     if not upload:
@@ -1194,7 +1227,7 @@ def api_migrate_mac(request):
 
 @csrf_exempt
 @require_POST
-@user_passes_test(_staff_check)
+@api_token_required
 def api_change_atc(request):
     upload = request.FILES.get('file')
     atc_id = request.POST.get('atc_id')
@@ -1243,12 +1276,12 @@ def api_change_atc(request):
 def _staff_check(user):
     return user.is_authenticated and user.is_staff
 
-@user_passes_test(_staff_check)
+@api_token_required
 def api_atc_list(request):
     atcs = Atc.objects.all().values('id', 'name')
     return JsonResponse(list(atcs), safe=False)
 
-@user_passes_test(_staff_check)
+@api_token_required
 def api_export_full(request):
     """
     ВЫГРУЗКА: полный набор данных
@@ -1316,7 +1349,7 @@ def api_export_full(request):
     return JsonResponse({"ok": True, "count": len(data), "results": data}, json_dumps_params={"ensure_ascii": False})
 
 
-@user_passes_test(_staff_check)
+@api_token_required
 def api_export_guid_number_display_name(request):
     """
     ВЫГРУЗКА: связка GUID - номер - отображаемое имя

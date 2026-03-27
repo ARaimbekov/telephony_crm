@@ -26,9 +26,9 @@
 
     <!-- RIGHT: user -->
     {% if request.user.is_authenticated %}
-      <div class="flex items-center gap-3 whitespace-nowrap">
+      <div class="flex items-center gap-8 whitespace-nowrap">
         <div class="text-sm text-gray-600">
-          Вы вошли как: <span class="font-semibold text-gray-900">{{ request.user.username }}</span>
+          Вы вошли как: &nbsp;&nbsp;<span class="font-semibold text-gray-900">{{ request.user.username }} &nbsp;&nbsp; </span>
         </div>
 
         <a href="{% url 'logout' %}"
