@@ -323,9 +323,15 @@
               <td class="nowrap muted">{{ phone.name }}</td>
             {% endfor %}
 
-            {% for company in lead.company.all %}
-              <td class="wrap muted">{{ company.name }}</td>
-            {% endfor %}
+            <td class="wrap muted">
+              {% if lead.employees.all %}
+                {{ lead.employees.all.0.company|default:"—" }}
+              {% elif lead.company.all %}
+                {{ lead.company.all.0.name|default:"—" }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
 
             <td class="nowrap">{{ lead.active }}</td>
             <td class="nowrap">{{ lead.reservation }}</td>

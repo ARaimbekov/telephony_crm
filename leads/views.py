@@ -62,7 +62,7 @@ def employee_search(request):
 
     results = []
     for e in qs:
-        text = f"{e.full_name} — {e.company} — {e.department} — {e.job_title}"
+        text = f"{e.full_name} — {e.company or 'Без компании'}"
         results.append({"id": e.id, "text": text})
 
     return JsonResponse({"results": results})
@@ -341,7 +341,7 @@ def lead_list(request):
     search_call_forwarding = request.GET.get('call_forwarding', '')
     page_list = request.GET.get('page')
 
-    leads = Lead.objects.all()
+    leads = Lead.objects.prefetch_related("atc", "phone_model", "company", "employees").all()
 
     # Фильтрация по существующим полям
     if search_number_query:

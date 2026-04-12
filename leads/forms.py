@@ -28,9 +28,14 @@ def _parse_full_name(full_name: str):
     return last, first, patronymic
 
 
+class EmployeeChoiceField(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, obj):
+        return f"{obj.full_name} — {obj.company or 'Без компании'}"
+
+
 class LeadCreateModelForm(forms.ModelForm):
-    employees = forms.ModelMultipleChoiceField(
-        label="Сотрудники",   
+    employees = EmployeeChoiceField(
+        label="Сотрудники",
         required=True,
         queryset=EmployeeDwh.objects.none(),
         widget=forms.SelectMultiple(attrs={
@@ -106,7 +111,7 @@ class LeadCreateModelForm(forms.ModelForm):
         return lead
 
 class LeadModelForm(forms.ModelForm):
-    employees = forms.ModelMultipleChoiceField(
+    employees = EmployeeChoiceField(
         label="Сотрудники",
         required=False,
         queryset=EmployeeDwh.objects.none(),
