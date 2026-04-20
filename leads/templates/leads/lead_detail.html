@@ -147,9 +147,15 @@
 
             <div class="flex border-t border-gray-300 py-2">
                 <span class="text-gray-500">Компания</span>
-                {% for company in lead.company.all %}
-                <span class="ml-auto text-gray-900">{{ company.name }}</span>
-                {% endfor %}
+                <span class="ml-auto text-gray-900">
+                    {% if lead.employees.count %}
+                        {{ lead.employees.all.0.company|default:"—" }}
+                    {% elif lead.company.count %}
+                        {{ lead.company.all.0.name|default:"—" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </span>
             </div>
 
             <div class="flex border-t border-gray-300 py-2">
