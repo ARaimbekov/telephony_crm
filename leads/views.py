@@ -1311,6 +1311,7 @@ def api_export_full(request):
             "phone_number": str(lead.phone_number),  # Number.__str__ -> name
             "line": lead.line,
             "mac_address": lead.mac_address,
+            "passwd": lead.passwd,
             "reservation": lead.reservation,
             "active": lead.active,
 
