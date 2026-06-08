@@ -609,19 +609,23 @@ def phone_number(request):
 @login_required
 def lead_update(request, pk):
     lead = Lead.objects.get(id=pk)
-    company = lead.company.first()
-    model = lead.phone_model.first()
-    atc = lead.atc.first()
-    atc_instance = atc
     updated_user = request.user.username
     my_number = lead.phone_number
     my_num_obj = Number.objects.filter(name=my_number)
     numbers = Lead.objects.all().values('phone_number')
     current_mac = lead.mac_address
 
-    form = LeadModelForm(instance=lead)
-    if atc_instance:
-        form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc_instance.id).exclude(id__in=numbers).union(my_num_obj)
+    # Инициальные значения
+    initial_data = {}
+    if my_number and my_number.atc:
+        initial_data['atc'] = [my_number.atc.id]
+    
+    form = LeadModelForm(instance=lead, initial=initial_data)
+    
+    # ATC берем из phone_number (Number.atc), а не из lead.atc
+    if my_number:
+        atc_from_number = my_number.atc
+        form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc_from_number.id).exclude(id__in=numbers).union(my_num_obj)
     else:
         form.fields['phone_number'].queryset = my_num_obj
 
