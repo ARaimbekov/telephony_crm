@@ -609,18 +609,21 @@ def phone_number(request):
 @login_required
 def lead_update(request, pk):
     lead = Lead.objects.get(id=pk)
-    company = Company.objects.get(lead=lead)
-    model = Apparats.objects.get(lead=lead)
-    atc = Atc.objects.get(lead=lead)
-    atc_instance = Atc.objects.get(name=atc)
+    company = lead.company.first()
+    model = lead.phone_model.first()
+    atc = lead.atc.first()
+    atc_instance = atc
     updated_user = request.user.username
     my_number = lead.phone_number
-    my_num_obj = Number.objects.filter(name=my_number).all()
+    my_num_obj = Number.objects.filter(name=my_number)
     numbers = Lead.objects.all().values('phone_number')
     current_mac = lead.mac_address
 
-    form = LeadModelForm(instance=lead, initial={'atc': atc, 'phone_model': model, 'company': company})
-    form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc_instance.id).exclude(id__in=numbers).all().union(my_num_obj)
+    form = LeadModelForm(instance=lead)
+    if atc_instance:
+        form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc_instance.id).exclude(id__in=numbers).union(my_num_obj)
+    else:
+        form.fields['phone_number'].queryset = my_num_obj
 
     if request.method == "POST":
         form = LeadModelForm(request.POST, instance=lead)
