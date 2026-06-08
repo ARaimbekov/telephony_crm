@@ -609,25 +609,41 @@ def phone_number(request):
 @login_required
 def lead_update(request, pk):
     lead = Lead.objects.get(id=pk)
+    
+    # Безопасно получаем связанные объекты (с fallback если их нет)
+    try:
+        company = lead.company.first()
+    except:
+        company = None
+    
+    try:
+        model = lead.phone_model.first()
+    except:
+        model = None
+    
+    try:
+        atc = lead.atc.first()
+    except:
+        atc = None
+    
     updated_user = request.user.username
     my_number = lead.phone_number
-    my_num_obj = Number.objects.filter(pk=my_number.pk) if my_number else Number.objects.none()
+    my_num_obj = Number.objects.filter(name=my_number).all()
     numbers = Lead.objects.all().values('phone_number')
     current_mac = lead.mac_address
 
-    # Инициальные значения для ATC — из номера телефона
-    initial_data = {}
-    if my_number and my_number.atc:
-        initial_data['atc'] = [my_number.atc.id]
-    elif lead.atc.exists():
-        initial_data['atc'] = list(lead.atc.values_list('id', flat=True))
-
-    form = LeadModelForm(instance=lead, initial=initial_data)
-
-    # ATC берем из phone_number (Number.atc), а не из lead.atc
-    if my_number and my_number.atc:
-        atc_from_number = my_number.atc
-        form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc_from_number.id).exclude(id__in=numbers).union(my_num_obj)
+    initial_dict = {}
+    if atc:
+        initial_dict['atc'] = atc
+    if model:
+        initial_dict['phone_model'] = model
+    if company:
+        initial_dict['company'] = company
+    
+    form = LeadModelForm(instance=lead, initial=initial_dict)
+    
+    if atc:
+        form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc.id).exclude(id__in=numbers).all().union(my_num_obj)
     else:
         form.fields['phone_number'].queryset = my_num_obj
 
