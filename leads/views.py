@@ -1378,7 +1378,7 @@ def api_export_full(request):
 @api_token_required
 def api_export_guid_number_display_name(request):
     """
-    ВЫГРУЗКА: связка GUID - номер - отображаемое имя
+    ВЫГРУЗКА: связка GUID - номер - ФИО
     (учитывает, что под одним номером может быть несколько сотрудников)
     """
     through = Lead.employees.through  # таблица связи Lead <-> EmployeeDwh
@@ -1388,9 +1388,9 @@ def api_export_guid_number_display_name(request):
         .select_related("lead", "employeedwh", "lead__phone_number")
         .only(
             "lead__id",
-            "lead__display_name",
             "lead__phone_number__name",
             "employeedwh__guid_nsi",
+            "employeedwh__full_name",
         )
         .order_by("lead__id")
     )
@@ -1400,7 +1400,7 @@ def api_export_guid_number_display_name(request):
         results.append({
             "guid": str(row.employeedwh.guid_nsi),
             "number": row.lead.phone_number.name,
-            "display_name": row.lead.display_name,
+            "display_name": row.employeedwh.full_name or "",
             "lead_id": row.lead.id,
         })
 
