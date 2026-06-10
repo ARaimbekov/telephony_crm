@@ -1,7 +1,6 @@
 import re
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.db.models import Q
 
 from leads.models import Lead, EmployeeDwh
 
@@ -36,7 +35,7 @@ def build_fio_initials(lead: Lead) -> str:
 
 
 class Command(BaseCommand):
-    help = "One-time: link existing Leads to EmployeeDwh by FIO rules; unresolved -> move FIO to display_name."
+    help = "One-time: link existing Leads to EmployeeDwh by FIO rules; unresolved leads keep display_name unchanged."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -66,7 +65,7 @@ class Command(BaseCommand):
             qs = qs[:limit]
 
         linked = 0
-        moved_to_display = 0
+        unresolved_left_empty = 0
         ambiguous = 0
         not_found = 0
         skipped = 0
@@ -90,12 +89,6 @@ class Command(BaseCommand):
                 key = " ".join([p for p in [last, fi, pi] if p]).lower()
                 if key:
                     init_map.setdefault(key, []).append(e)
-
-        def do_move_to_display(lead: Lead, fio: str):
-            nonlocal moved_to_display
-            if fio and not norm_spaces(lead.display_name):
-                lead.display_name = fio
-                moved_to_display += 1
 
         with transaction.atomic():
             for lead in qs:
@@ -134,20 +127,18 @@ class Command(BaseCommand):
 
                 elif len(cands) == 0:
                     not_found += 1
-                    if not dry:
-                        do_move_to_display(lead, fio)
-                        lead.save(update_fields=["display_name"])
+                    if not norm_spaces(lead.display_name):
+                        unresolved_left_empty += 1
 
                 else:
                     ambiguous += 1
-                    if not dry:
-                        do_move_to_display(lead, fio)
-                        lead.save(update_fields=["display_name"])
+                    if not norm_spaces(lead.display_name):
+                        unresolved_left_empty += 1
 
             if dry:
                 transaction.set_rollback(True)
 
         self.stdout.write(self.style.SUCCESS(
-            f"Done. linked={linked}, moved_to_display={moved_to_display}, "
+            f"Done. linked={linked}, unresolved_left_empty={unresolved_left_empty}, "
             f"not_found={not_found}, ambiguous={ambiguous}, skipped={skipped}, dry_run={dry}"
         ))
