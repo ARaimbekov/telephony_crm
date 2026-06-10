@@ -55,6 +55,8 @@ class LeadCreateModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.fields["display_name"].widget.attrs["autocomplete"] = "off"
+
         self.fields['atc'].empty_label = "ATC не выбрана"
         self.fields['phone_number'].empty_label = "номер телефона не выбран"
         self.fields['phone_model'].empty_label = "модель телефона не выбрана"
