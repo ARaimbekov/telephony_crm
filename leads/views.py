@@ -44,6 +44,14 @@ from .migrations_utils import migrate_numbers, migrate_mac, change_atc
 
 logger = logging.getLogger(__name__)
 
+def _generate_reserved_mac(line):
+    letters = string.digits
+    for _ in range(100):
+        new_mac = '000000' + ''.join(random.choice(letters) for i in range(6))
+        if not Lead.objects.filter(mac_address=new_mac, line=line).exists():
+            return new_mac
+    raise IntegrityError("Не удалось сгенерировать уникальный резервный MAC")
+
 def employee_search(request):
     q = (request.GET.get("q") or "").strip()
     qs = EmployeeDwh.objects.filter(status=EmployeeDwh.Status.ACTIVE)
@@ -476,23 +484,25 @@ def lead_create(request):
 
     if request.method == "POST":
         try:
+            if ('reservation') in request.POST:
+                temp = request.POST.copy()
+                temp['mac_address'] = _generate_reserved_mac(temp.get('line', '1'))
+                temp['created_user'] = request.user.username
+                form = LeadCreateModelForm(temp)
+                if form.is_valid():
+                    form.save()
+                    messages.success(request, "Вы успешно создали зарезервированную позицию !")
+                    return redirect("/leads")
+
+                print("FORM ERRORS:", form.errors)
+                print("NON FIELD ERRORS:", form.non_field_errors())
+                return render(request, "error_mac_failed.html")
+
             form = LeadCreateModelForm(request.POST)
             pattern = re.compile("^([0-9A-Fa-f]{2}[:-]{0,1}){5}([0-9A-Fa-f]{2})$")
             if pattern.match(request.POST['mac_address']) or request.POST['mac_address'] == '':
                 if form.is_valid():
-                    if ('reservation') in request.POST:
-                        letters = string.digits
-                        new_mac = '000000' + \
-                            ''.join(random.choice(letters) for i in range(6))
-                        temp = request.POST.copy()
-                        temp['mac_address'] = new_mac
-                        temp['created_user'] = request.user.username
-                        request.POST = temp
-                        form = LeadCreateModelForm(request.POST)
-                        form.save()
-                        messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")
-                    elif "-" in request.POST["mac_address"]:
+                    if "-" in request.POST["mac_address"]:
                         temp = request.POST.copy()
                         mac = temp['mac_address']
                         result = ''
