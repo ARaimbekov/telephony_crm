@@ -22,6 +22,7 @@ from django.views import generic
 from agents.mixins import OrganisorAndLoginRequiredMixin
 from .models import Lead, Company, Apparats, Number, Atc, User, EmployeeDwh, ApiToken
 from .forms import *
+from .forms import format_employee_label
 from django.db.models import ProtectedError
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
@@ -52,6 +53,13 @@ def _generate_reserved_mac(line):
             return new_mac
     raise IntegrityError("Не удалось сгенерировать уникальный резервный MAC")
 
+
+def _redirect_after_lead_save(request, lead):
+    if request.POST.get("save_action") == "exit":
+        return redirect("leads:lead-list")
+    return redirect("leads:lead-update", pk=lead.pk)
+
+
 def employee_search(request):
     q = (request.GET.get("q") or "").strip()
     qs = EmployeeDwh.objects.filter(status=EmployeeDwh.Status.ACTIVE)
@@ -70,7 +78,7 @@ def employee_search(request):
 
     results = []
     for e in qs:
-        text = f"{e.full_name} — {e.company or 'Без компании'}"
+        text = format_employee_label(e)
         results.append({"id": e.id, "text": text})
 
     return JsonResponse({"results": results})
@@ -490,9 +498,9 @@ def lead_create(request):
                 temp['created_user'] = request.user.username
                 form = LeadCreateModelForm(temp)
                 if form.is_valid():
-                    form.save()
+                    lead = form.save()
                     messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                    return redirect("/leads")
+                    return _redirect_after_lead_save(request, lead)
 
                 print("FORM ERRORS:", form.errors)
                 print("NON FIELD ERRORS:", form.non_field_errors())
@@ -513,9 +521,9 @@ def lead_create(request):
                         temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
-                        form.save()
+                        lead = form.save()
                         messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")
+                        return _redirect_after_lead_save(request, lead)
                     elif ":" in request.POST["mac_address"]:
                         temp = request.POST.copy()
                         mac = temp['mac_address']
@@ -527,9 +535,9 @@ def lead_create(request):
                         temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
-                        form.save()
+                        lead = form.save()
                         messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")
+                        return _redirect_after_lead_save(request, lead)
                     elif "." in request.POST["mac_address"]:
                         temp = request.POST.copy()
                         mac = temp['mac_address']
@@ -541,9 +549,9 @@ def lead_create(request):
                         temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
-                        form.save()
+                        lead = form.save()
                         messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")             
+                        return _redirect_after_lead_save(request, lead)
                     elif not request.POST["mac_address"]:
                         return render(request, "error_mac.html")
                     else:
@@ -554,9 +562,9 @@ def lead_create(request):
                         temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
-                        form.save()
+                        lead = form.save()
                         messages.success(request, "Вы успешно создали позицию, настройки будут применены в течении 10 минут !")
-                        return redirect("/leads")
+                        return _redirect_after_lead_save(request, lead)
                 else:
                     print("FORM ERRORS:", form.errors)
                     print("NON FIELD ERRORS:", form.non_field_errors())
@@ -660,7 +668,7 @@ def lead_update(request, pk):
     if request.method == "POST":
         form = LeadModelForm(request.POST, instance=lead)
         if form.is_valid():
-            form.save()
+            lead = form.save()
             lead.updated_user = updated_user
             lead.mac_address = lead.mac_address.lower()
             print(lead.mac_address)
@@ -671,7 +679,7 @@ def lead_update(request, pk):
 
             lead.save()
             messages.success(request, "В течении 10 минут изменения будут применены !")
-            return redirect("/leads")
+            return _redirect_after_lead_save(request, lead)
 
     context = {
         "form": form,

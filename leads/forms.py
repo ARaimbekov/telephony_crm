@@ -20,6 +20,13 @@ User = get_user_model()
 from django.db import transaction
 from django.db.models import Q
 
+
+def format_employee_label(employee):
+    company = (employee.company or "").strip() or "Без компании"
+    department = (employee.department or "").strip() or "Без отдела"
+    return f"{employee.full_name} — {company} — {department}"
+
+
 def _parse_full_name(full_name: str):
     parts = (full_name or "").strip().split()
     last = parts[0] if len(parts) > 0 else ""
@@ -30,7 +37,7 @@ def _parse_full_name(full_name: str):
 
 class EmployeeChoiceField(forms.ModelMultipleChoiceField):
     def label_from_instance(self, obj):
-        return f"{obj.full_name} — {obj.company or 'Без компании'}"
+        return format_employee_label(obj)
 
 
 class LeadCreateModelForm(forms.ModelForm):
