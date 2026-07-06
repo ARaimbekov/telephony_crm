@@ -43,5 +43,8 @@ urlpatterns = [
     path('api/migrate-mac/', api_migrate_mac, name='api-migrate-mac'),
     path('api/change-atc/', api_change_atc, name='api-change-atc'),
     path('api/atc-list/', api_atc_list, name='api-atc-list'),
+    path("employees/search/", employee_search, name="employee-search"),
+    path("api/export/full/", api_export_full, name="api-export-full"),
+    path("api/export/guid-number-display/", api_export_guid_number_display_name, name="api-export-guid-number-display"),
 
 ]

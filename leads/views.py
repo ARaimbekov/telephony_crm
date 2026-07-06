@@ -20,8 +20,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.views import generic
 from agents.mixins import OrganisorAndLoginRequiredMixin
-from .models import Lead, Company, Apparats, Number, Atc, User
+from .models import Lead, Company, Apparats, Number, Atc, User, EmployeeDwh, ApiToken
 from .forms import *
+from .forms import format_employee_label
 from django.db.models import ProtectedError
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
@@ -34,6 +35,8 @@ from django.utils.timezone import now
 import tempfile
 import os
 from django.db import transaction
+from django.db.models import Prefetch
+from functools import wraps
 
 
 from .migrations_utils import migrate_numbers, migrate_mac, change_atc
@@ -41,6 +44,45 @@ from .migrations_utils import migrate_numbers, migrate_mac, change_atc
 
 
 logger = logging.getLogger(__name__)
+
+def _generate_reserved_mac(line):
+    letters = string.digits
+    for _ in range(100):
+        new_mac = '000000' + ''.join(random.choice(letters) for i in range(6))
+        if not Lead.objects.filter(mac_address=new_mac, line=line).exists():
+            return new_mac
+    raise IntegrityError("Не удалось сгенерировать уникальный резервный MAC")
+
+
+def _redirect_after_lead_save(request, lead):
+    if request.POST.get("save_action") == "exit":
+        return redirect("leads:lead-list")
+    return redirect("leads:lead-update", pk=lead.pk)
+
+
+def employee_search(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = EmployeeDwh.objects.filter(status=EmployeeDwh.Status.ACTIVE)
+
+    if q:
+        qs = qs.filter(
+            Q(full_name__icontains=q) |
+            Q(mail__icontains=q) |
+            Q(company__icontains=q) |
+            Q(department__icontains=q) |
+            Q(job_title__icontains=q) |
+            Q(samaccountname__icontains=q)
+        )
+
+    qs = qs.order_by("full_name")[:25]
+
+    results = []
+    for e in qs:
+        text = format_employee_label(e)
+        results.append({"id": e.id, "text": text})
+
+    return JsonResponse({"results": results})
+
 
 def _save_upload_to_temp(upload: UploadedFile) -> str:
     suffix = f"_{now().strftime('%Y%m%d_%H%M%S')}.csv"
@@ -315,7 +357,7 @@ def lead_list(request):
     search_call_forwarding = request.GET.get('call_forwarding', '')
     page_list = request.GET.get('page')
 
-    leads = Lead.objects.all()
+    leads = Lead.objects.prefetch_related("atc", "phone_model", "company", "employees").all()
 
     # Фильтрация по существующим полям
     if search_number_query:
@@ -326,8 +368,11 @@ def lead_list(request):
         leads = leads.filter(
             Q(last_name__icontains=search_name_query) |
             Q(first_name__icontains=search_name_query) |
-            Q(patronymic_name__icontains=search_name_query)
-        )
+            Q(patronymic_name__icontains=search_name_query) |
+            Q(display_name__icontains=search_name_query) |
+            Q(employees__full_name__icontains=search_name_query)
+        ).distinct()
+
 
     # Фильтрация по новым полям
     if search_record_calls:
@@ -368,28 +413,39 @@ def lead_list(request):
 
 @login_required
 def lead_detail(request, pk):
-    # Получаем объект Lead или возвращаем 404 ошибку, если объект не найден
-    lead = get_object_or_404(Lead, id=pk)
-    
-    # Преобразуем номер телефона в строку для API-запроса
+    lead = get_object_or_404(
+        Lead.objects.prefetch_related(
+            "atc",
+            "phone_model",
+            "company",
+            Prefetch(
+                "employees",
+                queryset=EmployeeDwh.objects.filter(status=EmployeeDwh.Status.ACTIVE).prefetch_related(
+                    Prefetch(
+                        "leads",
+                        queryset=Lead.objects.select_related("phone_number").only("id", "phone_number", "line", "active")
+                    )
+                ),
+            ),
+        ),
+        id=pk
+    )
+
     phone = str(lead.phone_number)
 
     try:
-        # Выполняем запрос к внешнему API
         res = requests.get(f'http://10.90.42.250:8084/phoneinfo?phone={phone}', timeout=5)
-        res.raise_for_status()  # Проверяем HTTP-статус ответа
+        res.raise_for_status()
         res_json = res.json()
     except requests.RequestException as e:
-        # Если API недоступен, возвращаем страницу с ошибкой
-        return render(request, "leads/lead_detail.html", {
-            "lead": lead,
-            "error": f"Ошибка при получении данных из API: {e}"
-        })
+        res_json = {}
+        api_error = f"Ошибка при получении данных из API: {e}"
+    else:
+        api_error = None
 
-    # Обработка данных из API
     atc_ip_api = res_json.get('ipaddr', 'Неизвестно')
     user_agent = res_json.get('useragent', 'Неизвестно')
-    soket_info = res_json.get('socketinfo', {})
+    soket_info = res_json.get('socketinfo', {}) or {}
     status = res_json.get('status', 'Неизвестно')
     mac = soket_info.get('mac', 'Неизвестно')
     switch_ip = soket_info.get('ipaddr', 'Неизвестно')
@@ -398,9 +454,18 @@ def lead_detail(request, pk):
     socket = soket_info.get('socket', 'Неизвестно')
     description = soket_info.get('description', 'Неизвестно')
 
-    # Формируем контекст для шаблона
+    # список сотрудников + все их номера
+    employee_cards = []
+    for emp in lead.employees.all():
+        employee_cards.append({
+            "emp": emp,
+            "leads": emp.leads.select_related("phone_number").all()
+        })
+
     context = {
         "lead": lead,
+        "error": api_error,
+
         "atc_ip_api": atc_ip_api,
         "useragent": user_agent,
         "switch_ip": switch_ip,
@@ -410,14 +475,16 @@ def lead_detail(request, pk):
         "socket": socket,
         "description": description,
         "mac": mac,
-        # Новые поля из модели Lead
+
         "record_calls": lead.record_calls,
-        "external_line_access": lead.get_external_line_access_display(),  # Для отображения текстового значения выбора
-        "call_forwarding": lead.call_forwarding or "Не указано",  # Если поле пустое, показываем "Не указано"
+        "external_line_access": lead.get_external_line_access_display(),
+        "call_forwarding": lead.call_forwarding or "Не указано",
+
+        "employee_cards": employee_cards,
     }
 
-    # Рендерим шаблон с контекстом
     return render(request, "leads/lead_detail.html", context)
+
 
 @login_required
 def lead_create(request):
@@ -425,23 +492,25 @@ def lead_create(request):
 
     if request.method == "POST":
         try:
+            if ('reservation') in request.POST:
+                temp = request.POST.copy()
+                temp['mac_address'] = _generate_reserved_mac(temp.get('line', '1'))
+                temp['created_user'] = request.user.username
+                form = LeadCreateModelForm(temp)
+                if form.is_valid():
+                    lead = form.save()
+                    messages.success(request, "Вы успешно создали зарезервированную позицию !")
+                    return _redirect_after_lead_save(request, lead)
+
+                print("FORM ERRORS:", form.errors)
+                print("NON FIELD ERRORS:", form.non_field_errors())
+                return render(request, "error_mac_failed.html")
+
             form = LeadCreateModelForm(request.POST)
             pattern = re.compile("^([0-9A-Fa-f]{2}[:-]{0,1}){5}([0-9A-Fa-f]{2})$")
             if pattern.match(request.POST['mac_address']) or request.POST['mac_address'] == '':
                 if form.is_valid():
-                    if ('reservation') in request.POST:
-                        letters = string.digits
-                        new_mac = '000000' + \
-                            ''.join(random.choice(letters) for i in range(6))
-                        temp = request.POST.copy()
-                        temp['mac_address'] = new_mac
-                        temp['created_user'] = request.user.username
-                        request.POST = temp
-                        form = LeadCreateModelForm(request.POST)
-                        form.save()
-                        messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")
-                    elif "-" in request.POST["mac_address"]:
+                    if "-" in request.POST["mac_address"]:
                         temp = request.POST.copy()
                         mac = temp['mac_address']
                         result = ''
@@ -452,9 +521,9 @@ def lead_create(request):
                         temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
-                        form.save()
+                        lead = form.save()
                         messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")
+                        return _redirect_after_lead_save(request, lead)
                     elif ":" in request.POST["mac_address"]:
                         temp = request.POST.copy()
                         mac = temp['mac_address']
@@ -466,9 +535,9 @@ def lead_create(request):
                         temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
-                        form.save()
+                        lead = form.save()
                         messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")
+                        return _redirect_after_lead_save(request, lead)
                     elif "." in request.POST["mac_address"]:
                         temp = request.POST.copy()
                         mac = temp['mac_address']
@@ -480,9 +549,9 @@ def lead_create(request):
                         temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
-                        form.save()
+                        lead = form.save()
                         messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return redirect("/leads")             
+                        return _redirect_after_lead_save(request, lead)
                     elif not request.POST["mac_address"]:
                         return render(request, "error_mac.html")
                     else:
@@ -493,11 +562,14 @@ def lead_create(request):
                         temp['created_user'] = request.user.username
                         request.POST = temp
                         form = LeadCreateModelForm(request.POST)
-                        form.save()
+                        lead = form.save()
                         messages.success(request, "Вы успешно создали позицию, настройки будут применены в течении 10 минут !")
-                        return redirect("/leads")
+                        return _redirect_after_lead_save(request, lead)
                 else:
+                    print("FORM ERRORS:", form.errors)
+                    print("NON FIELD ERRORS:", form.non_field_errors())
                     return render(request, "error_mac_failed.html")
+                    # return render(request, "error_mac_failed.html")
             else:
                 return render(request, "error_mac_type_failed.html")
         except Exception as e:
@@ -555,23 +627,48 @@ def phone_number(request):
 @login_required
 def lead_update(request, pk):
     lead = Lead.objects.get(id=pk)
-    company = Company.objects.get(lead=lead)
-    model = Apparats.objects.get(lead=lead)
-    atc = Atc.objects.get(lead=lead)
-    atc_instance = Atc.objects.get(name=atc)
+    
+    # Безопасно получаем связанные объекты (с fallback если их нет)
+    try:
+        company = lead.company.first()
+    except:
+        company = None
+    
+    try:
+        model = lead.phone_model.first()
+    except:
+        model = None
+    
+    try:
+        atc = lead.atc.first()
+    except:
+        atc = None
+    
     updated_user = request.user.username
     my_number = lead.phone_number
     my_num_obj = Number.objects.filter(name=my_number).all()
     numbers = Lead.objects.all().values('phone_number')
     current_mac = lead.mac_address
 
-    form = LeadModelForm(instance=lead, initial={'atc': atc, 'phone_model': model, 'company': company})
-    form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc_instance.id).exclude(id__in=numbers).all().union(my_num_obj)
+    initial_dict = {}
+    if atc:
+        initial_dict['atc'] = atc
+    if model:
+        initial_dict['phone_model'] = model
+    if company:
+        initial_dict['company'] = company
+    
+    form = LeadModelForm(instance=lead, initial=initial_dict)
+    
+    if atc:
+        form.fields['phone_number'].queryset = Number.objects.filter(atc__id=atc.id).exclude(id__in=numbers).all().union(my_num_obj)
+    else:
+        form.fields['phone_number'].queryset = my_num_obj
 
     if request.method == "POST":
         form = LeadModelForm(request.POST, instance=lead)
         if form.is_valid():
-            form.save()
+            lead = form.save()
             lead.updated_user = updated_user
             lead.mac_address = lead.mac_address.lower()
             print(lead.mac_address)
@@ -582,7 +679,7 @@ def lead_update(request, pk):
 
             lead.save()
             messages.success(request, "В течении 10 минут изменения будут применены !")
-            return redirect("/leads")
+            return _redirect_after_lead_save(request, lead)
 
     context = {
         "form": form,
@@ -1024,9 +1121,41 @@ class LeadJsonView(generic.View):
         })
 
 
+def api_token_required(view_func):
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        x_token = request.headers.get("X-API-Token", "")
+
+        token = None
+
+        if auth_header.startswith("Bearer "):
+            token = auth_header.replace("Bearer ", "", 1).strip()
+        elif x_token:
+            token = x_token.strip()
+
+        if not token:
+            return JsonResponse(
+                {"ok": False, "error": "missing api token"},
+                status=401
+            )
+
+        token_obj = ApiToken.objects.filter(token=token, is_active=True).first()
+        if not token_obj:
+            return JsonResponse(
+                {"ok": False, "error": "invalid api token"},
+                status=403
+            )
+
+        request.api_token = token_obj
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
+
+
 @csrf_exempt
 @require_POST
-@user_passes_test(_staff_check)
+@api_token_required
 def api_migrate_numbers(request):
     upload = request.FILES.get('file')
     if not upload:
@@ -1055,7 +1184,7 @@ def api_migrate_numbers(request):
 
 @csrf_exempt
 @require_POST
-@user_passes_test(_staff_check)
+@api_token_required
 def api_migrate_mac(request):
     upload = request.FILES.get('file')
     if not upload:
@@ -1141,7 +1270,7 @@ def api_migrate_mac(request):
 
 @csrf_exempt
 @require_POST
-@user_passes_test(_staff_check)
+@api_token_required
 def api_change_atc(request):
     upload = request.FILES.get('file')
     atc_id = request.POST.get('atc_id')
@@ -1187,18 +1316,110 @@ def api_change_atc(request):
     }, status=200)
 
 
-# @login_required
-# def api_atc_list(request):
-#     """
-#     Возвращает список всех ATC в формате JSON: [{"id": 1, "name": "ATC Москва"}, ...]
-#     """
-#     atcs = Atc.objects.all().values('id', 'name')
-#     return JsonResponse(list(atcs), safe=False)
-
 def _staff_check(user):
     return user.is_authenticated and user.is_staff
 
-@user_passes_test(_staff_check)
+@api_token_required
 def api_atc_list(request):
     atcs = Atc.objects.all().values('id', 'name')
     return JsonResponse(list(atcs), safe=False)
+
+@api_token_required
+def api_export_full(request):
+    """
+    ВЫГРУЗКА: полный набор данных
+    """
+    qs = (
+        Lead.objects
+        .select_related("phone_number")
+        .prefetch_related(
+            "atc",
+            "company",
+            "phone_model",
+            Prefetch(
+                "employees",
+                queryset=EmployeeDwh.objects.all().only(
+                    "id", "guid_nsi", "full_name", "samaccountname",
+                    "mail", "company", "department", "job_title", "status"
+                )
+            ),
+        )
+        .order_by("id")
+    )
+
+    data = []
+    for lead in qs:
+        data.append({
+            "id": lead.id,
+            "phone_number": str(lead.phone_number),  # Number.__str__ -> name
+            "line": lead.line,
+            "mac_address": lead.mac_address,
+            "passwd": lead.passwd,
+            "reservation": lead.reservation,
+            "active": lead.active,
+
+            "first_name": lead.first_name,
+            "last_name": lead.last_name,
+            "patronymic_name": lead.patronymic_name,
+            "display_name": lead.display_name,  # <-- твое новое поле
+
+            "record_calls": lead.record_calls,
+            "external_line_access": lead.external_line_access,
+            "call_forwarding": lead.call_forwarding,
+            "timezone": lead.timezone,
+
+            "created_user": lead.created_user,
+            "updated_user": lead.updated_user,
+            "date_added": lead.date_added.isoformat() if lead.date_added else None,
+            "update_added": lead.update_added.isoformat() if lead.update_added else None,
+
+            "atc": [{"id": a.id, "name": a.name, "ip_address": a.ip_address} for a in lead.atc.all()],
+            "company": [{"id": c.id, "name": c.name} for c in lead.company.all()],
+            "phone_model": [{"id": p.id, "name": p.name} for p in lead.phone_model.all()],
+
+            "employees": [{
+                "id": e.id,
+                "guid_nsi": str(e.guid_nsi),
+                "full_name": e.full_name,
+                "samaccountname": e.samaccountname,
+                "mail": e.mail,
+                "company": e.company,
+                "department": e.department,
+                "job_title": e.job_title,
+                "status": e.status,
+            } for e in lead.employees.all()],
+        })
+
+    return JsonResponse({"ok": True, "count": len(data), "results": data}, json_dumps_params={"ensure_ascii": False})
+
+
+@api_token_required
+def api_export_guid_number_display_name(request):
+    """
+    ВЫГРУЗКА: связка GUID - номер - ФИО
+    (учитывает, что под одним номером может быть несколько сотрудников)
+    """
+    through = Lead.employees.through  # таблица связи Lead <-> EmployeeDwh
+
+    qs = (
+        through.objects
+        .select_related("lead", "employeedwh", "lead__phone_number")
+        .only(
+            "lead__id",
+            "lead__phone_number__name",
+            "employeedwh__guid_nsi",
+            "employeedwh__full_name",
+        )
+        .order_by("lead__id")
+    )
+
+    results = []
+    for row in qs:
+        results.append({
+            "guid": str(row.employeedwh.guid_nsi),
+            "number": row.lead.phone_number.name,
+            "display_name": row.employeedwh.full_name or "",
+            "lead_id": row.lead.id,
+        })
+
+    return JsonResponse({"ok": True, "count": len(results), "results": results}, json_dumps_params={"ensure_ascii": False})

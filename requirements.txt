@@ -15,3 +15,5 @@ django_extensions==3.2.1
 django-filter
 shortuuid
 requests
+mssql-django
+pyodbc

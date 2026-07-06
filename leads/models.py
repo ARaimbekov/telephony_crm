@@ -11,8 +11,36 @@ from django_extensions.db.fields import ShortUUIDField
 from django.core.validators import MinLengthValidator
 import shortuuid
 import datetime
+import secrets
+from django.conf import settings
 
 
+class EmployeeDwh(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Активен"
+        DELETED = "deleted", "Удалён в источнике"
+        DISABLED = "disabled", "Отключён"
+        OTHER = "other", "Другое"
+
+    guid_nsi = models.UUIDField(unique=True, db_index=True)
+
+    full_name = models.CharField(max_length=255, blank=True)
+    samaccountname = models.CharField(max_length=150, db_index=True)
+    mail = models.EmailField(max_length=254, blank=True)
+
+    company = models.CharField(max_length=255, blank=True)
+    department = models.CharField(max_length=255, blank=True)
+    job_title = models.CharField(max_length=255, blank=True)
+
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE, db_index=True)
+
+    source_last_seen_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.full_name} ({self.samaccountname})"
 
 class User(AbstractUser):
     is_organisor = models.BooleanField(default=True)
@@ -28,6 +56,28 @@ class UserProfile(models.Model):
 class LeadManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset()
+
+
+class ApiToken(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="Название токена")
+    token = models.CharField(max_length=128, unique=True, db_index=True, verbose_name="Токен", blank=True)
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name="Кем создан"
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = secrets.token_urlsafe(48)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
 
 
 class Lead(models.Model):
@@ -64,6 +114,7 @@ class Lead(models.Model):
     # ])
     first_name = models.CharField(max_length=20, blank=True, verbose_name='Имя')
     last_name = models.CharField(max_length=20, verbose_name='Фамилия')
+    display_name = models.CharField(max_length=100, blank=True, verbose_name="Отображаемое имя")
     patronymic_name = models.CharField(max_length=20, blank=True, verbose_name='Отчество')
     phone_model = models.ManyToManyField("Apparats", verbose_name='Модель телефона')
     company = models.ManyToManyField("company", verbose_name='Компания')
@@ -76,7 +127,13 @@ class Lead(models.Model):
     passwd = ShortUUIDField(max_length=32, editable=False, default=shortuuid.uuid, verbose_name='Пароль')
     updated_user = models.CharField(max_length=20, blank=True, verbose_name='Обновил')
     created_user = models.CharField(max_length=20, blank=True, verbose_name='Добавил')
-    record_calls = models.BooleanField(default=False, verbose_name='Запись разговоров') 
+    record_calls = models.BooleanField(default=False, verbose_name='Запись разговоров')
+    employees = models.ManyToManyField(
+        EmployeeDwh,
+        blank=True,
+        related_name="leads",
+        verbose_name="Сотрудники (DWH)"
+    ) 
     external_line_access = models.CharField(
         max_length=20,
         choices=[
@@ -140,4 +197,3 @@ class Atc(models.Model):
 
     def __str__(self):
         return self.name
-

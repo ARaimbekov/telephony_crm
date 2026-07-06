@@ -4,168 +4,268 @@
 {% load static %}
 
 {% block content %}
+<style>
+.lead-save-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.lead-save-button {
+    width: min(280px, 100%);
+    border: 0;
+    border-radius: 6px;
+    color: #fff;
+    padding: 10px 16px;
+    font-weight: 500;
+}
+
+.lead-save-button-primary {
+    background: #3b82f6;
+}
+
+.lead-save-button-primary:hover {
+    background: #2563eb;
+}
+
+.lead-save-button-secondary {
+    background: #374151;
+}
+
+.lead-save-button-secondary:hover {
+    background: #1f2937;
+}
+
+@media (max-width: 640px) {
+    .lead-save-actions {
+        flex-direction: column;
+    }
+
+    .lead-save-button {
+        width: 100%;
+    }
+}
+</style>
+
 <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
 
+<!-- jQuery -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+
+<!-- Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <section class="text-gray-700 body-font overflow-hidden">
-    <div class="container px-5 py-24 mx-auto" style="margin-top:-100px;">
-      <div class="lg:w-4/5 mx-auto flex flex-wrap">
-        <div class="w-full lg:pr-10 lg:py-6 mb-6 lg:mb-0">
-            <h2 class="text-gray-900 text-3xl title-font font-medium mb-4">Телефоны (MAC)</h2>
-            
-            <div class="flex mb-4">
-                <a href="{% url 'leads:lead-update' lead.pk %}" class="flex-grow text-indigo-500 border-b-2 border-indigo-500 py-2 text-lg px-1">
-                    Обновляемая информация
-                </a>
-                <!-- Добавляем ссылку на обзор -->
-                <a href="{% url 'leads:lead-detail' lead.pk %}" class="flex-grow text-indigo-500 border-b-2 border-indigo-500 py-2 text-lg px-1 ml-4">
-                    Обзор
-                </a>
+  <div class="container px-5 py-24 mx-auto" style="margin-top:-100px;">
+    <div class="lg:w-4/5 mx-auto flex flex-wrap">
+      <div class="w-full lg:pr-10 lg:py-6 mb-6 lg:mb-0">
+        <h2 class="text-gray-900 text-3xl title-font font-medium mb-4">Телефоны (MAC)</h2>
+
+        <div class="flex mb-4">
+          <a href="{% url 'leads:lead-update' lead.pk %}"
+             class="flex-grow text-indigo-500 border-b-2 border-indigo-500 py-2 text-lg px-1">
+            Обновляемая информация
+          </a>
+          <a href="{% url 'leads:lead-detail' lead.pk %}"
+             class="flex-grow text-indigo-500 border-b-2 border-indigo-500 py-2 text-lg px-1 ml-4">
+            Обзор
+          </a>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <div class="row">
+            <div class="col-6">
+              {{ form.atc|as_crispy_field }}
             </div>
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-
-                <div class="row">
-                    <div class="col-6">
-                        {{ form.atc | as_crispy_field }}
-                    </div>
-                    <div class="col-6">
-                        {{ form.phone_number | as_crispy_field }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-2">
-                        {{ form.reservation | as_crispy_field }}
-                    </div>
-                    <div class="col-6">
-                        {{ form.mac_address | as_crispy_field }}
-                    </div>
-                    <div class="col-4">
-                        {{ form.line | as_crispy_field }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-4">
-                        {{ form.last_name | as_crispy_field }}
-                    </div>
-                    <div class="col-4">
-                        {{ form.first_name | as_crispy_field }}
-                    </div>
-                    <div class="col-4">
-                        {{ form.patronymic_name | as_crispy_field }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-5">
-                        {{ form.phone_model | as_crispy_field }}
-                    </div>
-                    <div class="col-5">
-                        {{ form.company | as_crispy_field }}
-                    </div>
-                    <div class="col-2">
-                        {{ form.active | as_crispy_field }}
-                    </div>
-                </div>
-
-                <!-- Новый блок для новых полей -->
-                <div class="row mt-4">
-                    <div class="col-4">
-                        {{ form.record_calls | as_crispy_field }}
-                    </div>
-                    <div class="col-4">
-                        {{ form.external_line_access | as_crispy_field }}
-                    </div>
-                    <div class="col-4">
-                        {{ form.call_forwarding | as_crispy_field }}
-                    </div>
-                </div>
-                <div class="row mt-4">
-                    <div class="col-6">
-                        {{ form.timezone | as_crispy_field }}
-                    </div>
-                </div>
-                <div class="d-flex justify-content-center">
-                    <button type='submit' id="buttonStyle"
-                        class="col-6 text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-md">
-                        Готово
-                    </button>
-                </div>
-
-            </form>
-            <div class="mt-5 py-5 border-t border-gray-200">
-                <a href="{% url 'leads:lead-delete' lead.pk %}" class="w-1/2 mt-3 text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">
-                    Удалить
-                </a>
+            <div class="col-6">
+              {{ form.phone_number|as_crispy_field }}
             </div>
+          </div>
+
+          <div class="row">
+            <div class="col-2">
+              {{ form.reservation|as_crispy_field }}
+            </div>
+            <div class="col-6">
+              {{ form.mac_address|as_crispy_field }}
+            </div>
+            <div class="col-4">
+              {{ form.line|as_crispy_field }}
+            </div>
+          </div>
+          <!-- Employees (AJAX Select2) -->
+          <div class="row mt-3">
+            <div class="col-12">
+              <label for="{{ form.employees.id_for_label }}">{{ form.employees.label }}</label>
+                {{ form.employees }}
+                {{ form.employees.errors }}
+
+            </div>
+          </div>
+          <div class="row mt-3">
+          <div class="col-6">
+              {{ form.display_name|as_crispy_field }}
+          </div>
+          </div>
+          <div class="row">
+            <div class="col-5">
+              {{ form.phone_model|as_crispy_field }}
+            </div>
+            <div class="col-2">
+              {{ form.active|as_crispy_field }}
+            </div>
+          </div>
+
+          <!-- Новый блок для новых полей -->
+          <div class="row mt-4">
+            <div class="col-4">
+              {{ form.record_calls|as_crispy_field }}
+            </div>
+            <div class="col-4">
+              {{ form.external_line_access|as_crispy_field }}
+            </div>
+            <div class="col-4">
+              {{ form.call_forwarding|as_crispy_field }}
+            </div>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-6">
+              {{ form.timezone|as_crispy_field }}
+            </div>
+          </div>
+
+          {% if form.errors %}
+          <div class="alert alert-danger">
+            <strong>Ошибки формы:</strong>
+            <pre style="white-space: pre-wrap;">{{ form.errors }}</pre>
+          </div>
+          {% endif %}
+
+          <div class="lead-save-actions">
+            <button type="submit" id="buttonStyle" name="save_action" value="stay"
+              class="lead-save-button lead-save-button-primary">
+              Готово
+            </button>
+            <button type="submit" name="save_action" value="exit"
+              class="lead-save-button lead-save-button-secondary">
+              Сохранить и выйти
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-5 py-5 border-t border-gray-200">
+          <a href="{% url 'leads:lead-delete' lead.pk %}"
+             class="w-1/2 mt-3 text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded">
+            Удалить
+          </a>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <script>
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+<!-- ============================= -->
+<!-- SELECT2 INIT: Employees -->
+<!-- ============================= -->
+<script>
+$(document).ready(function () {
+    const $emp = $('#id_employees');
+
+    if (!$emp.length) {
+        console.error("Не найден #id_employees");
+        return;
+    }
+
+    $emp.select2({
+        width: '100%',
+        multiple: true,
+        placeholder: "Начните вводить ФИО",
+        allowClear: true,
+        closeOnSelect: false,
+        minimumInputLength: 2,
+
+
+        language: {
+            inputTooShort: function () {
+                return "Введите минимум 2 символа";
             }
-        }
-        return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken');
+        },
 
-    let atc_field = document.getElementById("div_id_atc")
-    let atc_name = document.getElementById("div_id_atc").querySelector('[selected]').textContent;
-    let current_number = document.getElementById("div_id_phone_number").querySelector('[selected]').textContent;
-    let number_field = document.querySelector("div.relative select[name='phone_number']")
-    atc_field.addEventListener("change", getAtcId)
-
-
-    function getAtcId(e) {
-        let atc_id = e.target.value
-
-
-        const data = { id: atc_id, atc_name: atc_name, current_number };
-
-        let url = " {% url 'leads:lead-phone' %} "
-
-        fetch(url, {
-            method: 'POST', // or 'PUT'
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
+        ajax: {
+            url: "{% url 'leads:employee-search' %}",
+            dataType: 'json',
+            delay: 300,
+            data: function (params) {
+                return { q: params.term || "" };
             },
-            body: JSON.stringify(data),
-        })
-            .then((response) => response.json())
+            processResults: function (data) {
+                return { results: data.results };
+            },
+            cache: true
+        }
+    });
+});
+</script>
 
-            .then((data) => {
-                console.log('Success:', data);
+<script>
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
 
-                if (data.length != 0) {
-                    number_field.innerHTML = `<option value="${data[0]["id"]}" id="number-id-field">${data[0]["name"]}</option>`
+  let atc_field = document.getElementById("div_id_atc");
+  let atc_name = document.getElementById("div_id_atc").querySelector('[selected]').textContent;
+  let current_number = document.getElementById("div_id_phone_number").querySelector('[selected]').textContent;
+  let number_field = document.querySelector("div.relative select[name='phone_number']");
+  atc_field.addEventListener("change", getAtcId);
 
+  function getAtcId(e) {
+      let atc_id = e.target.value;
+      const data = { id: atc_id, atc_name: atc_name, current_number };
 
-                    for (let i = 1; i < data.length; i++) {
-                        number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`
-                    }
+      let url = " {% url 'leads:lead-phone' %} ";
 
-                } else {
-                    number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номеров</option>'
+      fetch(url, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrftoken
+          },
+          body: JSON.stringify(data),
+      })
+      .then((response) => response.json())
+      .then((data) => {
+          console.log('Success:', data);
 
-                }
-
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-
-    }
+          if (data.length != 0) {
+              number_field.innerHTML = `<option value="${data[0]["id"]}" id="number-id-field">${data[0]["name"]}</option>`;
+              for (let i = 1; i < data.length; i++) {
+                  number_field.innerHTML += `<option value="${data[i]["id"]}" id="number-id-field">${data[i]["name"]}</option>`;
+              }
+          } else {
+              number_field.innerHTML = '<option value="" id="number-id-field">Нет свободных номеров</option>';
+          }
+      })
+      .catch((error) => {
+          console.error('Error:', error);
+      });
+  }
 </script>
 
 {% endblock content %}
