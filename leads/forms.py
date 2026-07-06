@@ -23,8 +23,11 @@ from django.db.models import Q
 
 def format_employee_label(employee):
     company = (employee.company or "").strip() or "Без компании"
-    department = (employee.department or "").strip() or "Без отдела"
-    return f"{employee.full_name} — {company} — {department}"
+    samaccountname = (employee.samaccountname or "").strip()
+    job_title = (employee.job_title or "").strip() or "Без должности"
+    full_name = (employee.full_name or "").strip()
+    name_with_account = f"{full_name} ({samaccountname})" if samaccountname else full_name
+    return f"{name_with_account} — {company} — {job_title}"
 
 
 def _parse_full_name(full_name: str):
