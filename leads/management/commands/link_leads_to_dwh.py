@@ -1,4 +1,9 @@
+import csv
 import re
+from collections import defaultdict
+from pathlib import Path
+
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -9,33 +14,47 @@ def norm_spaces(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip())
 
 
+def norm_key(s: str) -> str:
+    return norm_spaces(s).replace(".", "").lower()
+
+
 def build_fio(lead: Lead) -> str:
     parts = [lead.last_name, lead.first_name, lead.patronymic_name]
     parts = [norm_spaces(p) for p in parts if norm_spaces(p)]
     return " ".join(parts)
 
 
-def build_fio_initials(lead: Lead) -> str:
-    last = norm_spaces(lead.last_name)
-    first = norm_spaces(lead.first_name)
-    patr = norm_spaces(lead.patronymic_name)
+def split_person_name(value: str):
+    return norm_key(value).split()
 
-    if not last:
+
+def lead_name_parts(lead: Lead):
+    return split_person_name(build_fio(lead))
+
+
+def employee_name_parts(employee: EmployeeDwh):
+    return split_person_name(employee.full_name)
+
+
+def initials_key(parts):
+    if len(parts) < 3:
         return ""
+    last, first, patronymic = parts[0], parts[1], parts[2]
+    if not last or not first or not patronymic:
+        return ""
+    return " ".join([last, first[0], patronymic[0]])
 
-    fi = first[0] if first else ""
-    pi = patr[0] if patr else ""
-    # формат "Фамилия И О" (с пробелами)
-    parts = [last]
-    if fi:
-        parts.append(fi)
-    if pi:
-        parts.append(pi)
-    return " ".join(parts)
+
+def format_employee(employee: EmployeeDwh) -> str:
+    return (
+        f"{employee.full_name} | guid={employee.guid_nsi} | "
+        f"sam={employee.samaccountname} | company={employee.company}"
+    )
 
 
 class Command(BaseCommand):
     help = "One-time: link existing Leads to EmployeeDwh by FIO rules; unresolved leads keep display_name unchanged."
+    default_report_path = Path(settings.BASE_DIR) / "logs" / "link_leads_to_dwh_report.csv"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -54,13 +73,19 @@ class Command(BaseCommand):
             default=0,
             help="Process only first N leads (for testing)."
         )
+        parser.add_argument(
+            "--report-path",
+            default=str(self.default_report_path),
+            help="CSV report path with linked, ambiguous and not_found rows."
+        )
 
     def handle(self, *args, **options):
         dry = options["dry_run"]
         clear_fio = options["clear_fio"]
         limit = options["limit"]
+        report_path = Path(options["report_path"])
 
-        qs = Lead.objects.all().order_by("id")
+        qs = Lead.objects.select_related("phone_number").prefetch_related("employees", "company").all().order_by("id")
         if limit and limit > 0:
             qs = qs[:limit]
 
@@ -68,52 +93,60 @@ class Command(BaseCommand):
         unresolved_left_empty = 0
         ambiguous = 0
         not_found = 0
-        skipped = 0
+        skipped_existing = 0
+        skipped_no_fio = 0
+        report_rows = []
 
         # Предзагрузка сотрудников (ACTIVE+DELETED — чтобы можно было линковать и уволенных, если они были в старых Lead)
-        employees = list(EmployeeDwh.objects.all().only("id", "full_name", "guid_nsi"))
-        full_map = {}
-        init_map = {}
+        employees = list(EmployeeDwh.objects.all().only(
+            "id", "full_name", "guid_nsi", "samaccountname", "company"
+        ))
+        full_map = defaultdict(list)
+        init_map = defaultdict(list)
 
         for e in employees:
-            full = norm_spaces(e.full_name).lower()
+            full = norm_key(e.full_name)
             if full:
-                full_map.setdefault(full, []).append(e)
+                full_map[full].append(e)
 
-            # строим "Фамилия И О" из full_name
-            parts = norm_spaces(e.full_name).split()
-            if len(parts) >= 2:
-                last = parts[0]
-                fi = parts[1][0] if parts[1] else ""
-                pi = parts[2][0] if len(parts) >= 3 and parts[2] else ""
-                key = " ".join([p for p in [last, fi, pi] if p]).lower()
-                if key:
-                    init_map.setdefault(key, []).append(e)
+            key = initials_key(employee_name_parts(e))
+            if key:
+                init_map[key].append(e)
 
         with transaction.atomic():
             for lead in qs:
                 fio = build_fio(lead)
                 if not fio:
-                    skipped += 1
+                    skipped_no_fio += 1
+                    report_rows.append(self.build_report_row(lead, "skipped_no_fio", "", []))
                     continue
 
                 # если уже есть employees — можно пропустить (или перелинковать). Я пропускаю, чтобы не ломать руками выставленное.
                 if lead.employees.exists():
-                    skipped += 1
+                    skipped_existing += 1
+                    report_rows.append(self.build_report_row(
+                        lead,
+                        "skipped_existing",
+                        "already_has_employees",
+                        list(lead.employees.all()),
+                    ))
                     continue
 
                 # 1) полное совпадение
-                key_full = fio.lower()
+                key_full = norm_key(fio)
                 cands = full_map.get(key_full, [])
+                match_rule = "full_name"
 
                 # 2) если нет — по инициалам
                 if not cands:
-                    key_init = build_fio_initials(lead).lower()
+                    key_init = initials_key(lead_name_parts(lead))
                     cands = init_map.get(key_init, [])
+                    match_rule = "initials" if key_init else "no_initials_key"
 
                 if len(cands) == 1:
                     emp = cands[0]
                     linked += 1
+                    report_rows.append(self.build_report_row(lead, "linked", match_rule, [emp]))
                     if not dry:
                         lead.save()  # надо сохранить, чтобы M2M можно было поставить (на всякий)
                         lead.employees.add(emp)
@@ -127,18 +160,58 @@ class Command(BaseCommand):
 
                 elif len(cands) == 0:
                     not_found += 1
+                    report_rows.append(self.build_report_row(lead, "not_found", match_rule, []))
                     if not norm_spaces(lead.display_name):
                         unresolved_left_empty += 1
 
                 else:
                     ambiguous += 1
+                    report_rows.append(self.build_report_row(lead, "ambiguous", match_rule, cands))
                     if not norm_spaces(lead.display_name):
                         unresolved_left_empty += 1
 
             if dry:
                 transaction.set_rollback(True)
 
+        self.write_report(report_path, report_rows)
+
         self.stdout.write(self.style.SUCCESS(
             f"Done. linked={linked}, unresolved_left_empty={unresolved_left_empty}, "
-            f"not_found={not_found}, ambiguous={ambiguous}, skipped={skipped}, dry_run={dry}"
+            f"not_found={not_found}, ambiguous={ambiguous}, "
+            f"skipped_existing={skipped_existing}, skipped_no_fio={skipped_no_fio}, "
+            f"dry_run={dry}, report={report_path}"
         ))
+
+    def build_report_row(self, lead, status, match_rule, candidates):
+        old_companies = ", ".join(c.name for c in lead.company.all())
+        return {
+            "lead_id": lead.id,
+            "phone_number": getattr(lead.phone_number, "name", ""),
+            "mac_address": lead.mac_address,
+            "lead_fio": build_fio(lead),
+            "display_name": lead.display_name,
+            "old_companies": old_companies,
+            "status": status,
+            "match_rule": match_rule,
+            "candidates_count": len(candidates),
+            "candidates": " || ".join(format_employee(e) for e in candidates),
+        }
+
+    def write_report(self, report_path, rows):
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        fieldnames = [
+            "lead_id",
+            "phone_number",
+            "mac_address",
+            "lead_fio",
+            "display_name",
+            "old_companies",
+            "status",
+            "match_rule",
+            "candidates_count",
+            "candidates",
+        ]
+        with report_path.open("w", encoding="utf-8-sig", newline="") as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, delimiter=";")
+            writer.writeheader()
+            writer.writerows(rows)
