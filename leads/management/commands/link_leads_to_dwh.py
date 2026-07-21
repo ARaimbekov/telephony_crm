@@ -45,6 +45,41 @@ def initials_key(parts):
     return " ".join([last, first[0], patronymic[0]])
 
 
+def last_name_key(parts):
+    return parts[0] if parts else ""
+
+
+def describe_part_diff(label, lead_value, employee_value):
+    if not lead_value and not employee_value:
+        return ""
+    if not lead_value:
+        return f"{label}: в Lead пусто, в DWH {employee_value}"
+    if not employee_value:
+        return f"{label}: в Lead {lead_value}, в DWH пусто"
+    if lead_value == employee_value:
+        return f"{label}: совпало {lead_value}"
+    if len(lead_value) == 1 and employee_value.startswith(lead_value):
+        return f"{label}: инициал {lead_value} совпал с {employee_value}"
+    if len(employee_value) == 1 and lead_value.startswith(employee_value):
+        return f"{label}: Lead {lead_value} совпал с инициалом DWH {employee_value}"
+    return f"{label}: Lead {lead_value} != DWH {employee_value}"
+
+
+def describe_fio_diff(lead_parts, employee):
+    employee_parts = employee_name_parts(employee)
+    labels = ["фамилия", "имя", "отчество"]
+    messages = []
+    for index, label in enumerate(labels):
+        lead_value = lead_parts[index] if len(lead_parts) > index else ""
+        employee_value = employee_parts[index] if len(employee_parts) > index else ""
+        message = describe_part_diff(label, lead_value, employee_value)
+        if message:
+            messages.append(message)
+    if len(lead_parts) != len(employee_parts):
+        messages.append(f"частей ФИО: Lead {len(lead_parts)}, DWH {len(employee_parts)}")
+    return "; ".join(messages)
+
+
 def format_employee(employee: EmployeeDwh) -> str:
     return (
         f"{employee.full_name} | guid={employee.guid_nsi} | "
@@ -103,22 +138,32 @@ class Command(BaseCommand):
         ))
         full_map = defaultdict(list)
         init_map = defaultdict(list)
+        last_name_map = defaultdict(list)
 
         for e in employees:
+            parts = employee_name_parts(e)
             full = norm_key(e.full_name)
             if full:
                 full_map[full].append(e)
 
-            key = initials_key(employee_name_parts(e))
+            key = initials_key(parts)
             if key:
                 init_map[key].append(e)
+
+            last = last_name_key(parts)
+            if last:
+                last_name_map[last].append(e)
 
         with transaction.atomic():
             for lead in qs:
                 fio = build_fio(lead)
+                lead_parts = lead_name_parts(lead)
+                same_last_name_candidates = last_name_map.get(last_name_key(lead_parts), [])
                 if not fio:
                     skipped_no_fio += 1
-                    report_rows.append(self.build_report_row(lead, "skipped_no_fio", "", []))
+                    report_rows.append(self.build_report_row(
+                        lead, "skipped_no_fio", "", [], same_last_name_candidates
+                    ))
                     continue
 
                 # если уже есть employees — можно пропустить (или перелинковать). Я пропускаю, чтобы не ломать руками выставленное.
@@ -129,6 +174,7 @@ class Command(BaseCommand):
                         "skipped_existing",
                         "already_has_employees",
                         list(lead.employees.all()),
+                        same_last_name_candidates,
                     ))
                     continue
 
@@ -146,7 +192,9 @@ class Command(BaseCommand):
                 if len(cands) == 1:
                     emp = cands[0]
                     linked += 1
-                    report_rows.append(self.build_report_row(lead, "linked", match_rule, [emp]))
+                    report_rows.append(self.build_report_row(
+                        lead, "linked", match_rule, [emp], same_last_name_candidates
+                    ))
                     if not dry:
                         lead.save()  # надо сохранить, чтобы M2M можно было поставить (на всякий)
                         lead.employees.add(emp)
@@ -160,13 +208,17 @@ class Command(BaseCommand):
 
                 elif len(cands) == 0:
                     not_found += 1
-                    report_rows.append(self.build_report_row(lead, "not_found", match_rule, []))
+                    report_rows.append(self.build_report_row(
+                        lead, "not_found", match_rule, [], same_last_name_candidates
+                    ))
                     if not norm_spaces(lead.display_name):
                         unresolved_left_empty += 1
 
                 else:
                     ambiguous += 1
-                    report_rows.append(self.build_report_row(lead, "ambiguous", match_rule, cands))
+                    report_rows.append(self.build_report_row(
+                        lead, "ambiguous", match_rule, cands, same_last_name_candidates
+                    ))
                     if not norm_spaces(lead.display_name):
                         unresolved_left_empty += 1
 
@@ -182,20 +234,50 @@ class Command(BaseCommand):
             f"dry_run={dry}, report={report_path}"
         ))
 
-    def build_report_row(self, lead, status, match_rule, candidates):
+    def build_report_row(self, lead, status, match_rule, candidates, same_last_name_candidates):
+        lead_parts = lead_name_parts(lead)
+        lead_initials_key = initials_key(lead_parts)
+        comparison_candidates = candidates or same_last_name_candidates
         old_companies = ", ".join(c.name for c in lead.company.all())
         return {
             "lead_id": lead.id,
             "phone_number": getattr(lead.phone_number, "name", ""),
             "mac_address": lead.mac_address,
             "lead_fio": build_fio(lead),
+            "lead_normalized_fio": norm_key(build_fio(lead)),
+            "lead_initials_key": lead_initials_key,
             "display_name": lead.display_name,
             "old_companies": old_companies,
             "status": status,
             "match_rule": match_rule,
+            "match_reason": self.build_match_reason(status, match_rule, candidates, same_last_name_candidates),
             "candidates_count": len(candidates),
             "candidates": " || ".join(format_employee(e) for e in candidates),
+            "same_last_name_count": len(same_last_name_candidates),
+            "same_last_name_candidates": " || ".join(format_employee(e) for e in same_last_name_candidates[:20]),
+            "fio_differences": " || ".join(
+                f"{e.full_name}: {describe_fio_diff(lead_parts, e)}"
+                for e in comparison_candidates[:20]
+            ),
         }
+
+    def build_match_reason(self, status, match_rule, candidates, same_last_name_candidates):
+        if status == "linked":
+            if match_rule == "full_name":
+                return "Однозначное полное совпадение ФИО."
+            if match_rule == "initials":
+                return "Однозначное совпадение по фамилии и первым буквам имени/отчества."
+        if status == "ambiguous":
+            return "Найдено несколько кандидатов по правилу матчинга, автоматическая привязка пропущена."
+        if status == "not_found":
+            if same_last_name_candidates:
+                return "Точного совпадения нет, но есть сотрудники с такой же фамилией; проверьте различия ФИО."
+            return "Совпадений и сотрудников с такой же фамилией в DWH не найдено."
+        if status == "skipped_existing":
+            return "Запись уже была привязана к сотруднику, ручную привязку не трогаем."
+        if status == "skipped_no_fio":
+            return "В Lead нет ФИО для матчинга."
+        return ""
 
     def write_report(self, report_path, rows):
         report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -204,12 +286,18 @@ class Command(BaseCommand):
             "phone_number",
             "mac_address",
             "lead_fio",
+            "lead_normalized_fio",
+            "lead_initials_key",
             "display_name",
             "old_companies",
             "status",
             "match_rule",
+            "match_reason",
             "candidates_count",
             "candidates",
+            "same_last_name_count",
+            "same_last_name_candidates",
+            "fio_differences",
         ]
         with report_path.open("w", encoding="utf-8-sig", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames, delimiter=";")

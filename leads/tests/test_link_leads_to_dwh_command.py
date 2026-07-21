@@ -56,6 +56,8 @@ class LinkLeadsToDwhCommandTest(TestCase):
         self.assertEqual(list(lead.company.values_list("name", flat=True)), ["Old Company"])
         self.assertEqual(rows[0]["status"], "linked")
         self.assertEqual(rows[0]["match_rule"], "initials")
+        self.assertEqual(rows[0]["lead_initials_key"], "зайцев е в")
+        self.assertIn("инициал е совпал", rows[0]["fio_differences"])
 
     def test_does_not_link_ambiguous_initials(self):
         lead = self.make_lead("1002", "Зайцев", "Е", "В")
@@ -68,10 +70,11 @@ class LinkLeadsToDwhCommandTest(TestCase):
         self.assertEqual(lead.employees.count(), 0)
         self.assertEqual(rows[0]["status"], "ambiguous")
         self.assertEqual(rows[0]["candidates_count"], "2")
+        self.assertIn("Найдено несколько кандидатов", rows[0]["match_reason"])
 
     def test_reports_not_found_without_changing_lead(self):
         lead = self.make_lead("1003", "Масалов", "О", "А")
-        self.make_employee("Иванов Иван Иванович")
+        self.make_employee("Масалов Сергей Иванович")
 
         rows = self.run_command()
 
@@ -79,3 +82,6 @@ class LinkLeadsToDwhCommandTest(TestCase):
         self.assertEqual(lead.employees.count(), 0)
         self.assertEqual(list(lead.company.values_list("name", flat=True)), ["Old Company"])
         self.assertEqual(rows[0]["status"], "not_found")
+        self.assertEqual(rows[0]["same_last_name_count"], "1")
+        self.assertIn("Масалов Сергей Иванович", rows[0]["same_last_name_candidates"])
+        self.assertIn("имя: Lead о != DWH сергей", rows[0]["fio_differences"])
