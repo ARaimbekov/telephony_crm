@@ -46,6 +46,14 @@ def initials_key(parts):
     return " ".join([last, first[0], patronymic[0]])
 
 
+def lead_initials_key(parts):
+    if len(parts) == 3:
+        return initials_key(parts)
+    if len(parts) == 2 and len(parts[1]) == 2 and parts[1].isalpha():
+        return " ".join([parts[0], parts[1][0], parts[1][1]])
+    return ""
+
+
 def last_name_key(parts):
     return parts[0] if parts else ""
 
@@ -186,7 +194,7 @@ class Command(BaseCommand):
 
                 # 2) если нет — по инициалам
                 if not cands:
-                    key_init = initials_key(lead_name_parts(lead))
+                    key_init = lead_initials_key(lead_name_parts(lead))
                     cands = init_map.get(key_init, [])
                     match_rule = "initials" if key_init else "no_initials_key"
 
@@ -237,7 +245,7 @@ class Command(BaseCommand):
 
     def build_report_row(self, lead, status, match_rule, candidates, same_last_name_candidates):
         lead_parts = lead_name_parts(lead)
-        lead_initials_key = initials_key(lead_parts)
+        lead_initials = lead_initials_key(lead_parts)
         comparison_candidates = candidates or same_last_name_candidates
         old_companies = ", ".join(c.name for c in lead.company.all())
         return {
@@ -246,7 +254,7 @@ class Command(BaseCommand):
             "mac_address": lead.mac_address,
             "lead_fio": build_fio(lead),
             "lead_normalized_fio": norm_key(build_fio(lead)),
-            "lead_initials_key": lead_initials_key,
+            "lead_initials_key": lead_initials,
             "display_name": lead.display_name,
             "old_companies": old_companies,
             "status": status,

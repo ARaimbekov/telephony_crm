@@ -71,6 +71,29 @@ class LinkLeadsToDwhCommandTest(TestCase):
         self.assertEqual(rows[0]["match_rule"], "initials")
         self.assertEqual(rows[0]["lead_initials_key"], "журавлев а к")
 
+    def test_links_compact_initials(self):
+        lead = self.make_lead("1005", "Сергаков", "ВА", "")
+        employee = self.make_employee("Сергаков Виктор Аркадьевич")
+
+        rows = self.run_command()
+
+        lead.refresh_from_db()
+        self.assertQuerysetEqual(lead.employees.all(), [employee])
+        self.assertEqual(rows[0]["status"], "linked")
+        self.assertEqual(rows[0]["match_rule"], "initials")
+        self.assertEqual(rows[0]["lead_initials_key"], "сергаков в а")
+
+    def test_does_not_link_initials_when_lead_contains_multiple_people(self):
+        lead = self.make_lead("1006", "Клачков", "М.Ю.", "Скрастин В.Б.")
+        self.make_employee("Клачков Михаил Юрьевич")
+
+        rows = self.run_command()
+
+        lead.refresh_from_db()
+        self.assertEqual(lead.employees.count(), 0)
+        self.assertEqual(rows[0]["status"], "not_found")
+        self.assertEqual(rows[0]["match_rule"], "no_initials_key")
+
     def test_does_not_link_ambiguous_initials(self):
         lead = self.make_lead("1002", "Зайцев", "Е", "В")
         self.make_employee("Зайцев Евгений Вадимович")
