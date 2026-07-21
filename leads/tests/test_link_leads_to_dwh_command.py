@@ -59,6 +59,18 @@ class LinkLeadsToDwhCommandTest(TestCase):
         self.assertEqual(rows[0]["lead_initials_key"], "зайцев е в")
         self.assertIn("инициал е совпал", rows[0]["fio_differences"])
 
+    def test_links_dotted_initials(self):
+        lead = self.make_lead("1004", "Журавлев", "А.К.", "")
+        employee = self.make_employee("Журавлев Алеся Канева")
+
+        rows = self.run_command()
+
+        lead.refresh_from_db()
+        self.assertQuerysetEqual(lead.employees.all(), [employee])
+        self.assertEqual(rows[0]["status"], "linked")
+        self.assertEqual(rows[0]["match_rule"], "initials")
+        self.assertEqual(rows[0]["lead_initials_key"], "журавлев а к")
+
     def test_does_not_link_ambiguous_initials(self):
         lead = self.make_lead("1002", "Зайцев", "Е", "В")
         self.make_employee("Зайцев Евгений Вадимович")

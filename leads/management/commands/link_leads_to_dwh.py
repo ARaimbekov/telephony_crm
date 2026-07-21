@@ -15,7 +15,8 @@ def norm_spaces(s: str) -> str:
 
 
 def norm_key(s: str) -> str:
-    return norm_spaces(s).replace(".", "").lower()
+    value = re.sub(r"[.\u00b7]+", " ", s or "")
+    return norm_spaces(value).lower()
 
 
 def build_fio(lead: Lead) -> str:
