@@ -3,8 +3,16 @@ from os import environ
 import os
 
 
+def env_bool(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
+
+
 DEBUG = True
 SECRET_KEY = '0x!b#(1*cd73w$&azzc6p+essg7v=g80ls#z&xcx*mpemx&@9$'
+ALLOW_LEGACY_HTTP = env_bool("DJANGO_ALLOW_LEGACY_HTTP")
 
 #DEBUG = int(os.environ.get("DEBUG", default=0))
 #SECRET_KEY = os.environ.get("SECRET_KEY")
@@ -164,14 +172,14 @@ CRISPY_TEMPLATE_PACK = 'tailwind'
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = not ALLOW_LEGACY_HTTP
+    SESSION_COOKIE_SECURE = not ALLOW_LEGACY_HTTP
+    CSRF_COOKIE_SECURE = not ALLOW_LEGACY_HTTP
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    SECURE_HSTS_SECONDS = 0 if ALLOW_LEGACY_HTTP else 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = not ALLOW_LEGACY_HTTP
+    SECURE_HSTS_PRELOAD = not ALLOW_LEGACY_HTTP
     X_FRAME_OPTIONS = "DENY"
 
     ALLOWED_HOSTS = ["*"]

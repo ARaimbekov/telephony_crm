@@ -26,6 +26,7 @@ services:
       - POSTGRES_NAME=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - DJANGO_ALLOW_LEGACY_HTTP=true
     depends_on:
       - db
 

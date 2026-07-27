@@ -60,6 +60,47 @@ def _redirect_after_lead_save(request, lead):
     return redirect("leads:lead-update", pk=lead.pk)
 
 
+def _name_search_query(raw_query):
+    query = (raw_query or "").strip()
+    if not query:
+        return Q()
+
+    search = (
+        Q(last_name__icontains=query) |
+        Q(first_name__icontains=query) |
+        Q(patronymic_name__icontains=query) |
+        Q(display_name__icontains=query) |
+        Q(employees__full_name__icontains=query) |
+        Q(employees__samaccountname__icontains=query)
+    )
+
+    parts = query.split()
+    if len(parts) == 2:
+        last_name, initials = parts
+        initials = re.sub(r"[^A-Za-zА-Яа-яЁё]", "", initials)
+        if initials:
+            search |= (
+                Q(last_name__istartswith=last_name) &
+                Q(first_name__istartswith=initials[0])
+            )
+            search |= (
+                Q(employees__full_name__istartswith=f"{last_name} {initials[0]}")
+            )
+
+        if len(initials) >= 2:
+            search |= (
+                Q(last_name__istartswith=last_name) &
+                Q(first_name__istartswith=initials[0]) &
+                Q(patronymic_name__istartswith=initials[1])
+            )
+            search |= (
+                Q(employees__full_name__istartswith=f"{last_name} {initials[0]}") &
+                Q(employees__full_name__icontains=f" {initials[1]}")
+            )
+
+    return search
+
+
 def employee_search(request):
     q = (request.GET.get("q") or "").strip()
     qs = EmployeeDwh.objects.filter(status=EmployeeDwh.Status.ACTIVE)
@@ -365,13 +406,7 @@ def lead_list(request):
     if search_mac_query:
         leads = leads.filter(mac_address__icontains=search_mac_query)
     if search_name_query:
-        leads = leads.filter(
-            Q(last_name__icontains=search_name_query) |
-            Q(first_name__icontains=search_name_query) |
-            Q(patronymic_name__icontains=search_name_query) |
-            Q(display_name__icontains=search_name_query) |
-            Q(employees__full_name__icontains=search_name_query)
-        ).distinct()
+        leads = leads.filter(_name_search_query(search_name_query)).distinct()
 
 
     # Фильтрация по новым полям
@@ -491,100 +526,39 @@ def lead_create(request):
     form = LeadCreateModelForm()
 
     if request.method == "POST":
-        try:
-            if ('reservation') in request.POST:
-                temp = request.POST.copy()
-                temp['mac_address'] = _generate_reserved_mac(temp.get('line', '1'))
-                temp['created_user'] = request.user.username
-                form = LeadCreateModelForm(temp)
-                if form.is_valid():
-                    lead = form.save()
-                    messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                    return _redirect_after_lead_save(request, lead)
+        temp = request.POST.copy()
 
-                print("FORM ERRORS:", form.errors)
-                print("NON FIELD ERRORS:", form.non_field_errors())
-                return render(request, "error_mac_failed.html")
-
-            form = LeadCreateModelForm(request.POST)
-            pattern = re.compile("^([0-9A-Fa-f]{2}[:-]{0,1}){5}([0-9A-Fa-f]{2})$")
-            if pattern.match(request.POST['mac_address']) or request.POST['mac_address'] == '':
-                if form.is_valid():
-                    if "-" in request.POST["mac_address"]:
-                        temp = request.POST.copy()
-                        mac = temp['mac_address']
-                        result = ''
-                        for i in mac.split("-"):
-                            result += '' + i
-                        result = result.lower()
-                        temp['mac_address'] = result
-                        temp['created_user'] = request.user.username
-                        request.POST = temp
-                        form = LeadCreateModelForm(request.POST)
-                        lead = form.save()
-                        messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return _redirect_after_lead_save(request, lead)
-                    elif ":" in request.POST["mac_address"]:
-                        temp = request.POST.copy()
-                        mac = temp['mac_address']
-                        result = ''
-                        for i in mac.split(":"):
-                            result += '' + i
-                        result = result.lower()
-                        temp['mac_address'] = result
-                        temp['created_user'] = request.user.username
-                        request.POST = temp
-                        form = LeadCreateModelForm(request.POST)
-                        lead = form.save()
-                        messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return _redirect_after_lead_save(request, lead)
-                    elif "." in request.POST["mac_address"]:
-                        temp = request.POST.copy()
-                        mac = temp['mac_address']
-                        result = ''
-                        for i in mac.split("."):
-                            result += '' + i
-                        result = result.lower()
-                        temp['mac_address'] = result
-                        temp['created_user'] = request.user.username
-                        request.POST = temp
-                        form = LeadCreateModelForm(request.POST)
-                        lead = form.save()
-                        messages.success(request, "Вы успешно создали зарезервированную позицию !")
-                        return _redirect_after_lead_save(request, lead)
-                    elif not request.POST["mac_address"]:
-                        return render(request, "error_mac.html")
-                    else:
-                        temp = request.POST.copy()
-                        mac = temp['mac_address']
-                        mac = mac.lower()
-                        temp['mac_address'] = mac
-                        temp['created_user'] = request.user.username
-                        request.POST = temp
-                        form = LeadCreateModelForm(request.POST)
-                        lead = form.save()
-                        messages.success(request, "Вы успешно создали позицию, настройки будут применены в течении 10 минут !")
-                        return _redirect_after_lead_save(request, lead)
-                else:
-                    print("FORM ERRORS:", form.errors)
-                    print("NON FIELD ERRORS:", form.non_field_errors())
-                    return render(request, "error_mac_failed.html")
-                    # return render(request, "error_mac_failed.html")
-            else:
+        if 'reservation' in temp:
+            temp['mac_address'] = _generate_reserved_mac(temp.get('line', '1'))
+        else:
+            raw_mac = (temp.get('mac_address') or '').strip()
+            if not raw_mac:
+                return render(request, "error_mac.html")
+            if has_invalid_mac_chars(raw_mac):
                 return render(request, "error_mac_type_failed.html")
-        except Exception as e:
-            number_on_mac = request.POST["mac_address"]
-            print(number_on_mac)
-            # number_on_mac = Lead.objects.filter(mac_address__icontains='number_on_mac')
-            # leads = Lead.objects.filter(phone_number__in=Number.objects.filter(name__icontains=search_number_query))
-            mac = Lead.objects.filter(mac_address__icontains=number_on_mac)
-            print(mac)
-            context = {
-                'error': 'Такой MAC адрес уже существует',
-                'mac' : mac,
+            if not is_valid_mac_address(raw_mac):
+                return render(request, "error_mac_failed.html")
+            temp['mac_address'] = normalize_mac_address(raw_mac)
 
-            }
-            return render(request, "error.html", context)
+        temp['created_user'] = request.user.username
+        form = LeadCreateModelForm(temp)
+
+        if form.is_valid():
+            try:
+                lead = form.save()
+            except IntegrityError:
+                mac = Lead.objects.filter(mac_address__icontains=temp.get("mac_address", ""))
+                context = {
+                    'error': 'Такой MAC адрес уже существует',
+                    'mac': mac,
+                }
+                return render(request, "error.html", context)
+
+            if 'reservation' in temp:
+                messages.success(request, "Вы успешно создали зарезервированную позицию !")
+            else:
+                messages.success(request, "Вы успешно создали позицию, настройки будут применены в течении 10 минут !")
+            return _redirect_after_lead_save(request, lead)
 
     context = {
         "form": form,
@@ -666,18 +640,33 @@ def lead_update(request, pk):
         form.fields['phone_number'].queryset = my_num_obj
 
     if request.method == "POST":
-        form = LeadModelForm(request.POST, instance=lead)
-        if form.is_valid():
-            lead = form.save()
-            lead.updated_user = updated_user
-            lead.mac_address = lead.mac_address.lower()
-            print(lead.mac_address)
-            # Обновить пароль, если MAC-адрес обновлен
-            if current_mac != lead.mac_address:
-                print('HAHAHAHA')
-                lead.passwd = shortuuid.uuid()
+        temp = request.POST.copy()
+        raw_mac = (temp.get('mac_address') or '').strip()
+        if not raw_mac:
+            return render(request, "error_mac.html")
+        if has_invalid_mac_chars(raw_mac):
+            return render(request, "error_mac_type_failed.html")
+        if not is_valid_mac_address(raw_mac):
+            return render(request, "error_mac_failed.html")
+        temp['mac_address'] = normalize_mac_address(raw_mac)
 
-            lead.save()
+        form = LeadModelForm(temp, instance=lead)
+        if form.is_valid():
+            form.instance.updated_user = updated_user
+            # Обновить пароль, если MAC-адрес обновлен
+            if current_mac != temp['mac_address']:
+                form.instance.passwd = shortuuid.uuid()
+
+            try:
+                lead = form.save()
+            except IntegrityError:
+                mac = Lead.objects.filter(mac_address__icontains=temp['mac_address']).exclude(pk=lead.pk)
+                context = {
+                    'error': 'Такой MAC адрес уже существует',
+                    'mac': mac,
+                }
+                return render(request, "error.html", context)
+
             messages.success(request, "В течении 10 минут изменения будут применены !")
             return _redirect_after_lead_save(request, lead)
 

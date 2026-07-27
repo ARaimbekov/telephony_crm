@@ -172,6 +172,7 @@
   tbody tr:nth-child(even){ background: rgb(252,252,253); }
   tbody tr:hover{ background: rgb(247,250,255); }
   .muted{ color: rgb(107,114,128); }
+  .generated-display-name{ color: rgb(156,163,175); }
   .nowrap{ white-space: nowrap; }
   .wrap{ white-space: normal; overflow-wrap: anywhere; }
   .row-actions a{
@@ -238,8 +239,6 @@
   <div class="header-row">
     <div class="header-title">Телефоны</div>
     <div class="header-actions">
-      <a class="link-action" href="{% url 'leads:export_table' %}">Скачать (csv)</a>
-      <a class="link-action" href="{% url 'leads:export_table_exel' %}">Скачать (xls)</a>
       <a class="link-action" href="{% url 'leads:lead-create' %}">Добавить</a>
     </div>
   </div>
@@ -254,7 +253,7 @@
         <input class="filter-input" type="search" placeholder="Mac-address" name="mac"
                value="{{ request.GET.mac|default_if_none:'' }}">
 
-        <input class="filter-input" type="search" placeholder="Фамилия" name="name"
+        <input class="filter-input" type="search" placeholder="ФИО, отображаемое имя, сотрудник" name="name"
                value="{{ request.GET.name|default_if_none:'' }}">
 
         <select class="filter-input" name="record_calls">
@@ -316,7 +315,13 @@
             </td>
 
             <td class="wrap">
-              {{ lead.display_name|default:"—" }}
+              {% if lead.actual_display_name %}
+                <span class="{% if not lead.has_manual_display_name %}generated-display-name{% endif %}">
+                  {{ lead.actual_display_name }}
+                </span>
+              {% else %}
+                —
+              {% endif %}
             </td>
 
             {% for phone in lead.phone_model.all %}

@@ -1,4 +1,5 @@
 from dataclasses import Field
+import re
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import SetPasswordForm
@@ -21,6 +22,28 @@ from django.db import transaction
 from django.db.models import Q
 
 
+MAC_FORMAT_PATTERNS = (
+    re.compile(r"^[0-9A-Fa-f]{12}$"),
+    re.compile(r"^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$"),
+    re.compile(r"^([0-9A-Fa-f]{2}-){5}[0-9A-Fa-f]{2}$"),
+    re.compile(r"^[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}$"),
+)
+MAC_ALLOWED_CHARS = re.compile(r"^[0-9A-Fa-f:.-]+$")
+
+
+def normalize_mac_address(mac_address):
+    return (mac_address or "").replace("-", "").replace(":", "").replace(".", "").lower()
+
+
+def has_invalid_mac_chars(mac_address):
+    return not MAC_ALLOWED_CHARS.match((mac_address or "").strip())
+
+
+def is_valid_mac_address(mac_address):
+    value = (mac_address or "").strip()
+    return any(pattern.match(value) for pattern in MAC_FORMAT_PATTERNS)
+
+
 def format_employee_label(employee):
     company = (employee.company or "").strip() or "Без компании"
     samaccountname = (employee.samaccountname or "").strip()
@@ -36,6 +59,20 @@ def _parse_full_name(full_name: str):
     first = parts[1] if len(parts) > 1 else ""
     patronymic = parts[2] if len(parts) > 2 else ""
     return last, first, patronymic
+
+
+def _display_name_placeholder(instance, selected_ids):
+    if instance and instance.pk:
+        return instance.generated_display_name
+
+    first_selected_id = next((int(x) for x in selected_ids if str(x).isdigit()), None)
+    if not first_selected_id:
+        return ""
+
+    employee = EmployeeDwh.objects.filter(id=first_selected_id).first()
+    if not employee:
+        return ""
+    return Lead.employee_display_name(employee)
 
 
 class EmployeeChoiceField(forms.ModelMultipleChoiceField):
@@ -85,6 +122,19 @@ class LeadCreateModelForm(forms.ModelForm):
         else:
             self.fields["employees"].queryset = EmployeeDwh.objects.none()
 
+        if not (self.instance and self.instance.display_name):
+            placeholder = _display_name_placeholder(self.instance, selected_ids)
+            if placeholder:
+                self.fields["display_name"].widget.attrs["placeholder"] = placeholder
+
+
+    def clean_mac_address(self):
+        mac_address = (self.cleaned_data.get("mac_address") or "").strip()
+        if not mac_address:
+            return mac_address
+        if has_invalid_mac_chars(mac_address) or not is_valid_mac_address(mac_address):
+            raise ValidationError("Поле MAC адреса было введено неверно.")
+        return normalize_mac_address(mac_address)
 
 
     def clean(self):
@@ -143,6 +193,8 @@ class LeadModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.fields["display_name"].widget.attrs["autocomplete"] = "off"
+
         selected_ids = []
         if self.data:
             selected_ids = [x for x in self.data.getlist("employees") if str(x).isdigit()]            
@@ -157,6 +209,20 @@ class LeadModelForm(forms.ModelForm):
             self.fields["employees"].queryset = EmployeeDwh.objects.filter(id__in=selected_ids)
         else:
             self.fields["employees"].queryset = EmployeeDwh.objects.none()
+
+        if not (self.instance and self.instance.display_name):
+            placeholder = _display_name_placeholder(self.instance, selected_ids)
+            if placeholder:
+                self.fields["display_name"].widget.attrs["placeholder"] = placeholder
+
+
+    def clean_mac_address(self):
+        mac_address = (self.cleaned_data.get("mac_address") or "").strip()
+        if not mac_address:
+            return mac_address
+        if has_invalid_mac_chars(mac_address) or not is_valid_mac_address(mac_address):
+            raise ValidationError("Поле MAC адреса было введено неверно.")
+        return normalize_mac_address(mac_address)
 
 
     @transaction.atomic

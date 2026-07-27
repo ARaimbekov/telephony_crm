@@ -60,6 +60,16 @@
     background: #1f2937;
 }
 
+.display-name-preview {
+    margin-top: 6px;
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+.display-name-preview.hidden {
+    display: none;
+}
+
 @media (max-width: 640px) {
     .lead-save-actions {
         flex-direction: column;
@@ -125,6 +135,13 @@
         <div class="row mt-3">
         <div class="col-6">
             {{ form.display_name|as_crispy_field }}
+            {% with generated_display_name=form.display_name.field.widget.attrs.placeholder %}
+            <div id="display-name-preview"
+                 class="display-name-preview{% if not generated_display_name %} hidden{% endif %}">
+                Фактически будет показано:
+                <span data-display-name-preview-value>{{ generated_display_name }}</span>
+            </div>
+            {% endwith %}
         </div>
         </div>
         <div class="row">
@@ -169,11 +186,11 @@
         <div class="lead-save-actions">
             <button type="submit" name="save_action" value="stay"
                 class="lead-save-button lead-save-button-primary">
-                Готово
+                Сохранить
             </button>
             <button type="submit" name="save_action" value="exit"
                 class="lead-save-button lead-save-button-secondary">
-                Сохранить и выйти
+                Сохранить и закрыть
             </button>
         </div>
     </form>
@@ -185,6 +202,9 @@
 <script>
 $(document).ready(function () {
     const $emp = $('#id_employees');
+    const $displayName = $('#id_display_name');
+    const preview = document.getElementById('display-name-preview');
+    const previewValue = preview ? preview.querySelector('[data-display-name-preview-value]') : null;
 
     if (!$emp.length) {
         console.error("Не найден #id_employees");
@@ -220,6 +240,42 @@ $(document).ready(function () {
             cache: true
         }
     });
+
+    function generatedDisplayNameFromLabel(label) {
+        const fullName = (label || "")
+            .split("—")[0]
+            .trim()
+            .replace(/\s*\([^)]*\)\s*$/, "");
+        const parts = fullName.split(/\s+/).filter(Boolean);
+        if (!parts.length) return "";
+
+        const initials = parts
+            .slice(1, 3)
+            .map(function (part) { return part.charAt(0).toUpperCase(); })
+            .join("");
+
+        return initials ? parts[0] + " " + initials : parts[0];
+    }
+
+    function refreshDisplayNamePreview() {
+        if (!$displayName.length || !preview || !previewValue) return;
+
+        const selected = $emp.select2('data');
+        const generated = generatedDisplayNameFromLabel(selected.length ? selected[0].text : "") || $displayName.attr("placeholder") || "";
+        const hasManualValue = $displayName.val().trim().length > 0;
+
+        if (generated && !hasManualValue) {
+            $displayName.attr("placeholder", generated);
+            previewValue.textContent = generated;
+            preview.classList.remove("hidden");
+        } else {
+            preview.classList.add("hidden");
+        }
+    }
+
+    $emp.on("select2:select select2:unselect change", refreshDisplayNamePreview);
+    $displayName.on("input", refreshDisplayNamePreview);
+    refreshDisplayNamePreview();
 });
 </script>
 

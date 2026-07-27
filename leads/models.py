@@ -165,6 +165,35 @@ class Lead(models.Model):
 
     objects = LeadManager()
 
+    @staticmethod
+    def employee_display_name(employee):
+        parts = (employee.full_name or "").strip().split()
+        if not parts:
+            return ""
+
+        last_name = parts[0]
+        initials = "".join(part[0].upper() for part in parts[1:3] if part)
+        if initials:
+            return f"{last_name} {initials}"
+        return last_name
+
+    @property
+    def generated_display_name(self):
+        employee = next(iter(self.employees.all()), None) if self.pk else None
+        if not employee:
+            return ""
+        return self.employee_display_name(employee)
+
+    @property
+    def has_manual_display_name(self):
+        return bool((self.display_name or "").strip())
+
+    @property
+    def actual_display_name(self):
+        if self.has_manual_display_name:
+            return self.display_name.strip()
+        return self.generated_display_name
+
     def __str__(self):
         return f"{self.first_name} {self.last_name} {self.phone_number}"
 
