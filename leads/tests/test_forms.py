@@ -39,8 +39,8 @@ class LeadDisplayNameTest(TestCase):
     def test_actual_display_name_uses_generated_name_without_saving_it(self):
         lead = self.make_lead()
 
-        self.assertEqual(lead.generated_display_name, "Калычев НС")
-        self.assertEqual(lead.actual_display_name, "Калычев НС")
+        self.assertEqual(lead.generated_display_name, "Калычев Н.С.")
+        self.assertEqual(lead.actual_display_name, "Калычев Н.С.")
 
         lead.refresh_from_db()
         self.assertEqual(lead.display_name, "")
@@ -48,7 +48,7 @@ class LeadDisplayNameTest(TestCase):
     def test_manual_display_name_has_priority(self):
         lead = self.make_lead(display_name="Дежурный столовой")
 
-        self.assertEqual(lead.generated_display_name, "Калычев НС")
+        self.assertEqual(lead.generated_display_name, "Калычев Н.С.")
         self.assertEqual(lead.actual_display_name, "Дежурный столовой")
 
     def test_form_uses_generated_display_name_as_placeholder(self):
@@ -56,4 +56,4 @@ class LeadDisplayNameTest(TestCase):
 
         form = LeadModelForm(instance=lead)
 
-        self.assertEqual(form.fields["display_name"].widget.attrs["placeholder"], "Калычев НС")
+        self.assertEqual(form.fields["display_name"].widget.attrs["placeholder"], "Калычев Н.С.")

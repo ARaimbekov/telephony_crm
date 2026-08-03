@@ -172,7 +172,7 @@ class Lead(models.Model):
             return ""
 
         last_name = parts[0]
-        initials = "".join(part[0].upper() for part in parts[1:3] if part)
+        initials = "".join(f"{part[0].upper()}." for part in parts[1:3] if part)
         if initials:
             return f"{last_name} {initials}"
         return last_name

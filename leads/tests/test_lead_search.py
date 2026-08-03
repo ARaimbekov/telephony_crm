@@ -37,7 +37,7 @@ class LeadNameSearchTest(TestCase):
         return Lead.objects.filter(_name_search_query(query)).distinct()
 
     def test_searches_generated_employee_display_name(self):
-        self.assertQuerysetEqual(self.search("Калычев НС"), [self.lead])
+        self.assertQuerysetEqual(self.search("Калычев Н.С."), [self.lead])
 
     def test_searches_employee_full_name(self):
         self.assertQuerysetEqual(self.search("Николай Сергеевич"), [self.lead])

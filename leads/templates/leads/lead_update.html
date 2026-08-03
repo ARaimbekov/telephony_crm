@@ -238,7 +238,7 @@ $(document).ready(function () {
 
         const initials = parts
             .slice(1, 3)
-            .map(function (part) { return part.charAt(0).toUpperCase(); })
+            .map(function (part) { return part.charAt(0).toUpperCase() + "."; })
             .join("");
 
         return initials ? parts[0] + " " + initials : parts[0];
