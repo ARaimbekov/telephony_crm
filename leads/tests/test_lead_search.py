@@ -1,4 +1,5 @@
 from uuid import uuid4
+from html.parser import HTMLParser
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -6,6 +7,19 @@ from django.urls import reverse
 
 from leads.models import Apparats, Atc, Company, EmployeeDwh, Lead, Number
 from leads.views import _name_search_query
+
+
+class LinkHrefParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.hrefs = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag != "a":
+            return
+        attrs = dict(attrs)
+        if "href" in attrs:
+            self.hrefs.append(attrs["href"])
 
 
 class LeadNameSearchTest(TestCase):
@@ -47,6 +61,38 @@ class LeadNameSearchTest(TestCase):
         self.lead.save(update_fields=["display_name"])
 
         self.assertQuerysetEqual(self.search("столовой"), [self.lead])
+
+
+class LeadListPaginationSearchTest(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username="user", password="pass")
+        self.atc = Atc.objects.create(name="ATC", ip_address="127.0.0.1")
+        self.company = Company.objects.create(name="Company")
+        self.phone_model = Apparats.objects.create(name="Phone")
+
+        for index in range(16):
+            lead = Lead.objects.create(
+                phone_number=Number.objects.create(name=f"20{index:02}", atc=self.atc),
+                mac_address=f"00000000{index:04}",
+                last_name="ИЗП",
+                first_name=f"Test{index}",
+                patronymic_name="",
+            )
+            lead.atc.add(self.atc)
+            lead.company.add(self.company)
+            lead.phone_model.add(self.phone_model)
+
+    def test_pagination_keeps_search_query(self):
+        self.client.login(username="user", password="pass")
+
+        response = self.client.get(reverse("leads:lead-list"), {"name": "ИЗП"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["pagination_query"], "name=%D0%98%D0%97%D0%9F")
+
+        parser = LinkHrefParser()
+        parser.feed(response.content.decode())
+        self.assertIn("?name=%D0%98%D0%97%D0%9F&page=2", parser.hrefs)
 
 
 class LeadCreateErrorHandlingTest(TestCase):

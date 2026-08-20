@@ -397,8 +397,11 @@ def lead_list(request):
     search_external_line_access = request.GET.get('external_line_access', '')
     search_call_forwarding = request.GET.get('call_forwarding', '')
     page_list = request.GET.get('page')
+    pagination_params = request.GET.copy()
+    pagination_params.pop("page", None)
+    pagination_query = pagination_params.urlencode()
 
-    leads = Lead.objects.prefetch_related("atc", "phone_model", "company", "employees").all()
+    leads = Lead.objects.prefetch_related("atc", "phone_model", "company", "employees").all().order_by("id")
 
     # Фильтрация по существующим полям
     if search_number_query:
@@ -441,6 +444,7 @@ def lead_list(request):
         "free_number": free_number,
         "all_number": all_number,
         "all_atc": all_atc,
+        "pagination_query": pagination_query,
     }
 
     return render(request, "leads/lead_list.html", context)
