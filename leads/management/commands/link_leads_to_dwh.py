@@ -10,6 +10,17 @@ from django.db import transaction
 from leads.models import Lead, EmployeeDwh
 
 
+COMPANY_PREFIX_WORDS = {
+    "изп",
+    "инк",
+    "инкс",
+    "ук",
+    "гпз",
+    "ооо",
+    "ао",
+}
+
+
 def norm_spaces(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip())
 
@@ -31,6 +42,49 @@ def split_person_name(value: str):
 
 def lead_name_parts(lead: Lead):
     return split_person_name(build_fio(lead))
+
+
+def has_multiple_person_marker(value: str) -> bool:
+    return "/" in (value or "")
+
+
+def person_initials_tail(parts):
+    if len(parts) < 3:
+        return []
+
+    last_three = parts[-3:]
+    if (
+        len(last_three[1]) == 1
+        and len(last_three[2]) == 1
+        and all(p.isalpha() for p in last_three)
+    ):
+        return last_three
+
+    last_two = parts[-2:]
+    if (
+        len(last_two[1]) == 2
+        and all(p.isalpha() for p in last_two)
+    ):
+        return last_two
+
+    return []
+
+
+def has_company_prefix(parts, tail):
+    prefix = parts[:len(parts) - len(tail)]
+    return bool(prefix) and all(part in COMPANY_PREFIX_WORDS for part in prefix)
+
+
+def lead_match_parts(lead: Lead):
+    fio = build_fio(lead)
+    parts = split_person_name(fio)
+    if has_multiple_person_marker(fio):
+        return parts
+
+    tail = person_initials_tail(parts)
+    if tail and has_company_prefix(parts, tail):
+        return tail
+    return parts
 
 
 def employee_name_parts(employee: EmployeeDwh):
@@ -56,6 +110,10 @@ def lead_initials_key(parts):
 
 def last_name_key(parts):
     return parts[0] if parts else ""
+
+
+def fio_from_parts(parts):
+    return " ".join(parts)
 
 
 def describe_part_diff(label, lead_value, employee_value):
@@ -166,7 +224,7 @@ class Command(BaseCommand):
         with transaction.atomic():
             for lead in qs:
                 fio = build_fio(lead)
-                lead_parts = lead_name_parts(lead)
+                lead_parts = lead_match_parts(lead)
                 same_last_name_candidates = last_name_map.get(last_name_key(lead_parts), [])
                 if not fio:
                     skipped_no_fio += 1
@@ -188,13 +246,13 @@ class Command(BaseCommand):
                     continue
 
                 # 1) полное совпадение
-                key_full = norm_key(fio)
+                key_full = norm_key(fio_from_parts(lead_parts))
                 cands = full_map.get(key_full, [])
                 match_rule = "full_name"
 
                 # 2) если нет — по инициалам
                 if not cands:
-                    key_init = lead_initials_key(lead_name_parts(lead))
+                    key_init = lead_initials_key(lead_parts)
                     cands = init_map.get(key_init, [])
                     match_rule = "initials" if key_init else "no_initials_key"
 
@@ -244,7 +302,7 @@ class Command(BaseCommand):
         ))
 
     def build_report_row(self, lead, status, match_rule, candidates, same_last_name_candidates):
-        lead_parts = lead_name_parts(lead)
+        lead_parts = lead_match_parts(lead)
         lead_initials = lead_initials_key(lead_parts)
         comparison_candidates = candidates or same_last_name_candidates
         old_companies = ", ".join(c.name for c in lead.company.all())

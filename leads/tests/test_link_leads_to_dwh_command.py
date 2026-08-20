@@ -83,6 +83,66 @@ class LinkLeadsToDwhCommandTest(TestCase):
         self.assertEqual(rows[0]["match_rule"], "initials")
         self.assertEqual(rows[0]["lead_initials_key"], "сергаков в а")
 
+    def test_links_initials_after_company_prefix_in_last_name(self):
+        lead = self.make_lead("1007", "ИЗП Маркова ОА", "", "")
+        employee = self.make_employee("Маркова Ольга Александровна")
+
+        rows = self.run_command()
+
+        lead.refresh_from_db()
+        self.assertQuerysetEqual(lead.employees.all(), [employee])
+        self.assertEqual(rows[0]["status"], "linked")
+        self.assertEqual(rows[0]["match_rule"], "initials")
+        self.assertEqual(rows[0]["lead_fio"], "ИЗП Маркова ОА")
+        self.assertEqual(rows[0]["lead_initials_key"], "маркова о а")
+
+    def test_links_dotted_initials_after_company_prefix(self):
+        lead = self.make_lead("1008", "ИЗП Маркова О. А.", "", "")
+        employee = self.make_employee("Маркова Ольга Александровна")
+
+        rows = self.run_command()
+
+        lead.refresh_from_db()
+        self.assertQuerysetEqual(lead.employees.all(), [employee])
+        self.assertEqual(rows[0]["status"], "linked")
+        self.assertEqual(rows[0]["match_rule"], "initials")
+        self.assertEqual(rows[0]["lead_initials_key"], "маркова о а")
+
+    def test_links_initials_after_multiple_prefix_words(self):
+        lead = self.make_lead("1009", "УК ГПЗ Лукманова", "Ю.В", "")
+        employee = self.make_employee("Лукманова Юлия Викторовна")
+
+        rows = self.run_command()
+
+        lead.refresh_from_db()
+        self.assertQuerysetEqual(lead.employees.all(), [employee])
+        self.assertEqual(rows[0]["status"], "linked")
+        self.assertEqual(rows[0]["match_rule"], "initials")
+        self.assertEqual(rows[0]["lead_initials_key"], "лукманова ю в")
+
+    def test_links_initials_after_inks_prefix(self):
+        lead = self.make_lead("1010", "ИНКС Непомнящая", "НЛ", "")
+        employee = self.make_employee("Непомнящая Наталья Леонидовна")
+
+        rows = self.run_command()
+
+        lead.refresh_from_db()
+        self.assertQuerysetEqual(lead.employees.all(), [employee])
+        self.assertEqual(rows[0]["status"], "linked")
+        self.assertEqual(rows[0]["match_rule"], "initials")
+        self.assertEqual(rows[0]["lead_initials_key"], "непомнящая н л")
+
+    def test_does_not_strip_prefix_when_lead_contains_slash(self):
+        lead = self.make_lead("1011", "ИЗП Глумова/Харасов", "", "")
+        self.make_employee("Глумова Ольга Александровна")
+
+        rows = self.run_command()
+
+        lead.refresh_from_db()
+        self.assertEqual(lead.employees.count(), 0)
+        self.assertEqual(rows[0]["status"], "not_found")
+        self.assertEqual(rows[0]["match_rule"], "no_initials_key")
+
     def test_does_not_link_initials_when_lead_contains_multiple_people(self):
         lead = self.make_lead("1006", "Клачков", "М.Ю.", "Скрастин В.Б.")
         self.make_employee("Клачков Михаил Юрьевич")
